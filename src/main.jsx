@@ -1,5 +1,5 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App';
+import Customizer from './sauna/Customizer';
 import './style.css';
-createRoot(document.getElementById('root')).render(<App />);
+createRoot(document.getElementById('root')).render(<Customizer />);

@@ -1,0 +1,51 @@
+[
+  {
+    "id": "espoo-compact",
+    "total_chf": 8138,
+    "warnings": [
+      "Kein Platz fuer die untere Liege."
+    ],
+    "objects": 271,
+    "seconds": 2.5
+  },
+  {
+    "id": "fichte-fenster-l",
+    "total_chf": 13280,
+    "warnings": [
+      "Ofen HARVIA-VIRTA-90 ist fuer 8-14 m3 ausgelegt; Kabine hat 7.3 m3."
+    ],
+    "objects": 338,
+    "seconds": 1.0
+  },
+  {
+    "id": "espe-front-vertical",
+    "total_chf": 10410,
+    "warnings": [
+      "Tiefe 170 cm ist ein Zwischenmass; Aufpreis der Stufe 180 cm verwendet.",
+      "Ofen HARVIA-DELTA-36 ist fuer 1.5-4.5 m3 ausgelegt; Kabine hat 6.5 m3."
+    ],
+    "objects": 257,
+    "seconds": 0.9
+  },
+  {
+    "id": "fichte-glasfront",
+    "total_chf": 13556,
+    "warnings": [],
+    "objects": 294,
+    "seconds": 0.8
+  },
+  {
+    "id": "zirbe-eck-glasfront",
+    "total_chf": 25852,
+    "warnings": [],
+    "objects": 391,
+    "seconds": 1.3
+  },
+  {
+    "id": "designer-espe-schiefer",
+    "total_chf": 19415,
+    "warnings": [],
+    "objects": 417,
+    "seconds": 1.4
+  }
+]

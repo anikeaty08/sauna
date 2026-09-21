@@ -1,0 +1,174 @@
+{
+  "config": {
+    "family": "fichte",
+    "width_cm": 210,
+    "depth_cm": 190,
+    "height_cm": 202,
+    "board_orientation": "horizontal",
+    "cladding": "none",
+    "entry": "glasfront",
+    "door": {
+      "hinge": "left",
+      "position": "left",
+      "corner": "right"
+    },
+    "window": "auto",
+    "interior": {
+      "material": "espe_exklusiv_gerade",
+      "layout": "straight",
+      "upper_depth_cm": 60,
+      "lower_depth_cm": 30,
+      "upper_height_cm": 86,
+      "lower_height_cm": 44,
+      "backrests": true,
+      "side_backrests": true,
+      "apron": true,
+      "floor_grate": true,
+      "headrests": 2,
+      "sliding_stool": true
+    },
+    "heater": {
+      "sku": "HARVIA-CILINDRO-90",
+      "position": "front_right"
+    },
+    "control": "UKU-WIFI-GB",
+    "lighting": [
+      "ZS2",
+      "LED-5"
+    ],
+    "accessories": [
+      "S2342",
+      "W4408"
+    ],
+    "ventilation": true,
+    "services": [
+      "M",
+      "M-LED",
+      "L1"
+    ]
+  },
+  "items": [
+    {
+      "category": "cabin",
+      "sku": "572",
+      "name_de": "Holzsauna Fichte Massiv Swissmade nach Mass 210x190x202 cm",
+      "qty": 1,
+      "price_chf": 8220,
+      "note": ""
+    },
+    {
+      "category": "cabin",
+      "sku": "BREITE",
+      "name_de": "Aufpreis Breite 210 cm",
+      "qty": 1,
+      "price_chf": 780,
+      "note": ""
+    },
+    {
+      "category": "cabin",
+      "sku": "TIEFE",
+      "name_de": "Aufpreis Tiefe 190 cm",
+      "qty": 1,
+      "price_chf": 325,
+      "note": ""
+    },
+    {
+      "category": "interior",
+      "sku": "espe_exklusiv_gerade",
+      "name_de": "Inneneinrichtung Espe Exklusiv 28mm gerade",
+      "qty": 1,
+      "price_chf": 0,
+      "note": ""
+    },
+    {
+      "category": "heater",
+      "sku": "HARVIA-CILINDRO-90",
+      "name_de": "Harvia Saunaofen Cilindro E 9kW, Schutzmantel halb offen, inkl. 90kg Saunasteine",
+      "qty": 1,
+      "price_chf": 1080,
+      "note": "Masse ca."
+    },
+    {
+      "category": "control",
+      "sku": "UKU-WIFI-GB",
+      "name_de": "Saunasteuerung HUUM UKU 4.2 - Wifi, Glass Black",
+      "qty": 1,
+      "price_chf": 975,
+      "note": ""
+    },
+    {
+      "category": "lighting",
+      "sku": "ZS2",
+      "name_de": "Saunaleuchte inkl. Silikonkabel (Holzblendenschirm Espe, E27 max 40W)",
+      "qty": 1,
+      "price_chf": 89,
+      "note": ""
+    },
+    {
+      "category": "lighting",
+      "sku": "LED-5",
+      "name_de": "LED-Band warmweiss 5m Set mit Transformator",
+      "qty": 1,
+      "price_chf": 299,
+      "note": ""
+    },
+    {
+      "category": "accessory",
+      "sku": "S2342",
+      "name_de": "Saunaset Nova 4-teilig: Sanduhr, Klimamessstation, 5L Aufgusseimer schwarz, Schoepfkelle",
+      "qty": 1,
+      "price_chf": 229,
+      "note": ""
+    },
+    {
+      "category": "accessory",
+      "sku": "W4408",
+      "name_de": "Verschiebbare ergonomische Rueckenlehne (Pappel)",
+      "qty": 1,
+      "price_chf": 59,
+      "note": ""
+    },
+    {
+      "category": "service",
+      "sku": "M",
+      "name_de": "Montagekosten Sauna ohne Elektroinstallation",
+      "qty": 1,
+      "price_chf": 1250,
+      "note": ""
+    },
+    {
+      "category": "service",
+      "sku": "M-LED",
+      "name_de": "Aufpreis Montagekosten LED-Beleuchtung",
+      "qty": 1,
+      "price_chf": 150,
+      "note": ""
+    },
+    {
+      "category": "service",
+      "sku": "L1",
+      "name_de": "Lieferkosten bis 150 km",
+      "qty": 1,
+      "price_chf": 100,
+      "note": ""
+    }
+  ],
+  "total_chf": 13556,
+  "total_excl_vat_chf": 12540.24,
+  "warnings": [],
+  "cabin_bounds_m": {
+    "x": [
+      -1.05,
+      1.05
+    ],
+    "y": [
+      -1.9,
+      0
+    ],
+    "z": [
+      0,
+      2.02
+    ]
+  },
+  "volume_m3": 8.06
+}
