@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, DoorOpen, RotateCcw, ChevronLeft, ChevronDown, Receipt, Flame } from 'lucide-react';
+import { Box, DoorOpen, ChevronLeft, ChevronDown, Receipt } from 'lucide-react';
 import { useCatalog } from './useCatalog';
 import { SaunaScene } from './SaunaScene';
 import { MaterialCache } from './geometry';
@@ -195,7 +195,10 @@ export default function Customizer() {
                 aria-pressed={doorOpen}
                 title={doorOpen ? 'Close door' : 'Open door'}
               >
-                <RotateCcw size={16} />
+                <DoorOpen size={16} />
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.02em' }}>
+                  {doorOpen ? 'Close' : 'Open'}
+                </span>
               </button>
             </div>
 

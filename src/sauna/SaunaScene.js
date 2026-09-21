@@ -115,6 +115,9 @@ export class SaunaScene {
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(host);
     this.resize();
+    // Second resize after the browser has painted the layout — ensures the
+    // host div has real pixel dimensions before we set the camera aspect ratio.
+    setTimeout(() => this.resize(), 0);
     this.renderer.setAnimationLoop(() => this.tick());
   }
 
@@ -133,15 +136,27 @@ export class SaunaScene {
     this.lastGroup = built.group;
     this.model.add(built.group);
     this.registry = built.registry;
-    this.doorRoot = built.doorRoot;
     this.doorSign = built.doorSign;
     this.bounds = built.bounds;
     this.heaterInfo = built.heaterInfo;
+
+    // Attach the new doorRoot and capture its rest rotation immediately,
+    // before any applyDoor() call can overwrite it.
+    this.doorRoot = built.doorRoot;
+    if (this.doorRoot) {
+      this.doorRoot.userData.baseRotY = this.doorRoot.rotation.y;
+    }
+
     this.frame(built.bounds);
     if (typeof window !== 'undefined') {
       window.__saunaDebug = { bounds: built.bounds, cameraPos: this.camera.position.toArray(), target: this.controls.target.toArray(), size: this.size, centre: this.centre?.toArray(), registryCount: this.registry.length, fov: this.camera.fov, aspect: this.camera.aspect, hostSize: [this.host.clientWidth, this.host.clientHeight] };
     }
-    this.doorOpenT = this.doorTarget = this.view === 'interior' ? 1 : 0;
+
+    // When first loading interior view, open door; otherwise preserve the
+    // current door state (so toggling open then switching cabin size keeps it open).
+    if (!this.framed) {
+      this.doorOpenT = this.doorTarget = this.view === 'interior' ? 1 : 0;
+    }
     this.applyDoor();
   }
 
@@ -226,13 +241,18 @@ export class SaunaScene {
 
   applyDoor() {
     if (!this.doorRoot) return;
-    const angle = (this.doorOpenT * 90 * Math.PI) / 180;
-    this.doorRoot.rotation.y = this.doorRoot.userData.baseRotY ?? this.doorRoot.rotation.y;
-    if (this.doorRoot.userData.baseRotY === undefined) this.doorRoot.userData.baseRotY = this.doorRoot.rotation.y;
+    // baseRotY is captured once in setConfig when the doorRoot is freshly built.
+    // Guard here in case something calls applyDoor before setConfig ran.
+    if (this.doorRoot.userData.baseRotY === undefined) {
+      this.doorRoot.userData.baseRotY = this.doorRoot.rotation.y;
+    }
+    const angle = (this.doorOpenT * Math.PI) / 2; // 0 → closed, 1 → 90°
     this.doorRoot.rotation.y = this.doorRoot.userData.baseRotY - this.doorSign * angle;
   }
 
-  setDoorOpen(open) { this.doorTarget = open ? 1 : 0; }
+  setDoorOpen(open) {
+    this.doorTarget = open ? 1 : 0;
+  }
 
   pick(event, isClick) {
     if (!this.registry.length) return;
