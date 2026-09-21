@@ -21,14 +21,19 @@ export class SaunaScene {
     this.disposed = false;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color('#e7ebe4');
-    this.camera = new THREE.PerspectiveCamera(38, 1, 0.02, 60);
+    // Warm studio gradient background (approximated with a solid warm neutral)
+    this.scene.background = new THREE.Color('#d8e0d4');
+    // Subtle warm fog for depth
+    this.scene.fog = new THREE.FogExp2(0xdde5da, 0.018);
+
+    this.camera = new THREE.PerspectiveCamera(36, 1, 0.02, 80);
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.08;
+    // Slightly warmer exposure for a premium feel
+    this.renderer.toneMappingExposure = 1.18;
     this.renderer.domElement.setAttribute('role', 'img');
     this.renderer.domElement.setAttribute('aria-label', 'Interactive 3D sauna. Drag to orbit, scroll to zoom, click a part to configure it.');
     this.renderer.domElement.tabIndex = 0;
@@ -36,27 +41,44 @@ export class SaunaScene {
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.08;
-    this.controls.minDistance = 0.6;
-    this.controls.maxDistance = 14;
-    this.controls.maxPolarAngle = Math.PI * 0.495;
+    this.controls.dampingFactor = 0.07;
+    this.controls.minDistance = 0.5;
+    this.controls.maxDistance = 16;
+    this.controls.maxPolarAngle = Math.PI * 0.49;
     this.controls.target.set(0, 1, 1);
 
+    // Premium environment using RoomEnvironment
     const env = new RoomEnvironment();
     const pmrem = new THREE.PMREMGenerator(this.renderer);
-    this.envTex = pmrem.fromScene(env, 0.045).texture;
+    this.envTex = pmrem.fromScene(env, 0.04).texture;
     this.scene.environment = this.envTex;
-    this.scene.environmentIntensity = 0.6;
+    this.scene.environmentIntensity = 0.75;
     env.dispose(); pmrem.dispose();
 
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x859079, 1.3));
-    this.sun = new THREE.DirectionalLight(0xfff3e2, 2.6);
+    // Warm hemisphere (sky warm, ground earthy)
+    this.scene.add(new THREE.HemisphereLight(0xfff8f0, 0x7a8c70, 1.1));
+
+    // Key light — warm afternoon sun
+    this.sun = new THREE.DirectionalLight(0xfff0d8, 2.8);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(1024, 1024);
-    this.sun.shadow.bias = -0.0003;
+    this.sun.shadow.mapSize.set(2048, 2048);
+    this.sun.shadow.bias = -0.00025;
+    this.sun.shadow.normalBias = 0.02;
     this.scene.add(this.sun, this.sun.target);
 
-    this.floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.15 }));
+    // Soft fill light from the front-left (reduces harsh shadow depth)
+    this.fill = new THREE.DirectionalLight(0xe8f0ff, 0.55);
+    this.scene.add(this.fill);
+
+    // Subtle rim light from behind for depth separation
+    this.rim = new THREE.DirectionalLight(0xfff8e8, 0.30);
+    this.scene.add(this.rim);
+
+    // Reflective floor with subtle shadow
+    this.floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(80, 80),
+      new THREE.ShadowMaterial({ opacity: 0.12, color: 0x3a5040 }),
+    );
     this.floor.rotation.x = -Math.PI / 2;
     this.floor.receiveShadow = true;
     this.scene.add(this.floor);
@@ -131,17 +153,29 @@ export class SaunaScene {
   }
 
   frame(bounds) {
-    const cx = (bounds.minX + bounds.maxX) / 2, cz = (bounds.minZ + bounds.maxZ) / 2, cy = bounds.maxY * 0.45;
+    const cx = (bounds.minX + bounds.maxX) / 2, cz = (bounds.minZ + bounds.maxZ) / 2;
     const size = Math.max(bounds.maxX - bounds.minX, bounds.maxZ - bounds.minZ, bounds.maxY);
-    this.centre = new THREE.Vector3(cx, cy, cz);
+    this.centre = new THREE.Vector3(cx, bounds.maxY * 0.45, cz);
     this.size = size;
     this.floor.position.set(cx, -0.001, cz);
-    this.sun.position.set(cx + size * 1.6, size * 2.6, cz - size * 1.2);
+
+    // Key (sun) — upper-right, warm afternoon angle
+    this.sun.position.set(cx + size * 1.7, size * 2.8, cz - size * 1.1);
     this.sun.target.position.set(cx, 0, cz);
-    this.sun.shadow.camera.left = -size * 1.4; this.sun.shadow.camera.right = size * 1.4;
-    this.sun.shadow.camera.top = size * 1.4; this.sun.shadow.camera.bottom = -size * 1.4;
-    this.sun.shadow.camera.near = 0.5; this.sun.shadow.camera.far = size * 6;
+    this.sun.shadow.camera.left   = -size * 1.5;
+    this.sun.shadow.camera.right  =  size * 1.5;
+    this.sun.shadow.camera.top    =  size * 1.5;
+    this.sun.shadow.camera.bottom = -size * 1.5;
+    this.sun.shadow.camera.near   = 0.5;
+    this.sun.shadow.camera.far    = size * 7;
     this.sun.shadow.camera.updateProjectionMatrix();
+
+    // Fill — soft, front-left, lower
+    this.fill.position.set(cx - size * 1.2, size * 1.0, cz + size * 1.8);
+
+    // Rim — from behind, high
+    this.rim.position.set(cx - size * 0.5, size * 2.0, cz - size * 2.0);
+
     if (!this.framed || Math.abs((this.lastSize || 0) - size) > 0.01) {
       this.setView(this.view, true);
       this.framed = true;
