@@ -289,6 +289,20 @@ export class SaunaScene {
     this.renderer.render(this.scene, this.camera);
   }
 
+  async exportGLB(filename = 'custom-sauna') {
+    const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
+    const exporter = new GLTFExporter();
+    this.model.updateMatrixWorld(true);
+    const gltf = await exporter.parseAsync(this.model, { binary: true });
+    const blob = new Blob([gltf], { type: 'model/gltf-binary' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename}.glb`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
   dispose() {
     this.disposed = true;
     this.renderer.setAnimationLoop(null);

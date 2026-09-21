@@ -585,6 +585,65 @@
   font-size: 9.5px; color: #9aa28f; line-height: 1.6;
 }
 
+/* ── Export actions ─────────────────────────────────────────────────────────── */
+.export-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition: all 0.16s ease;
+  cursor: pointer;
+  width: 100%;
+}
+
+.export-btn-primary {
+  background: var(--pine);
+  color: #fafbf7;
+  border: 1px solid var(--pine);
+  box-shadow: 0 1px 3px rgba(45, 74, 56, 0.15);
+}
+.export-btn-primary:hover:not(:disabled) {
+  background: #223a2b;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(45, 74, 56, 0.22);
+}
+.export-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.export-btn-secondary {
+  background: #fff;
+  color: var(--pine);
+  border: 1.5px solid var(--line);
+}
+.export-btn-secondary:hover {
+  background: var(--mineral);
+  border-color: #c5cec0;
+  color: #1a2f22;
+}
+
+.export-feedback {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--sage);
+  text-align: center;
+  margin: 2px 0 0;
+  animation: fadeIn 0.2s ease-out both;
+}
+
 /* Customizer header "back" button */
 .customizer-back {
   display: inline-flex; align-items: center; gap: 6px;

@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, DoorOpen, ChevronLeft, ChevronDown, Receipt } from 'lucide-react';
+import { Box, DoorOpen, ChevronLeft, ChevronDown, Receipt, Download, FileText } from 'lucide-react';
 import { useCatalog } from './useCatalog';
 import { SaunaScene } from './SaunaScene';
 import { MaterialCache } from './geometry';
 import { defaultConfig, fromPreset, normalizeConfig } from './config';
 import { priceItems } from './pricing';
 import { chf } from './format';
+import { downloadSpecification } from './exportSpec';
 import PresetPicker from './PresetPicker';
 import { ConfiguratorPanel, ComponentDrawer } from './Panel';
 import './customizer.css';
@@ -60,9 +61,39 @@ export default function Customizer() {
   const [drawerCategory, setDrawerCategory] = useState(null);
   const [drawerName, setDrawerName] = useState('');
   const [hover, setHover] = useState({ info: null, x: 0, y: 0 });
+  const [exportingGLB, setExportingGLB] = useState(false);
+  const [exportMessage, setExportMessage] = useState('');
   const hostRef = useRef(null);
   const sceneRef = useRef(null);
   const materialsRef = useRef(null);
+
+  const handleExportGLB = async () => {
+    if (!sceneRef.current) return;
+    setExportingGLB(true);
+    setExportMessage('Generating 3D model (.glb)...');
+    try {
+      const familySlug = cfg?.family || 'custom';
+      const filename = `${familySlug}-sauna-${cfg?.widthCm || 200}x${cfg?.depthCm || 180}`;
+      await sceneRef.current.exportGLB(filename);
+      setExportMessage('3D model (.glb) downloaded!');
+      setTimeout(() => setExportMessage(''), 3500);
+    } catch (err) {
+      console.error('Failed to export GLB:', err);
+      setExportMessage('Export failed. Please try again.');
+      setTimeout(() => setExportMessage(''), 4000);
+    } finally {
+      setExportingGLB(false);
+    }
+  };
+
+  const handleExportSpec = () => {
+    if (!cfg || !catalog) return;
+    const familySlug = cfg?.family || 'custom';
+    const filename = `${familySlug}-sauna-${cfg?.widthCm || 200}x${cfg?.depthCm || 180}-specification`;
+    downloadSpecification(cfg, catalog, pricing, filename);
+    setExportMessage('Quote & specification (.txt) downloaded!');
+    setTimeout(() => setExportMessage(''), 3500);
+  };
 
   // Price every preset once for the picker screen's "from CHF …" tags
   useEffect(() => {
@@ -277,6 +308,31 @@ export default function Customizer() {
                 </div>
                 <b>{chf(pricing?.total)}</b>
               </div>
+
+              {/* Export actions */}
+              <div className="export-actions">
+                <button
+                  type="button"
+                  className="export-btn export-btn-primary"
+                  onClick={handleExportGLB}
+                  disabled={exportingGLB}
+                  title="Export and download the 3D model (.glb) for Blender, AR or CAD viewers"
+                >
+                  <Download size={14} />
+                  <span>{exportingGLB ? 'Exporting 3D...' : 'Export 3D Model (.glb)'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="export-btn export-btn-secondary"
+                  onClick={handleExportSpec}
+                  title="Download an itemized bill of materials and price quote (.txt)"
+                >
+                  <FileText size={14} />
+                  <span>Download Quote & Spec</span>
+                </button>
+              </div>
+              {exportMessage && <p className="export-feedback">{exportMessage}</p>}
             </div>
           </aside>
         </div>
