@@ -1,0 +1,12 @@
+node_modules/
+.tools/
+dist/
+public/assets/
+public/draco/
+test-results/
+playwright-report/
+*.log
+
+data/
+public/images/
+

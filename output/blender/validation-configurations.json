@@ -1,0 +1,25 @@
+{
+  "configurations": [
+    {
+      "file": "sauna-left-integrated.blend",
+      "status": "pass",
+      "packed_textures": 4
+    },
+    {
+      "file": "sauna-left-external.blend",
+      "status": "pass",
+      "packed_textures": 4
+    },
+    {
+      "file": "sauna-right-integrated.blend",
+      "status": "pass",
+      "packed_textures": 4
+    },
+    {
+      "file": "sauna-right-external.blend",
+      "status": "pass",
+      "packed_textures": 4
+    }
+  ],
+  "status": "pass"
+}

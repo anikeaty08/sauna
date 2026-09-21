@@ -1,0 +1,193 @@
+{
+  "specification": "KDL-SAUNA3D-PILOT-001",
+  "units": "metres",
+  "blender_axes": {
+    "up": "+Z",
+    "front": "-Y",
+    "width": "+X"
+  },
+  "gltf_axes": {
+    "up": "+Y",
+    "front": "+Z",
+    "width": "+X"
+  },
+  "origin": "Back exterior wall centre at floor level",
+  "assembly_transform": {
+    "translation": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ]
+  },
+  "door_state": "closed; door_leaf meshes rotate around hinge_pivot_gltf in the browser",
+  "schema_version": 2,
+  "source_file": "sauna-complete.blend",
+  "source_sha256": "5e9ca069c241ec32ba11033a3f53eb98a59d183f08198989d0522be36033de23",
+  "material_conversion": "Timber color and tangent normal maps baked in Cycles on a 1.6 x 0.24 m UV plane; editable source materials preserved.",
+  "lighting": "Optional fixture geometry and emissive materials included; Blender area lights are not glTF punctual lights.",
+  "assets": [
+    {
+      "id": "base_cabin",
+      "file": "base_cabin.glb",
+      "bytes": 656476,
+      "triangles": 25952,
+      "parts": [
+        "back",
+        "left",
+        "right",
+        "front",
+        "roof",
+        "floor",
+        "seating",
+        "heater guard"
+      ],
+      "bounds_blender": [
+        -0.699999988079071,
+        -1.2000000476837158,
+        0.0,
+        0.699999988079071,
+        0.0,
+        2.0199999809265137
+      ],
+      "sha256": "cf9e5e5711e1eae655c74f3ab83676f2bcb840776a9c307d2636c85ff4b45b05"
+    },
+    {
+      "id": "door_left-hinge",
+      "file": "door_left-hinge.glb",
+      "bytes": 268236,
+      "triangles": 7260,
+      "parts": [
+        "door_leaf",
+        "door_frame"
+      ],
+      "bounds_blender": [
+        -0.6209999918937683,
+        -1.2549999952316284,
+        0.0899999737739563,
+        0.03999999165534973,
+        -1.11899995803833,
+        1.9100000858306885
+      ],
+      "sha256": "0bb1deefcdcca609732edc757933094e5563f6cb9e32b08345a22ff93a049961"
+    },
+    {
+      "id": "door_right-hinge",
+      "file": "door_right-hinge.glb",
+      "bytes": 268252,
+      "triangles": 7260,
+      "parts": [
+        "door_leaf",
+        "door_frame"
+      ],
+      "bounds_blender": [
+        -0.5800000429153442,
+        -1.2549999952316284,
+        0.0899999737739563,
+        0.08100000023841858,
+        -1.11899995803833,
+        1.9100000858306885
+      ],
+      "sha256": "e0f011f7a3bb7d3a8c58171f0c5bd7e0464dddff11c82383584d15524fb8c615"
+    },
+    {
+      "id": "heater_integrated-control",
+      "file": "heater_integrated-control.glb",
+      "bytes": 115352,
+      "triangles": 11248,
+      "parts": [
+        "body"
+      ],
+      "bounds_blender": [
+        0.2590000033378601,
+        -0.9930499792098999,
+        0.17000000178813934,
+        0.6549999713897705,
+        -0.7379999756813049,
+        0.7265850901603699
+      ],
+      "sha256": "383ab6b19ddc43bcefcfd2e1721085b75b72ee838815f534921f9b7d1bf7dd57"
+    },
+    {
+      "id": "heater_external-control",
+      "file": "heater_external-control.glb",
+      "bytes": 122792,
+      "triangles": 12224,
+      "parts": [
+        "body"
+      ],
+      "bounds_blender": [
+        0.07100000232458115,
+        -1.2500001192092896,
+        0.17000000178813934,
+        0.6549999713897705,
+        -0.7379999756813049,
+        1.4390000104904175
+      ],
+      "sha256": "47dd025d9df69d75241ae7f868a13af026acbad0aaa961135e6e68b80a95961c"
+    },
+    {
+      "id": "scale_reference",
+      "file": "scale_reference.glb",
+      "bytes": 48616,
+      "triangles": 6060,
+      "parts": [
+        "body"
+      ],
+      "bounds_blender": [
+        -1.303494930267334,
+        -1.5750000476837158,
+        0.0,
+        -0.7565050721168518,
+        -1.3199999332427979,
+        1.6999999284744263
+      ],
+      "sha256": "e072db594c9987d07ace5cd5f0af0420181cb55f4fca937e8d69548ac67ed253"
+    },
+    {
+      "id": "lighting_timber-shade",
+      "file": "lighting_timber-shade.glb",
+      "bytes": 225244,
+      "triangles": 2444,
+      "parts": [
+        "body"
+      ],
+      "bounds_blender": [
+        -0.5789999961853027,
+        -0.14299999177455902,
+        1.462499976158142,
+        -0.3409999907016754,
+        -0.044999998062849045,
+        1.777500033378601
+      ],
+      "sha256": "4693acf7ba74d2dd02e64cfb05e4d2febf9fddf3776e7411e29c37dbb377d46a"
+    },
+    {
+      "id": "lighting_under-bench",
+      "file": "lighting_under-bench.glb",
+      "bytes": 6652,
+      "triangles": 376,
+      "parts": [
+        "body"
+      ],
+      "bounds_blender": [
+        -0.49000000953674316,
+        -0.30900001525878906,
+        0.8309999704360962,
+        0.49000000953674316,
+        -0.29100000858306885,
+        0.8400000333786011
+      ],
+      "sha256": "c95530372ddb520302a066460d6e2afd10af10a32f3a1c7ca70ce44a19432428"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "source": "sauna-complete.blend",
+  "source_sha256": "5e9ca069c241ec32ba11033a3f53eb98a59d183f08198989d0522be36033de23",
+  "configurations": [
+    {
+      "file": "sauna-left-integrated.blend",
+      "door": "left",
+      "heater": "integrated",
+      "sha256": "6ce8c26e45acfc41ff93b5e43155ed37b4247f13860209cf927edf5805f60532"
+    },
+    {
+      "file": "sauna-left-external.blend",
+      "door": "left",
+      "heater": "external",
+      "sha256": "8c67d9770bbfc3a1b6c62e11f83efb0de37cc46741c6e9d6e241f8e81c4a7905"
+    },
+    {
+      "file": "sauna-right-integrated.blend",
+      "door": "right",
+      "heater": "integrated",
+      "sha256": "6799eabb8f2f20bad4ef73219410b10316c4eb7083b14d355167806fd4d791c6"
+    },
+    {
+      "file": "sauna-right-external.blend",
+      "door": "right",
+      "heater": "external",
+      "sha256": "29df8395bd38ec8c2a662677d686ddbd414c26d24aee726e48454607a08d1ef2"
+    }
+  ]
+}
