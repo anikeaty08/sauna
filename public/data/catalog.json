@@ -1,0 +1,2786 @@
+{
+  "meta": {
+    "currency": "CHF",
+    "vat_rate": 0.081,
+    "prices_include_vat": true,
+    "sources": [
+      "holzsauna.ch/Sauna-nach-Mass product configurators (Fichte, Zirbe, Espe Glasfront), Standardsauna Espoo, Saunaofen, Saunasteuerung, Zubehoer pages, 2026-09-21",
+      "Angebot A202607092848 Holzbau Boscheri GmbH, 09.07.2026 (Sauna Espoo klein)",
+      "holzsauna.ch Sauna-nach-Mass listing prices for entry types and claddings (Zirbe deltas), 2026-09-21",
+      "holzsauna.ch full category survey (Finn-Serie, Sentiotec, Infraworld, Harvia, Saunafass, Saunahaus, Infrarot, Holzbefeuert), 2026-09-22"
+    ],
+    "note": "Heater, control and accessory dimensions marked approx are typical manufacturer sizes, not verified drawings.",
+    "sizing_rules": {
+      "kw_per_m3": 1.0,
+      "kw_per_m2_glass": 1.2,
+      "height_factor_per_30cm_above_200": 0.1,
+      "three_phase_above_kw": 8,
+      "single_phase_amps_max": 16,
+      "note": "Industry rule of thumb; manufacturer m3 ranges take precedence when stricter."
+    }
+  },
+  "families": {
+    "espoo": {
+      "name_de": "Sauna Espoo Massivholz 45mm mit Fronteinstieg und Fenster",
+      "sku": "B-Espoo-FrontF-x",
+      "wall_wood": "fichte",
+      "wall_mm": 45,
+      "ceiling_mm": 45,
+      "door_mm": [
+        490,
+        1720
+      ],
+      "door_frame_mm": 100,
+      "entries": [
+        "front",
+        "corner",
+        "glasfront"
+      ],
+      "sizes": [
+        {
+          "w": 140,
+          "d": 120,
+          "price": 5720,
+          "aktion": 3718
+        },
+        {
+          "w": 196,
+          "d": 160,
+          "price": 8028,
+          "aktion": 5218
+        },
+        {
+          "w": 196,
+          "d": 196,
+          "price": 8548,
+          "aktion": 5556
+        },
+        {
+          "w": 220,
+          "d": 190,
+          "price": 9144,
+          "aktion": 5943
+        },
+        {
+          "w": 220,
+          "d": 220,
+          "price": 9572,
+          "aktion": 6221
+        }
+      ],
+      "height_cm": 202,
+      "interior_default": "espe_standard",
+      "interior_options": [
+        "espe_standard"
+      ],
+      "entry_prices": {
+        "front": 0,
+        "corner": 0,
+        "glasfront": 0
+      },
+      "name_en": "Sauna Espoo, solid spruce 45 mm, front entry with window",
+      "type": "cabin",
+      "threshold": false,
+      "lead_time_weeks": [
+        1,
+        4
+      ],
+      "product_url": "https://www.holzsauna.ch/Sauna-Espoo-Massivholz-45mm-mit-Fronteinstieg-und-Fenster",
+      "handle_default": "wood_metal"
+    },
+    "fichte": {
+      "name_de": "Holzsauna Fichte Massiv Swissmade nach Mass",
+      "sku": "572",
+      "wall_wood": "fichte",
+      "wall_mm": 45,
+      "ceiling_mm": 45,
+      "door_mm": [
+        620,
+        1925
+      ],
+      "door_frame_mm": 100,
+      "entries": [
+        "front",
+        "corner",
+        "glasfront",
+        "corner_glasfront",
+        "glass_corner"
+      ],
+      "base_price": 8220,
+      "width_cm": {
+        "150": 0,
+        "160": 105,
+        "180": 242,
+        "190": 325,
+        "200": 635,
+        "210": 780,
+        "220": 910,
+        "230": 1060,
+        "240": 1170,
+        "250": 1305
+      },
+      "depth_cm": {
+        "150": 0,
+        "160": 105,
+        "180": 242,
+        "190": 325,
+        "200": 505,
+        "210": 599,
+        "220": 713,
+        "230": 789,
+        "240": 860,
+        "250": 939
+      },
+      "height_cm": 202,
+      "interior_default": "espe_exklusiv_gerade",
+      "interior_options": [
+        "espe_exklusiv_gerade",
+        "espe_exklusiv_gerundet",
+        "erle_exklusiv_gerade",
+        "erle_exklusiv_gerundet"
+      ],
+      "entry_prices": {
+        "front": 0,
+        "corner": 0,
+        "glasfront": 0,
+        "corner_glasfront": 120,
+        "glass_corner": 120
+      },
+      "name_en": "Solid Nordic spruce sauna, Swiss-made to measure",
+      "type": "cabin",
+      "threshold": false,
+      "lead_time_weeks": [
+        6,
+        10
+      ],
+      "product_url": "https://www.holzsauna.ch/Sauna-nach-Mass",
+      "handle_default": "wood_steel"
+    },
+    "espe": {
+      "name_de": "Holzsauna Espe Swissmade nach Mass",
+      "sku": "H-E-1",
+      "wall_wood": "espe",
+      "wall_mm": 45,
+      "ceiling_mm": 45,
+      "door_mm": [
+        620,
+        1925
+      ],
+      "door_frame_mm": 100,
+      "entries": [
+        "front",
+        "corner"
+      ],
+      "entry_prices": {
+        "front": 0,
+        "corner": 340
+      },
+      "window_price": 410,
+      "base_price": 7350,
+      "width_cm": {
+        "150": 0,
+        "160": 105,
+        "180": 242,
+        "190": 325,
+        "200": 635,
+        "210": 780,
+        "220": 910,
+        "230": 1060,
+        "240": 1170,
+        "250": 1305
+      },
+      "depth_cm": {
+        "150": 0,
+        "160": 105,
+        "180": 242,
+        "190": 325,
+        "200": 505,
+        "210": 599,
+        "220": 713,
+        "230": 789,
+        "240": 860,
+        "250": 939
+      },
+      "height_cm": 202,
+      "interior_default": "espe_exklusiv_gerade",
+      "interior_options": [
+        "espe_exklusiv_gerade",
+        "espe_exklusiv_gerundet",
+        "erle_exklusiv_gerade",
+        "erle_exklusiv_gerundet"
+      ],
+      "price_note": "Breiten-/Tiefenaufpreise wie Fichte-Konfigurator (Annahme)",
+      "name_en": "Aspen sauna, Swiss-made to measure",
+      "price_note_en": "Width/depth surcharges assumed to match the spruce configurator",
+      "type": "cabin",
+      "threshold": false,
+      "lead_time_weeks": [
+        6,
+        10
+      ],
+      "product_url": "https://www.holzsauna.ch/Sauna-nach-Mass",
+      "handle_default": "wood_steel"
+    },
+    "espe_glasfront": {
+      "name_de": "Glasfrontsauna aus Espe Swissmade nach Mass",
+      "sku": "H-E-G-1",
+      "wall_wood": "espe",
+      "wall_mm": 59,
+      "ceiling_mm": 59,
+      "door_mm": [
+        620,
+        1925
+      ],
+      "door_frame_mm": 60,
+      "entries": [
+        "glasfront",
+        "corner_glasfront",
+        "glass_corner"
+      ],
+      "base_price": 9370,
+      "width_cm": {
+        "152": 0,
+        "169": 200,
+        "186": 479,
+        "203": 799,
+        "220": 1149,
+        "237": 1519,
+        "254": 1864,
+        "271": 2235
+      },
+      "depth_cm": {
+        "152": 0,
+        "169": 200,
+        "186": 479,
+        "203": 799,
+        "220": 1149,
+        "237": 1519,
+        "254": 1864,
+        "271": 2235
+      },
+      "height_cm": 202,
+      "interior_default": "espe_exklusiv_gerade",
+      "interior_options": [
+        "espe_exklusiv_gerade",
+        "espe_exklusiv_gerundet",
+        "erle_exklusiv_gerade",
+        "erle_exklusiv_gerundet"
+      ],
+      "entry_prices": {
+        "glasfront": 0,
+        "corner_glasfront": 120,
+        "glass_corner": 120
+      },
+      "name_en": "Glass-front aspen sauna, Swiss-made to measure",
+      "type": "cabin",
+      "threshold": false,
+      "lead_time_weeks": [
+        6,
+        10
+      ],
+      "product_url": "https://www.holzsauna.ch/Sauna-nach-Mass",
+      "handle_default": "wood_steel"
+    },
+    "zirbe": {
+      "name_de": "Holzsauna Zirbe Massiv-Paneele Swissmade nach Mass",
+      "sku": "H-Z-1",
+      "wall_wood": "zirbe",
+      "wall_mm": 40,
+      "ceiling_mm": 40,
+      "door_mm": [
+        670,
+        1875
+      ],
+      "door_frame_mm": 100,
+      "entries": [
+        "glasfront",
+        "corner_glasfront",
+        "glass_corner",
+        "front",
+        "corner"
+      ],
+      "base_price": 16670,
+      "width_cm": {
+        "150": 0,
+        "160": 127,
+        "170": 296,
+        "180": 435,
+        "190": 574,
+        "200": 712,
+        "210": 872,
+        "220": 1011,
+        "230": 1181,
+        "240": 1320,
+        "250": 1459
+      },
+      "depth_cm": {
+        "150": 0,
+        "160": 96,
+        "170": 235,
+        "180": 343,
+        "190": 452,
+        "200": 560,
+        "210": 690,
+        "220": 798,
+        "230": 938,
+        "240": 1047,
+        "250": 1156
+      },
+      "height_cm": 202,
+      "interior_default": "espe_standard",
+      "interior_options": [
+        "espe_standard",
+        "espe_gerundet",
+        "erle_raute",
+        "erle_gerundet"
+      ],
+      "entry_prices": {
+        "glasfront": 0,
+        "corner_glasfront": 1620,
+        "glass_corner": 1320,
+        "front": 0,
+        "corner": 0
+      },
+      "name_en": "Stone pine panel sauna, Swiss-made to measure",
+      "type": "cabin",
+      "threshold": false,
+      "lead_time_weeks": [
+        6,
+        10
+      ],
+      "product_url": "https://www.holzsauna.ch/Sauna-nach-Mass",
+      "handle_default": "wood_steel"
+    },
+    "espoo_corner": {
+      "name_de": "Sauna Espoo Massivholz 45mm mit Eckeinstieg und Fenster",
+      "name_en": "Sauna Espoo, solid spruce 45 mm, corner entry with window",
+      "sku": "B-Espoo-EckF-x",
+      "type": "cabin",
+      "wall_wood": "fichte",
+      "wall_mm": 45,
+      "ceiling_mm": 77,
+      "door_mm": [
+        490,
+        1720
+      ],
+      "door_frame_mm": 100,
+      "entries": [
+        "corner"
+      ],
+      "entry_prices": {
+        "corner": 0
+      },
+      "threshold": false,
+      "handle_default": "wood_metal",
+      "sizes": [
+        {
+          "w": 196,
+          "d": 160,
+          "price": 7900,
+          "aktion": 5135
+        },
+        {
+          "w": 196,
+          "d": 196,
+          "price": 8704,
+          "aktion": 5657
+        },
+        {
+          "w": 220,
+          "d": 190,
+          "price": 9316,
+          "aktion": 6055
+        },
+        {
+          "w": 220,
+          "d": 220,
+          "price": 9932,
+          "aktion": 6455
+        }
+      ],
+      "height_cm": 202,
+      "interior_default": "espe_standard",
+      "interior_options": [
+        "espe_standard"
+      ],
+      "lead_time_weeks": [
+        1,
+        4
+      ],
+      "product_url": "https://www.holzsauna.ch/Holzsauna-Espoo-Massivholz-45mm-mit-Eckeinstieg-und-Fenster"
+    },
+    "espoo_glasfront": {
+      "name_de": "Sauna Espoo Massivholz 45mm mit Glasfront",
+      "name_en": "Sauna Espoo, solid spruce 45 mm, full glass front",
+      "sku": "B-Espoo-Glas-x",
+      "type": "cabin",
+      "wall_wood": "fichte",
+      "wall_mm": 45,
+      "ceiling_mm": 77,
+      "door_mm": [
+        620,
+        1900
+      ],
+      "door_frame_mm": 60,
+      "entries": [
+        "glasfront"
+      ],
+      "entry_prices": {
+        "glasfront": 0
+      },
+      "threshold": false,
+      "handle_default": "wood_metal",
+      "sizes": [
+        {
+          "w": 196,
+          "d": 160,
+          "price": 8776,
+          "aktion": 5704
+        },
+        {
+          "w": 196,
+          "d": 196,
+          "price": 9296,
+          "aktion": 6042
+        },
+        {
+          "w": 220,
+          "d": 220,
+          "price": 10320,
+          "aktion": 6708
+        }
+      ],
+      "height_cm": 204,
+      "interior_default": "espe_standard",
+      "interior_options": [
+        "espe_standard"
+      ],
+      "lead_time_weeks": [
+        1,
+        4
+      ],
+      "product_url": "https://www.holzsauna.ch/Holzsauna-Espoo-Massivholz-45mm-mit-Glasfront"
+    },
+    "heinola": {
+      "name_de": "Sauna Heinola 45mm Massivholz, Fronteinstieg",
+      "name_en": "Sauna Heinola, solid spruce 45 mm, front entry",
+      "sku": "T-Heinola45-x",
+      "type": "cabin",
+      "wall_wood": "fichte",
+      "wall_mm": 45,
+      "ceiling_mm": 45,
+      "door_mm": [
+        672,
+        1712
+      ],
+      "door_frame_mm": 90,
+      "entries": [
+        "front"
+      ],
+      "entry_prices": {
+        "front": 0
+      },
+      "threshold": true,
+      "handle_default": "wood_wood",
+      "base_price": 3620,
+      "width_cm": {
+        "144.5": 0,
+        "158": 219,
+        "171.5": 400,
+        "185": 565,
+        "198.5": 679,
+        "212": 860,
+        "225.5": 1120,
+        "239": 1425,
+        "252.5": 1550
+      },
+      "depth_cm": {
+        "130": 0,
+        "144.5": 115,
+        "158": 264,
+        "171.5": 400,
+        "185": 560,
+        "198.5": 679,
+        "212": 860,
+        "225.5": 1120,
+        "239": 1425,
+        "252.5": 1550
+      },
+      "height_cm": 204,
+      "interior_default": "espe_standard",
+      "interior_options": [
+        "espe_standard"
+      ],
+      "window_types": [
+        "none"
+      ],
+      "included_extra": [
+        "guard"
+      ],
+      "lead_time_weeks": [
+        1,
+        4
+      ],
+      "product_url": "https://www.holzsauna.ch/Holzsauna-Heinola-45mm"
+    },
+    "rauma": {
+      "name_de": "Sauna Rauma 45mm Massivholz, Glasfront mit Tuer in der Mitte",
+      "name_en": "Sauna Rauma, solid spruce 45 mm, glass front with centre door",
+      "sku": "T-Rauma45-x",
+      "type": "cabin",
+      "wall_wood": "fichte",
+      "wall_mm": 45,
+      "ceiling_mm": 45,
+      "door_mm": [
+        620,
+        1900
+      ],
+      "door_frame_mm": 60,
+      "entries": [
+        "glasfront"
+      ],
+      "entry_prices": {
+        "glasfront": 0
+      },
+      "threshold": false,
+      "handle_default": "wood_glass",
+      "door_position_default": "centre",
+      "base_price": 4700,
+      "width_cm": {
+        "144.5": 0,
+        "171.5": 1899,
+        "198.5": 2120,
+        "239": 2930
+      },
+      "depth_cm": {
+        "130": 0,
+        "171.5": 565,
+        "198.5": 910,
+        "239": 1495
+      },
+      "height_cm": 204,
+      "interior_default": "abachi_standard",
+      "interior_options": [
+        "abachi_standard"
+      ],
+      "lead_time_weeks": [
+        1,
+        4
+      ],
+      "product_url": "https://www.holzsauna.ch/Holzsauna-Rauma-45mm"
+    },
+    "kemi": {
+      "name_de": "Sauna Kemi 45mm Massivholz, Eckeinstieg und 2 grosse Fenster",
+      "name_en": "Sauna Kemi, solid spruce 45 mm, corner entry with 2 large windows",
+      "sku": "T-Kemi-x",
+      "type": "cabin",
+      "wall_wood": "fichte",
+      "wall_mm": 45,
+      "ceiling_mm": 45,
+      "door_mm": [
+        672,
+        1710
+      ],
+      "door_frame_mm": 90,
+      "entries": [
+        "corner"
+      ],
+      "entry_prices": {
+        "corner": 0
+      },
+      "threshold": true,
+      "handle_default": "wood_wood",
+      "base_price": 5390,
+      "width_cm": {
+        "145": 0,
+        "180": 345,
+        "190": 679,
+        "200": 829,
+        "210": 977,
+        "220": 1115,
+        "230": 1265,
+        "240": 1439,
+        "250": 1480
+      },
+      "depth_cm": {
+        "145": 0,
+        "180": 345,
+        "190": 449,
+        "200": 599,
+        "210": 700,
+        "220": 790,
+        "230": 860,
+        "240": 1050,
+        "250": 1139
+      },
+      "height_cm": 200,
+      "interior_default": "espe_standard",
+      "interior_options": [
+        "espe_standard"
+      ],
+      "window_types": [
+        "two_fixed"
+      ],
+      "window_default": "two_fixed",
+      "lead_time_weeks": [
+        1,
+        4
+      ],
+      "product_url": "https://www.holzsauna.ch/Holzsauna-Kemi-45mm"
+    },
+    "mikkeli": {
+      "name_de": "Sauna Mikkeli 45mm Massivholz, Fronteinstieg und 2 grosse Fenster",
+      "name_en": "Sauna Mikkeli, solid spruce 45 mm, front entry with 2 large windows",
+      "sku": "T-Mikkeli45-x",
+      "type": "cabin",
+      "wall_wood": "fichte",
+      "wall_mm": 45,
+      "ceiling_mm": 45,
+      "door_mm": [
+        680,
+        1830
+      ],
+      "door_frame_mm": 90,
+      "entries": [
+        "front"
+      ],
+      "entry_prices": {
+        "front": 0
+      },
+      "threshold": true,
+      "handle_default": "wood_wood",
+      "base_price": 4950,
+      "width_cm": {
+        "171.5": 0,
+        "198.5": 565,
+        "239": 1369
+      },
+      "depth_cm": {
+        "171.5": 0,
+        "198.5": 219,
+        "239": 750
+      },
+      "height_cm": 204,
+      "interior_default": "espe_standard",
+      "interior_options": [
+        "espe_standard"
+      ],
+      "window_types": [
+        "two_fixed"
+      ],
+      "window_default": "two_fixed",
+      "lead_time_weeks": [
+        1,
+        4
+      ],
+      "product_url": "https://www.holzsauna.ch/Holzsauna-Mikkeli-45mm"
+    },
+    "erle": {
+      "name_de": "Holzsauna Erle Swissmade nach Mass",
+      "name_en": "Alder sauna, Swiss-made to measure",
+      "sku": "H-ER-1",
+      "type": "cabin",
+      "wall_wood": "erle",
+      "wall_mm": 45,
+      "ceiling_mm": 45,
+      "door_mm": [
+        620,
+        1925
+      ],
+      "door_frame_mm": 100,
+      "entries": [
+        "corner",
+        "front"
+      ],
+      "entry_prices": {
+        "corner": 0,
+        "front": 0
+      },
+      "window_price": 350,
+      "threshold": false,
+      "handle_default": "wood_steel",
+      "base_price": 7690,
+      "width_cm": {
+        "150": 0,
+        "160": 105,
+        "180": 242,
+        "190": 325,
+        "200": 635,
+        "210": 780,
+        "220": 910,
+        "230": 1060,
+        "240": 1170,
+        "250": 1305
+      },
+      "depth_cm": {
+        "150": 0,
+        "160": 105,
+        "180": 242,
+        "190": 325,
+        "200": 505,
+        "210": 599,
+        "220": 713,
+        "230": 789,
+        "240": 860,
+        "250": 939
+      },
+      "height_cm": 202,
+      "interior_default": "espe_exklusiv_gerade",
+      "interior_options": [
+        "espe_exklusiv_gerade",
+        "espe_exklusiv_gerundet",
+        "erle_exklusiv_gerade",
+        "erle_exklusiv_gerundet"
+      ],
+      "price_note": "Breiten-/Tiefenaufpreise wie Fichte-Konfigurator (Annahme)",
+      "price_note_en": "Width/depth surcharges assumed to match the spruce configurator",
+      "lead_time_weeks": [
+        6,
+        10
+      ],
+      "product_url": "https://www.holzsauna.ch/Holzsauna-Erle-mit-Eckeinstieg_1"
+    },
+    "bergzauber": {
+      "name_de": "Sauna Bergzauber, Elementsauna mit furnierten Paneelen und Glaselementen",
+      "name_en": "Sauna Bergzauber, panel sauna with veneered panels and framed glass",
+      "sku": "391096",
+      "type": "cabin",
+      "wall_wood": "ahorn",
+      "wall_mm": 75,
+      "ceiling_mm": 75,
+      "door_mm": [
+        625,
+        2100
+      ],
+      "door_frame_mm": 60,
+      "entries": [
+        "front",
+        "corner",
+        "glass_corner"
+      ],
+      "entry_prices": {
+        "front": 0,
+        "corner": 1250,
+        "glass_corner": 0
+      },
+      "threshold": false,
+      "handle_default": "beech_black",
+      "base_price": 17250,
+      "width_cm": {
+        "150": 0,
+        "160": 490,
+        "170": 1100,
+        "180": 1600,
+        "190": 1910,
+        "200": 2500,
+        "210": 2900,
+        "220": 4000,
+        "230": 4700,
+        "240": 5290,
+        "250": 6000
+      },
+      "depth_cm": {
+        "150": 0,
+        "160": 490,
+        "170": 1000,
+        "180": 1500,
+        "190": 2250,
+        "200": 2850,
+        "210": 3490,
+        "220": 4120,
+        "230": 4790,
+        "240": 5290,
+        "250": 6000
+      },
+      "height_cm": 210,
+      "interior_default": "espe_interio",
+      "interior_options": [
+        "espe_interio"
+      ],
+      "wood_options_outside": [
+        "ahorn",
+        "fichte_astarm",
+        "eiche_astig",
+        "zirbe",
+        "hemlock",
+        "eiche_alt"
+      ],
+      "wood_options_inside": [
+        "ahorn",
+        "fichte_astarm",
+        "eiche_astig",
+        "zirbe",
+        "hemlock",
+        "eiche_alt"
+      ],
+      "premium_options": [
+        "BENCH-2STEP",
+        "FLOATING-BENCH",
+        "LED-SPHERA",
+        "IR-VITALLIGHT-RED",
+        "IR-VITALLIGHT-BLACK",
+        "AIR-INLET-GLASS"
+      ],
+      "included_lighting": [
+        "LED-MORIS"
+      ],
+      "lead_time_weeks": [
+        8,
+        12
+      ],
+      "product_url": "https://www.holzsauna.ch/Holzsauna-Bergzauber",
+      "datasheet_note": "Datenblatt und Montageanleitung als PDF auf der Produktseite"
+    },
+    "saunafass": {
+      "name_de": "Saunafass, nordische Fichte 42mm Massivholzbohlen",
+      "name_en": "Barrel sauna, 42 mm solid Nordic spruce staves",
+      "sku": "EC-x",
+      "type": "barrel",
+      "wall_wood": "fichte",
+      "wall_mm": 42,
+      "ceiling_mm": 42,
+      "door_mm": [
+        620,
+        1800
+      ],
+      "door_frame_mm": 60,
+      "entries": [
+        "front"
+      ],
+      "entry_prices": {
+        "front": 0
+      },
+      "threshold": true,
+      "handle_default": "wood_wood",
+      "sizes": [
+        {
+          "w": 205,
+          "d": 220,
+          "price": 4420,
+          "label": "Saunafass 220"
+        },
+        {
+          "w": 205,
+          "d": 250,
+          "price": 5179,
+          "label": "Saunafass 250"
+        },
+        {
+          "w": 205,
+          "d": 280,
+          "price": 5290,
+          "label": "Saunafass 280"
+        },
+        {
+          "w": 205,
+          "d": 330,
+          "price": 7230,
+          "label": "Saunafass 330"
+        },
+        {
+          "w": 205,
+          "d": 400,
+          "price": 8225,
+          "label": "Saunafass 400 mit Terrasse",
+          "terrace_cm": 70
+        },
+        {
+          "w": 240,
+          "d": 400,
+          "price": 8989,
+          "label": "Saunafass Oval 400",
+          "oval": true
+        }
+      ],
+      "height_cm": 215,
+      "interior_default": "erle_standard",
+      "interior_options": [
+        "erle_standard"
+      ],
+      "window_types": [
+        "none",
+        "two_fixed",
+        "tilt_open",
+        "round_half",
+        "round_full"
+      ],
+      "door_glass_options": [
+        "bronze",
+        "wood_window"
+      ],
+      "wood_options_outside": [
+        "fichte",
+        "thermo_kiefer"
+      ],
+      "roof_colours": [
+        "black",
+        "red"
+      ],
+      "outdoor": true,
+      "wood_fired_ok": true,
+      "lead_time_weeks": [
+        4,
+        8
+      ],
+      "product_url": "https://www.holzsauna.ch/Saunafass-330"
+    },
+    "saunahaus": {
+      "name_de": "Saunahaus, Blockbohlen 70mm massive Fichte (Infraworld)",
+      "name_en": "Garden sauna house, 70 mm solid spruce logs (Infraworld)",
+      "sku": "3910xx",
+      "type": "house",
+      "wall_wood": "fichte",
+      "wall_mm": 70,
+      "ceiling_mm": 70,
+      "door_mm": [
+        700,
+        1900
+      ],
+      "door_frame_mm": 80,
+      "entries": [
+        "front"
+      ],
+      "entry_prices": {
+        "front": 0
+      },
+      "threshold": true,
+      "handle_default": "wood_steel",
+      "sizes": [
+        {
+          "w": 214,
+          "d": 214,
+          "price": 9690,
+          "label": "Terra 4 Satteldach 2140x2140",
+          "roof": "gable",
+          "h": 282
+        },
+        {
+          "w": 214,
+          "d": 214,
+          "price": 9690,
+          "label": "Terra 5 Pultdach 2140x2140",
+          "roof": "pent",
+          "h": 253
+        },
+        {
+          "w": 325,
+          "d": 214,
+          "price": 9390,
+          "label": "Terra 1 Satteldach 3250x2140",
+          "roof": "gable",
+          "h": 282,
+          "anteroom_cm": 110
+        },
+        {
+          "w": 325,
+          "d": 214,
+          "price": 11960,
+          "label": "Terra 2 Pultdach 3250x2140",
+          "roof": "pent",
+          "h": 282,
+          "anteroom_cm": 110
+        },
+        {
+          "w": 230,
+          "d": 230,
+          "price": 9100,
+          "label": "Country Satteldach 2300x2300",
+          "roof": "gable",
+          "h": 290
+        },
+        {
+          "w": 341,
+          "d": 230,
+          "price": 11100,
+          "label": "Lava Pultdach 3410x2300",
+          "roof": "pent",
+          "h": 270,
+          "anteroom_cm": 110
+        },
+        {
+          "w": 459,
+          "d": 214,
+          "price": 15160,
+          "label": "Bella 3 Pultdach 4590x2140 mit Vorraum",
+          "roof": "pent",
+          "h": 248,
+          "anteroom_cm": 230
+        },
+        {
+          "w": 489,
+          "d": 369,
+          "price": 25100,
+          "label": "Bella 1 Pultdach 4890x3690 mit Vorraum",
+          "roof": "pent",
+          "h": 282,
+          "anteroom_cm": 250
+        }
+      ],
+      "height_cm": 282,
+      "interior_default": "espe_norma",
+      "interior_options": [
+        "espe_norma",
+        "espe_exklusiv_gerade",
+        "thermoespe_exklusiv"
+      ],
+      "insulation_options": true,
+      "outdoor": true,
+      "wood_fired_ok": true,
+      "lead_time_weeks": [
+        6,
+        12
+      ],
+      "product_url": "https://www.holzsauna.ch/Saunahaus"
+    },
+    "infrarot": {
+      "name_de": "Infrarotkabine (Vario Natura / TrioSol)",
+      "name_en": "Infrared cabin (Vario Natura / TrioSol)",
+      "sku": "IR-x",
+      "type": "infrared",
+      "wall_wood": "fichte",
+      "wall_mm": 40,
+      "ceiling_mm": 40,
+      "door_mm": [
+        600,
+        1850
+      ],
+      "door_frame_mm": 40,
+      "entries": [
+        "glasfront"
+      ],
+      "entry_prices": {
+        "glasfront": 0
+      },
+      "threshold": false,
+      "handle_default": "wood_steel",
+      "sizes": [
+        {
+          "w": 103,
+          "d": 100,
+          "price": 4312,
+          "label": "Vario Natura 103",
+          "emitters": 3
+        },
+        {
+          "w": 120,
+          "d": 100,
+          "price": 4664,
+          "label": "Vario Natura 120",
+          "emitters": 4
+        },
+        {
+          "w": 148,
+          "d": 100,
+          "price": 5040,
+          "label": "Vario Natura 148",
+          "emitters": 4
+        },
+        {
+          "w": 148,
+          "d": 121,
+          "price": 5232,
+          "label": "Vario Natura 148 Ecke",
+          "emitters": 4
+        },
+        {
+          "w": 145,
+          "d": 112,
+          "price": 7064,
+          "label": "TrioSol Glas 145 Fichte",
+          "emitters": 5,
+          "triosol": true
+        },
+        {
+          "w": 125,
+          "d": 112,
+          "price": 7816,
+          "label": "TrioSol Glas 125 Tanne VG",
+          "emitters": 4,
+          "triosol": true
+        },
+        {
+          "w": 154,
+          "d": 128,
+          "price": 8920,
+          "label": "TrioSol Unica",
+          "emitters": 6,
+          "triosol": true
+        },
+        {
+          "w": 214,
+          "d": 128,
+          "price": 11808,
+          "label": "TrioSol Sera",
+          "emitters": 7,
+          "triosol": true
+        }
+      ],
+      "height_cm": 200,
+      "interior_default": "espe_standard",
+      "interior_options": [
+        "espe_standard"
+      ],
+      "no_heater": true,
+      "lead_time_weeks": [
+        2,
+        6
+      ],
+      "product_url": "https://www.holzsauna.ch/Infrarotkabine"
+    }
+  },
+  "woods": {
+    "fichte": {
+      "name_de": "Nordische Fichte",
+      "color": [
+        0.72,
+        0.555,
+        0.355
+      ],
+      "grain": 1.0,
+      "knots": true,
+      "name_en": "Nordic spruce"
+    },
+    "zirbe": {
+      "name_de": "Oesterreichische Zirbe",
+      "color": [
+        0.78,
+        0.6,
+        0.42
+      ],
+      "grain": 1.1,
+      "knots": true,
+      "name_en": "Austrian stone pine"
+    },
+    "espe": {
+      "name_de": "Nordische Espe",
+      "color": [
+        0.86,
+        0.78,
+        0.64
+      ],
+      "grain": 0.35,
+      "knots": false,
+      "name_en": "Nordic aspen"
+    },
+    "erle": {
+      "name_de": "Erle",
+      "color": [
+        0.74,
+        0.54,
+        0.4
+      ],
+      "grain": 0.5,
+      "knots": false,
+      "name_en": "Alder"
+    },
+    "laerche": {
+      "name_de": "Laerche",
+      "color": [
+        0.76,
+        0.58,
+        0.38
+      ],
+      "grain": 0.9,
+      "knots": false,
+      "name_en": "Larch"
+    },
+    "pappel": {
+      "name_de": "Pappel",
+      "color": [
+        0.84,
+        0.76,
+        0.62
+      ],
+      "grain": 0.3,
+      "knots": false,
+      "name_en": "Poplar"
+    },
+    "altholz": {
+      "name_de": "Altholz Fichte (verwittert)",
+      "color": [
+        0.55,
+        0.47,
+        0.38
+      ],
+      "grain": 1.4,
+      "knots": true,
+      "name_en": "Reclaimed spruce (weathered)"
+    },
+    "ahorn": {
+      "name_de": "Ahorn (furnierte Paneele)",
+      "name_en": "Maple (veneered panels)",
+      "color": [
+        0.88,
+        0.8,
+        0.66
+      ],
+      "grain": 0.4,
+      "knots": false
+    },
+    "fichte_astarm": {
+      "name_de": "Fichte astarm",
+      "name_en": "Spruce, low-knot",
+      "color": [
+        0.78,
+        0.63,
+        0.44
+      ],
+      "grain": 0.8,
+      "knots": false
+    },
+    "eiche_astig": {
+      "name_de": "Eiche astig",
+      "name_en": "Knotty oak",
+      "color": [
+        0.62,
+        0.46,
+        0.3
+      ],
+      "grain": 1.2,
+      "knots": true
+    },
+    "hemlock": {
+      "name_de": "Hemlock",
+      "name_en": "Hemlock",
+      "color": [
+        0.8,
+        0.68,
+        0.52
+      ],
+      "grain": 0.7,
+      "knots": false,
+      "on_request": true
+    },
+    "eiche_alt": {
+      "name_de": "Eiche Alt",
+      "name_en": "Aged oak",
+      "color": [
+        0.45,
+        0.35,
+        0.25
+      ],
+      "grain": 1.3,
+      "knots": true,
+      "on_request": true
+    },
+    "thermo_kiefer": {
+      "name_de": "Nordische Kiefer Thermoholz",
+      "name_en": "Thermally modified Nordic pine",
+      "color": [
+        0.48,
+        0.32,
+        0.2
+      ],
+      "grain": 1.1,
+      "knots": true
+    },
+    "abachi": {
+      "name_de": "Abachi",
+      "name_en": "Abachi",
+      "color": [
+        0.9,
+        0.84,
+        0.7
+      ],
+      "grain": 0.3,
+      "knots": false
+    },
+    "thermoespe": {
+      "name_de": "Thermo-Espe",
+      "name_en": "Thermally modified aspen",
+      "color": [
+        0.55,
+        0.4,
+        0.28
+      ],
+      "grain": 0.5,
+      "knots": false
+    }
+  },
+  "interiors": {
+    "espe_standard": {
+      "name_de": "Espe Standard 28mm gerade",
+      "wood": "espe",
+      "slat_mm": 28,
+      "rounded": false,
+      "price": 0,
+      "name_en": "Aspen Standard 28 mm, straight edge"
+    },
+    "espe_gerundet": {
+      "name_de": "Espe gerundet",
+      "wood": "espe",
+      "slat_mm": 28,
+      "rounded": true,
+      "price": 150,
+      "name_en": "Aspen, rounded edge"
+    },
+    "erle_raute": {
+      "name_de": "Erle mit Raute",
+      "wood": "erle",
+      "slat_mm": 28,
+      "rounded": false,
+      "price": 350,
+      "note": "Rauten-Profil nicht modelliert",
+      "name_en": "Alder with diamond profile",
+      "note_en": "Diamond profile is not modelled"
+    },
+    "erle_gerundet": {
+      "name_de": "Erle gerundet",
+      "wood": "erle",
+      "slat_mm": 28,
+      "rounded": true,
+      "price": 400,
+      "name_en": "Alder, rounded edge"
+    },
+    "espe_exklusiv_gerade": {
+      "name_de": "Espe Exklusiv 28mm gerade",
+      "wood": "espe",
+      "slat_mm": 28,
+      "rounded": false,
+      "price": 0,
+      "name_en": "Aspen Exclusive 28 mm, straight edge",
+      "house_price": 1220
+    },
+    "espe_exklusiv_gerundet": {
+      "name_de": "Espe Exklusiv 28mm gerundet",
+      "wood": "espe",
+      "slat_mm": 28,
+      "rounded": true,
+      "price": 400,
+      "name_en": "Aspen Exclusive 28 mm, rounded edge"
+    },
+    "erle_exklusiv_gerade": {
+      "name_de": "Erle Exklusiv 28mm gerade",
+      "wood": "erle",
+      "slat_mm": 28,
+      "rounded": false,
+      "price": 250,
+      "name_en": "Alder Exclusive 28 mm, straight edge"
+    },
+    "erle_exklusiv_gerundet": {
+      "name_de": "Erle Exklusiv 28mm gerundet",
+      "wood": "erle",
+      "slat_mm": 28,
+      "rounded": true,
+      "price": 650,
+      "name_en": "Alder Exclusive 28 mm, rounded edge"
+    },
+    "abachi_standard": {
+      "name_de": "Abachi Standard",
+      "name_en": "Abachi Standard",
+      "wood": "abachi",
+      "slat_mm": 28,
+      "rounded": false,
+      "price": 0
+    },
+    "erle_standard": {
+      "name_de": "Erle Standard",
+      "name_en": "Alder Standard",
+      "wood": "erle",
+      "slat_mm": 28,
+      "rounded": false,
+      "price": 0
+    },
+    "espe_interio": {
+      "name_de": "Espe Interio (Liegen 58 cm)",
+      "name_en": "Aspen Interio (58 cm benches)",
+      "wood": "espe",
+      "slat_mm": 28,
+      "rounded": true,
+      "price": 0
+    },
+    "espe_norma": {
+      "name_de": "Norma Espe",
+      "name_en": "Norma aspen",
+      "wood": "espe",
+      "slat_mm": 28,
+      "rounded": false,
+      "price": 0
+    },
+    "thermoespe_exklusiv": {
+      "name_de": "Exklusiv Thermoespe",
+      "name_en": "Exclusive thermo-aspen",
+      "wood": "thermoespe",
+      "slat_mm": 28,
+      "rounded": true,
+      "price": 1849
+    }
+  },
+  "heaters": {
+    "MN-36NB-Z": {
+      "name_de": "Saunaofen Sawo Mini 3.6kW, integrierte Steuerung, inkl. 20kg Steine",
+      "kw": 3.6,
+      "price": 790,
+      "dims_mm": [
+        315,
+        210,
+        470
+      ],
+      "mount": "wall",
+      "control": "integrated",
+      "m3": [
+        1.3,
+        6
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "steel",
+      "approx": true,
+      "name_en": "Sawo Mini 3.6 kW, built-in controls, incl. 20 kg stones"
+    },
+    "MN-36NS-Z": {
+      "name_de": "Saunaofen Sawo Mini 3.6kW, externe Steuerung erforderlich, inkl. 20kg Steine",
+      "kw": 3.6,
+      "price": 570,
+      "dims_mm": [
+        315,
+        210,
+        470
+      ],
+      "mount": "wall",
+      "control": "external",
+      "m3": [
+        1.3,
+        6
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "steel",
+      "approx": true,
+      "name_en": "Sawo Mini 3.6 kW, needs external control unit, incl. 20 kg stones"
+    },
+    "SENT-MINI-36": {
+      "name_de": "Sentiotec Saunaofen Mini 3.6kW, inkl. 20kg Saunasteine",
+      "kw": 3.6,
+      "price": 329,
+      "dims_mm": [
+        300,
+        220,
+        480
+      ],
+      "mount": "wall",
+      "control": "external",
+      "m3": [
+        1.3,
+        6
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "steel",
+      "approx": true,
+      "name_en": "Sentiotec Mini 3.6 kW, incl. 20 kg stones"
+    },
+    "SENT-MINI-C36": {
+      "name_de": "Sentiotec Saunaofen Mini Combi 3.6kW (Verdampfer), inkl. 20kg Saunasteine",
+      "kw": 3.6,
+      "price": 719,
+      "dims_mm": [
+        300,
+        220,
+        480
+      ],
+      "mount": "wall",
+      "control": "external",
+      "m3": [
+        1.3,
+        6
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "steel",
+      "approx": true,
+      "combi": true,
+      "name_en": "Sentiotec Mini Combi 3.6 kW with steamer, incl. 20 kg stones"
+    },
+    "HARVIA-DELTA-36": {
+      "name_de": "Harvia Saunaofen Delta 3.6kW, inkl. 20kg Saunasteine",
+      "kw": 3.6,
+      "price": 549,
+      "dims_mm": [
+        340,
+        200,
+        635
+      ],
+      "mount": "wall",
+      "control": "integrated",
+      "m3": [
+        1.5,
+        4.5
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "steel",
+      "approx": true,
+      "name_en": "Harvia Delta 3.6 kW, incl. 20 kg stones"
+    },
+    "HARVIA-WALL-60": {
+      "name_de": "Harvia Saunaofen The Wall Black Steel 6kW, inkl. 20kg Saunasteine",
+      "kw": 6,
+      "price": 545,
+      "dims_mm": [
+        400,
+        270,
+        620
+      ],
+      "mount": "wall",
+      "control": "integrated",
+      "m3": [
+        5,
+        8
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "black",
+      "approx": true,
+      "name_en": "Harvia The Wall Black Steel 6 kW, incl. 20 kg stones"
+    },
+    "SENT-290E": {
+      "name_de": "Saunaofen Sentiotec by Harvia 290 E 9kW, inkl. 20kg Saunasteine",
+      "kw": 9,
+      "price": 590,
+      "dims_mm": [
+        410,
+        280,
+        600
+      ],
+      "mount": "wall",
+      "control": "external",
+      "m3": [
+        8,
+        14
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "steel",
+      "approx": true,
+      "name_en": "Sentiotec by Harvia 290 E 9 kW, incl. 20 kg stones"
+    },
+    "SAWO-SCANDIA-80": {
+      "name_de": "Sawo Saunaofen Scandia Next 8kW, inkl. 20kg Saunasteine",
+      "kw": 8,
+      "price": 519,
+      "dims_mm": [
+        430,
+        270,
+        600
+      ],
+      "mount": "wall",
+      "control": "external",
+      "m3": [
+        7,
+        13
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "steel",
+      "approx": true,
+      "name_en": "Sawo Scandia Next 8 kW, incl. 20 kg stones"
+    },
+    "HARVIA-SPIRIT-90": {
+      "name_de": "Harvia Saunaofen Spirit E 9kW, inkl. 60kg Saunasteine",
+      "kw": 9,
+      "price": 1160,
+      "dims_mm": [
+        410,
+        410,
+        830
+      ],
+      "mount": "floor",
+      "control": "external",
+      "m3": [
+        8,
+        14
+      ],
+      "guard": false,
+      "shape": "box",
+      "color": "black",
+      "approx": true,
+      "name_en": "Harvia Spirit E 9 kW, incl. 60 kg stones"
+    },
+    "HARVIA-CILINDRO-90": {
+      "name_de": "Harvia Saunaofen Cilindro E 9kW, Schutzmantel halb offen, inkl. 90kg Saunasteine",
+      "kw": 9,
+      "price": 1080,
+      "dims_mm": [
+        320,
+        320,
+        930
+      ],
+      "mount": "floor",
+      "control": "external",
+      "m3": [
+        8,
+        14
+      ],
+      "guard": false,
+      "shape": "cylinder",
+      "color": "black",
+      "approx": true,
+      "name_en": "Harvia Cilindro E 9 kW, half-open mantle, incl. 90 kg stones"
+    },
+    "HARVIA-CILINDRO-90I": {
+      "name_de": "Harvia Saunaofen Cilindro 9kW, interne Steuerung, inkl. 80kg Saunasteine",
+      "kw": 9,
+      "price": 1260,
+      "dims_mm": [
+        320,
+        320,
+        930
+      ],
+      "mount": "floor",
+      "control": "integrated",
+      "m3": [
+        8,
+        14
+      ],
+      "guard": false,
+      "shape": "cylinder",
+      "color": "black",
+      "approx": true,
+      "name_en": "Harvia Cilindro 9 kW, built-in controls, incl. 80 kg stones",
+      "bundle_note": "Barrel option incl. internal control"
+    },
+    "HARVIA-VIRTA-90": {
+      "name_de": "Harvia Saunaofen Virta schwarz 9kW, inkl. 50kg Saunasteine",
+      "kw": 9,
+      "price": 1450,
+      "dims_mm": [
+        415,
+        325,
+        810
+      ],
+      "mount": "wall",
+      "control": "external",
+      "m3": [
+        8,
+        14
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "black",
+      "approx": true,
+      "name_en": "Harvia Virta black 9 kW, incl. 50 kg stones"
+    },
+    "HARVIA-VIRTA-C90": {
+      "name_de": "Harvia Saunaofen Virta Combi schwarz 9kW, inkl. 50kg Saunasteine",
+      "kw": 9,
+      "price": 2140,
+      "dims_mm": [
+        415,
+        325,
+        810
+      ],
+      "mount": "wall",
+      "control": "external",
+      "m3": [
+        8,
+        14
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "black",
+      "approx": true,
+      "combi": true,
+      "name_en": "Harvia Virta Combi black 9 kW with steamer, incl. 50 kg stones"
+    },
+    "HARVIA-VIRTA-110": {
+      "name_de": "Harvia Saunaofen Virta schwarz 11kW, inkl. 70kg Saunasteine",
+      "kw": 11,
+      "price": 2240,
+      "dims_mm": [
+        415,
+        325,
+        810
+      ],
+      "mount": "wall",
+      "control": "external",
+      "m3": [
+        10,
+        18
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "black",
+      "approx": true,
+      "name_en": "Harvia Virta black 11 kW, incl. 70 kg stones"
+    },
+    "HARVIA-SENATOR-90": {
+      "name_de": "Harvia Saunaofen Senator 9kW, inkl. 35kg Saunasteine",
+      "kw": 9,
+      "price": 1119,
+      "dims_mm": [
+        500,
+        335,
+        800
+      ],
+      "mount": "floor",
+      "control": "external",
+      "m3": [
+        8,
+        14
+      ],
+      "guard": false,
+      "shape": "box",
+      "color": "steel",
+      "approx": true,
+      "name_en": "Harvia Senator 9 kW, incl. 35 kg stones"
+    },
+    "EOS-MYTHOS-S35": {
+      "name_de": "Saunaofen EOS Mythos S35 black 9kW, inkl. Cubius Steine schwarz",
+      "kw": 9,
+      "price": 1690,
+      "dims_mm": [
+        500,
+        510,
+        860
+      ],
+      "mount": "floor",
+      "control": "external",
+      "m3": [
+        8,
+        14
+      ],
+      "guard": false,
+      "shape": "box",
+      "color": "black",
+      "approx": true,
+      "price_note": "Set-Preis auf holzsauna.ch nur mit Steuerung EmoStyle Hi",
+      "name_en": "EOS Mythos S35 black 9 kW, incl. black Cubius stones",
+      "price_note_en": "Listed on holzsauna.ch only as a set with the EmoStyle Hi control"
+    },
+    "HARVIA-LINEAR-22": {
+      "name_de": "Holzofen Harvia Linear 22, inkl. 40kg Saunasteine",
+      "kw": 0,
+      "price": 1480,
+      "dims_mm": [
+        430,
+        510,
+        760
+      ],
+      "mount": "floor",
+      "control": "none",
+      "m3": [
+        8,
+        22
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "black",
+      "approx": true,
+      "wood_fired": true,
+      "name_en": "Harvia Linear 22 wood-fired stove, incl. 40 kg stones",
+      "outdoor_only": true
+    },
+    "HARVIA-TOPCLASS-C80": {
+      "name_de": "Harvia Saunaofen Topclass Combi 8kW (finnisch + Dampf), inkl. 20kg Steine",
+      "name_en": "Harvia Topclass Combi 8 kW (Finnish + steam), incl. 20 kg stones",
+      "kw": 8,
+      "price": 1150,
+      "dims_mm": [
+        410,
+        350,
+        590
+      ],
+      "mount": "wall",
+      "control": "external",
+      "m3": [
+        7,
+        12
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "steel",
+      "approx": true,
+      "combi": true
+    },
+    "HARVIA-COMBINATOR-80": {
+      "name_de": "Harvia Saunaofen Combinator 8kW schwarz (finnisch + Dampf), inkl. 20kg Steine",
+      "name_en": "Harvia Combinator 8 kW black (Finnish + steam), incl. 20 kg stones",
+      "kw": 8,
+      "price": 1190,
+      "dims_mm": [
+        400,
+        340,
+        600
+      ],
+      "mount": "wall",
+      "control": "external",
+      "m3": [
+        7,
+        12
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "black",
+      "approx": true,
+      "combi": true
+    },
+    "HARVIA-LINEAR-18": {
+      "name_de": "Harvia Linear 18 Compact holzbefeuert, inkl. 40kg Steine",
+      "name_en": "Harvia Linear 18 Compact wood-fired, incl. 40 kg stones",
+      "kw": 14.3,
+      "price": 1279,
+      "dims_mm": [
+        430,
+        500,
+        710
+      ],
+      "mount": "floor",
+      "control": "none",
+      "m3": [
+        5,
+        18
+      ],
+      "guard": true,
+      "shape": "box",
+      "color": "black",
+      "approx": true,
+      "wood_fired": true,
+      "outdoor_only": true
+    },
+    "HARVIA-LINEAR-16": {
+      "name_de": "Harvia Linear 16 holzbefeuert, inkl. 36kg Steine und Schutzmantel",
+      "name_en": "Harvia Linear 16 wood-fired, incl. 36 kg stones and guard mantle",
+      "kw": 17.9,
+      "price": 1348,
+      "dims_mm": [
+        430,
+        500,
+        710
+      ],
+      "mount": "floor",
+      "control": "none",
+      "m3": [
+        6,
+        16
+      ],
+      "guard": false,
+      "shape": "box",
+      "color": "black",
+      "approx": true,
+      "wood_fired": true,
+      "outdoor_only": true
+    },
+    "HARVIA-M3": {
+      "name_de": "Harvia M3 holzbefeuert, inkl. 30kg Steine und Schutzmantel",
+      "name_en": "Harvia M3 wood-fired, incl. 30 kg stones and guard mantle",
+      "kw": 16.5,
+      "price": 1253,
+      "dims_mm": [
+        390,
+        500,
+        720
+      ],
+      "mount": "floor",
+      "control": "none",
+      "m3": [
+        6,
+        13
+      ],
+      "guard": false,
+      "shape": "box",
+      "color": "black",
+      "approx": true,
+      "wood_fired": true,
+      "outdoor_only": true
+    }
+  },
+  "controls": {
+    "none": {
+      "name_de": "Ohne Saunasteuerung",
+      "price": 0,
+      "dims_mm": [
+        0,
+        0,
+        0
+      ],
+      "name_en": "No separate control unit"
+    },
+    "UKU-LOCAL-CB": {
+      "name_de": "Saunasteuerung HUUM UKU 4.2 - Local, Classic Black",
+      "sku": "4744103013326",
+      "price": 599,
+      "dims_mm": [
+        88,
+        30,
+        138
+      ],
+      "series": "classic",
+      "color": "black",
+      "wifi": false,
+      "name_en": "HUUM UKU 4.2 control, Local, Classic Black"
+    },
+    "UKU-WIFI-CB": {
+      "name_de": "Saunasteuerung HUUM UKU 4.2 - Wifi, Classic Black",
+      "sku": "4744103013319",
+      "price": 790,
+      "dims_mm": [
+        88,
+        30,
+        138
+      ],
+      "series": "classic",
+      "color": "black",
+      "wifi": true,
+      "name_en": "HUUM UKU 4.2 control, WiFi, Classic Black"
+    },
+    "UKU-WIFI-CW": {
+      "name_de": "Saunasteuerung HUUM UKU 4.2 - Wifi, Classic White",
+      "price": 790,
+      "dims_mm": [
+        88,
+        30,
+        138
+      ],
+      "series": "classic",
+      "color": "white",
+      "wifi": true,
+      "approx": true,
+      "name_en": "HUUM UKU 4.2 control, WiFi, Classic White"
+    },
+    "UKU-WIFI-CWOOD": {
+      "name_de": "Saunasteuerung HUUM UKU 4.2 - Wifi, Classic Wood",
+      "price": 790,
+      "dims_mm": [
+        88,
+        30,
+        138
+      ],
+      "series": "classic",
+      "color": "wood",
+      "wifi": true,
+      "approx": true,
+      "name_en": "HUUM UKU 4.2 control, WiFi, Classic Wood"
+    },
+    "UKU-WIFI-GB": {
+      "name_de": "Saunasteuerung HUUM UKU 4.2 - Wifi, Glass Black",
+      "price": 975,
+      "dims_mm": [
+        95,
+        20,
+        145
+      ],
+      "series": "glass",
+      "color": "black",
+      "wifi": true,
+      "name_en": "HUUM UKU 4.2 control, WiFi, Glass Black"
+    },
+    "UKU-WIFI-GM": {
+      "name_de": "Saunasteuerung HUUM UKU 4.2 - Wifi, Glass Mirror",
+      "price": 975,
+      "dims_mm": [
+        95,
+        20,
+        145
+      ],
+      "series": "glass",
+      "color": "mirror",
+      "wifi": true,
+      "approx": true,
+      "name_en": "HUUM UKU 4.2 control, WiFi, Glass Mirror"
+    },
+    "UKU-WIFI-GG": {
+      "name_de": "Saunasteuerung HUUM UKU 4.2 - Wifi, Glass Gold",
+      "price": 975,
+      "dims_mm": [
+        95,
+        20,
+        145
+      ],
+      "series": "glass",
+      "color": "gold",
+      "wifi": true,
+      "approx": true,
+      "name_en": "HUUM UKU 4.2 control, WiFi, Glass Gold"
+    },
+    "HARVIA-CF9": {
+      "name_de": "Harvia CF9 Saunasteuerung",
+      "name_en": "Harvia CF9 control unit",
+      "price": 238,
+      "dims_mm": [
+        95,
+        25,
+        150
+      ],
+      "series": "classic",
+      "color": "black",
+      "wifi": false,
+      "bundle_only": true,
+      "approx": true
+    },
+    "HARVIA-XENIO": {
+      "name_de": "Harvia Xenio Saunasteuerung",
+      "name_en": "Harvia Xenio control unit",
+      "price": 790,
+      "dims_mm": [
+        95,
+        25,
+        160
+      ],
+      "series": "classic",
+      "color": "black",
+      "wifi": false,
+      "bundle_only": true,
+      "approx": true
+    },
+    "HARVIA-XENIO-COMBI": {
+      "name_de": "Harvia Xenio Combi Saunasteuerung",
+      "name_en": "Harvia Xenio Combi control unit",
+      "price": 830,
+      "dims_mm": [
+        95,
+        25,
+        160
+      ],
+      "series": "classic",
+      "color": "black",
+      "wifi": false,
+      "bundle_only": true,
+      "approx": true
+    },
+    "SENT-PRO-D2": {
+      "name_de": "Sentiotec Pro D2 Steuerung",
+      "name_en": "Sentiotec Pro D2 control unit",
+      "price": 892,
+      "dims_mm": [
+        95,
+        25,
+        160
+      ],
+      "series": "classic",
+      "color": "black",
+      "wifi": false,
+      "bundle_only": true,
+      "approx": true
+    }
+  },
+  "lighting": {
+    "ZS2": {
+      "name_de": "Saunaleuchte inkl. Silikonkabel (Holzblendenschirm Espe, E27 max 40W)",
+      "price": 89,
+      "dims_mm": [
+        235,
+        110,
+        315
+      ],
+      "kind": "wall_lamp",
+      "name_en": "Wall light with aspen slat shade (E27, max 40 W), incl. silicone cable"
+    },
+    "ZS3": {
+      "name_de": "Silikonkabel-Set",
+      "price": 60,
+      "dims_mm": [
+        0,
+        0,
+        0
+      ],
+      "kind": "cable",
+      "name_en": "Silicone cable set"
+    },
+    "LED-2.5": {
+      "name_de": "LED-Band warmweiss 2.5m Set mit Transformator (WX440)",
+      "price": 225,
+      "length_m": 2.5,
+      "kind": "backrest_strip",
+      "dims_mm": [
+        2500,
+        10,
+        3
+      ],
+      "name_en": "Warm-white LED strip, 2.5 m set with transformer"
+    },
+    "LED-5": {
+      "name_de": "LED-Band warmweiss 5m Set mit Transformator",
+      "price": 299,
+      "length_m": 5.0,
+      "kind": "backrest_strip",
+      "dims_mm": [
+        5000,
+        10,
+        3
+      ],
+      "name_en": "Warm-white LED strip, 5 m set with transformer"
+    },
+    "LUMIA-1": {
+      "name_de": "LED-Beleuchtung Lumia - Set 1 (2 x 67cm RGB+WW)",
+      "sku": "W4460",
+      "price": 373,
+      "kind": "under_bench",
+      "strips": 2,
+      "dims_mm": [
+        670,
+        12,
+        5
+      ],
+      "name_en": "Lumia RGB + warm-white LED set 1 (2 x 67 cm)"
+    },
+    "LUMIA-2": {
+      "name_de": "LED-Beleuchtung Lumia - Set 2 (4 x 67cm RGB+WW)",
+      "sku": "W4461",
+      "price": 560,
+      "kind": "under_bench",
+      "strips": 4,
+      "dims_mm": [
+        670,
+        12,
+        5
+      ],
+      "name_en": "Lumia RGB + warm-white LED set 2 (4 x 67 cm)"
+    },
+    "LED-SPHERA": {
+      "name_de": "LED-Beleuchtung Sphera 2 in der Rueckenlehne",
+      "name_en": "Sphera 2 LED lighting in the backrest",
+      "price": 990,
+      "kind": "backrest_inset",
+      "dims_mm": [
+        1200,
+        20,
+        20
+      ]
+    },
+    "LED-MORIS": {
+      "name_de": "LED-Saunaleuchte Moris",
+      "name_en": "Moris LED sauna light",
+      "price": 0,
+      "kind": "wall_lamp",
+      "dims_mm": [
+        200,
+        80,
+        260
+      ],
+      "included_with": [
+        "bergzauber"
+      ]
+    }
+  },
+  "accessories": {
+    "S2340": {
+      "name_de": "Saunaset Lima: Sanduhr, Klimamessstation, 3L Aufgusseimer Fichte, Schoepfkelle",
+      "price": 129,
+      "kind": "set",
+      "bucket": "fichte",
+      "bucket_l": 3,
+      "dims_mm": [
+        200,
+        200,
+        180
+      ],
+      "name_en": "Lima sauna set: hourglass, thermo-hygrometer, 3 l spruce bucket, ladle"
+    },
+    "S2343": {
+      "name_de": "Saunaset Nova 2-teilig: 5L Aufgusseimer schwarz, Schoepfkelle",
+      "price": 108,
+      "kind": "set",
+      "bucket": "black",
+      "bucket_l": 5,
+      "dims_mm": [
+        240,
+        240,
+        200
+      ],
+      "no_wall": true,
+      "name_en": "Nova 2-piece set: 5 l black bucket, ladle"
+    },
+    "S2342": {
+      "name_de": "Saunaset Nova 4-teilig: Sanduhr, Klimamessstation, 5L Aufgusseimer schwarz, Schoepfkelle",
+      "price": 229,
+      "kind": "set",
+      "bucket": "black",
+      "bucket_l": 5,
+      "dims_mm": [
+        240,
+        240,
+        200
+      ],
+      "name_en": "Nova 4-piece set: hourglass, thermo-hygrometer, 5 l black bucket, ladle"
+    },
+    "ZUB-STD": {
+      "name_de": "Standard Zubehoerset: Sanduhr, Thermo-/Hygrometer, 5L Kuebel, 40cm Holz-Schoepfkelle",
+      "price": 105,
+      "kind": "set",
+      "bucket": "fichte",
+      "bucket_l": 5,
+      "dims_mm": [
+        240,
+        240,
+        200
+      ],
+      "name_en": "Standard accessory set: hourglass, thermo-hygrometer, 5 l bucket, 40 cm wooden ladle"
+    },
+    "ZUB-HARVIA": {
+      "name_de": "Zubehoerset Harvia: Sanduhr, Thermo-/Hygrometer, 4L Kuebel, 36cm Holz-Schoepfkelle",
+      "price": 315,
+      "kind": "set",
+      "bucket": "fichte",
+      "bucket_l": 4,
+      "dims_mm": [
+        220,
+        220,
+        190
+      ],
+      "name_en": "Harvia accessory set: hourglass, thermo-hygrometer, 4 l bucket, 36 cm wooden ladle"
+    },
+    "B6622-1": {
+      "name_de": "Sole-Aqua Premium Salzverdampfer (rot), fuer jeden Saunaofen",
+      "price": 410,
+      "kind": "evaporator",
+      "dims_mm": [
+        200,
+        200,
+        210
+      ],
+      "name_en": "Sole-Aqua Premium salt evaporator (red), fits any heater"
+    },
+    "SET-A-L-H": {
+      "name_de": "Set: Audio System mit Bluetooth, 2 Lautsprecher mit Holzrahmen",
+      "price": 436,
+      "kind": "speakers",
+      "dims_mm": [
+        200,
+        200,
+        70
+      ],
+      "name_en": "Bluetooth audio system with 2 wood-framed speakers"
+    },
+    "W4408": {
+      "name_de": "Verschiebbare ergonomische Rueckenlehne (Pappel)",
+      "price": 59,
+      "kind": "ergo_backrest",
+      "dims_mm": [
+        520,
+        400,
+        70
+      ],
+      "name_en": "Sliding ergonomic backrest (poplar)"
+    },
+    "A5039": {
+      "name_de": "Fusswaermematte 24V 50W",
+      "price": 0,
+      "kind": "foot_mat",
+      "dims_mm": [
+        410,
+        610,
+        8
+      ],
+      "price_note": "Preis auf Anfrage",
+      "name_en": "Foot-warming mat, 24 V 50 W",
+      "price_note_en": "Price on request"
+    },
+    "FLOOR-PLATE": {
+      "name_de": "Schutzplatte fuer den Boden, Schwarz",
+      "price": 279,
+      "kind": "floor_plate",
+      "dims_mm": [
+        600,
+        500,
+        6
+      ],
+      "name_en": "Black floor protection plate"
+    },
+    "DUFT-ALPIN": {
+      "name_de": "Duftset Alpin (3x20ml)",
+      "price": 42,
+      "kind": "none",
+      "dims_mm": [
+        0,
+        0,
+        0
+      ],
+      "name_en": "Alpine essential oil set (3 x 20 ml)"
+    },
+    "TAUCHBECKEN": {
+      "name_de": "Tauchbecken Laerche, innen und aussen farblos beschichtet (oval)",
+      "price": 2099,
+      "kind": "plunge_tub",
+      "dims_mm": [
+        1200,
+        800,
+        1000
+      ],
+      "approx": true,
+      "name_en": "Larch plunge tub, clear-coated inside and out (oval)"
+    },
+    "TAUCH-DECKEL": {
+      "name_de": "Abschlussdeckel fuer Tauchbecken aus Laerchenholz",
+      "price": 595,
+      "kind": "plunge_lid",
+      "dims_mm": [
+        1200,
+        800,
+        30
+      ],
+      "requires": "TAUCHBECKEN",
+      "name_en": "Larch cover for the plunge tub"
+    },
+    "FOOT-MAT": {
+      "name_de": "Fussmatte 1x1 m",
+      "name_en": "Foot mat 1 x 1 m",
+      "price": 150,
+      "kind": "foot_mat_floor",
+      "dims_mm": [
+        1000,
+        1000,
+        15
+      ]
+    },
+    "FUSSAUFTRITT": {
+      "name_de": "Fussauftritt (Einstiegsstufe)",
+      "name_en": "Entry step",
+      "price": 0,
+      "kind": "step",
+      "dims_mm": [
+        600,
+        300,
+        180
+      ],
+      "price_note": "Preis auf Anfrage",
+      "price_note_en": "Price on request"
+    },
+    "BENCH-2STEP": {
+      "name_de": "Saunabock 2-stufig (ab Saunatiefe 240 cm)",
+      "name_en": "2-step bench frame (from 240 cm depth)",
+      "price": 860,
+      "kind": "bench_frame",
+      "dims_mm": [
+        0,
+        0,
+        0
+      ],
+      "min_depth_cm": 240
+    },
+    "FLOATING-BENCH": {
+      "name_de": "Schwebeliege, Bank ohne Stuetzfuss (Metallkonstruktion in der Wand)",
+      "name_en": "Floating bench without legs (steel frame in the wall)",
+      "price": 1820,
+      "kind": "floating_bench",
+      "dims_mm": [
+        0,
+        0,
+        0
+      ]
+    },
+    "AIR-INLET-GLASS": {
+      "name_de": "Zuluft zum Ofen: 5 Bohrungen à 60 mm in der Glasecke",
+      "name_en": "Heater air inlet: 5 x 60 mm holes in the glass corner",
+      "price": 130,
+      "kind": "air_inlet",
+      "dims_mm": [
+        300,
+        8,
+        60
+      ]
+    },
+    "DUFT-ACTIVE": {
+      "name_de": "Duftset Active (Zitrone, Latschenkiefer, Eukalyptus, 3x20 ml)",
+      "name_en": "Active essential oil set (lemon, mountain pine, eucalyptus, 3 x 20 ml)",
+      "price": 42,
+      "kind": "none",
+      "dims_mm": [
+        0,
+        0,
+        0
+      ]
+    },
+    "DUFT-RELAX": {
+      "name_de": "Duftset Relax (Lavendel, Lorbeer, Orange, 3x20 ml)",
+      "name_en": "Relax essential oil set (lavender, bay, orange, 3 x 20 ml)",
+      "price": 42,
+      "kind": "none",
+      "dims_mm": [
+        0,
+        0,
+        0
+      ]
+    },
+    "TERRACE-70": {
+      "name_de": "Terrasse 70 cm am Saunafass (bei 400er inklusive)",
+      "name_en": "70 cm terrace on the barrel sauna (included on the 400)",
+      "price": 0,
+      "kind": "terrace",
+      "dims_mm": [
+        2050,
+        700,
+        100
+      ],
+      "barrel_only": true
+    }
+  },
+  "services": {
+    "M": {
+      "name_de": "Montagekosten Sauna ohne Elektroinstallation",
+      "price": 1250,
+      "name_en": "Assembly (without electrical installation), fixed price",
+      "note_en": "Fixed price from the Espoo quotation; larger cabins are quoted on request"
+    },
+    "M-LED": {
+      "name_de": "Aufpreis Montagekosten LED-Beleuchtung",
+      "price": 150,
+      "name_en": "Assembly surcharge for LED lighting"
+    },
+    "L1": {
+      "name_de": "Lieferkosten bis 150 km",
+      "price": 100,
+      "name_en": "Delivery up to 150 km"
+    },
+    "L2": {
+      "name_de": "Lieferkosten ab 150 km",
+      "price": 200,
+      "name_en": "Delivery beyond 150 km"
+    },
+    "M-REQUEST": {
+      "name_de": "Sauna-Montage durch Holzsauna auf Anfrage",
+      "name_en": "Assembly by Holzsauna, quoted on request",
+      "price": 0
+    }
+  },
+  "included": {
+    "backrests": "Rueckenlehnen",
+    "apron": "Zwischenbankverkleidung",
+    "floor_grate": "Bodenrost",
+    "headrests": "Zwei Kopfstuetzen",
+    "guard": "Ofenschutzgitter, sofern erforderlich",
+    "ventilation": "Zu-/Abluft"
+  },
+  "entries": {
+    "front": {
+      "name_de": "Fronteinstieg (Glastuere, optional Fenster)",
+      "name_en": "Front entry (glass door, optional window)"
+    },
+    "corner": {
+      "name_de": "Abgeschraegter Eckeinstieg (optional Fenster)",
+      "name_en": "Chamfered corner entry (optional window)"
+    },
+    "glasfront": {
+      "name_de": "Glasfront",
+      "name_en": "Full glass front"
+    },
+    "corner_glasfront": {
+      "name_de": "Eckeinstieg mit Glasfront (Glas beidseitig der Ecke)",
+      "name_en": "Corner entry with glass on both sides"
+    },
+    "glass_corner": {
+      "name_de": "Glaseck (Glasfront ueber Eck, Tuere in der Front)",
+      "name_en": "Glass corner (glass wraps the corner, door in front)"
+    }
+  },
+  "claddings": {
+    "none": {
+      "name_de": "Aussen Holz sichtbar",
+      "price": 0,
+      "name_en": "Natural wood exterior"
+    },
+    "schiefer": {
+      "name_de": "Aussenverkleidung Schieferplatten",
+      "price": 1700,
+      "price_note": "Richtpreis aus Zirbe-Modellen",
+      "name_en": "Slate tile exterior cladding",
+      "price_note_en": "Indicative price derived from the stone pine models"
+    },
+    "altholz": {
+      "name_de": "Aussenverkleidung Altholz Fichte",
+      "price": 2200,
+      "price_note": "Richtpreis aus Zirbe-Modellen",
+      "name_en": "Reclaimed spruce exterior cladding",
+      "price_note_en": "Indicative price derived from the stone pine models"
+    },
+    "thermo_kiefer": {
+      "name_de": "Aussen nordische Kiefer Thermoholz",
+      "name_en": "Thermo-pine exterior",
+      "price": 1930,
+      "barrel_only": true
+    },
+    "hpl_grey": {
+      "name_de": "HPL-Platten grau aussen",
+      "name_en": "Grey HPL panel exterior",
+      "price": 0,
+      "price_note": "Preis auf Anfrage",
+      "price_note_en": "Price on request",
+      "outdoor_only": true
+    },
+    "black_lacquer": {
+      "name_de": "Aussen schwarz lackierte Elemente",
+      "name_en": "Black-lacquered exterior elements",
+      "price": 0,
+      "price_note": "Preis auf Anfrage",
+      "price_note_en": "Price on request"
+    },
+    "sunburnt_zirbe": {
+      "name_de": "Aussen Zirbe sonnenverbrannt",
+      "name_en": "Sun-burnt stone pine exterior",
+      "price": 1243,
+      "price_note": "Differenz Zirbe Glasfront 16870 vs. sonnenverbrannt 18113",
+      "price_note_en": "Derived from the 18'113 vs 16'870 stone pine glass-front models"
+    }
+  },
+  "included_en": {
+    "backrests": "Backrests",
+    "apron": "Under-bench cladding",
+    "floor_grate": "Floor grating",
+    "headrests": "Two headrests",
+    "guard": "Heater guard where required",
+    "ventilation": "Supply and exhaust vents"
+  },
+  "bundles": {
+    "SET-SCANDIA-CF9": {
+      "name_de": "Set: Sentiotec Scandia 8kW + Harvia CF9 Steuerung + 20kg Steine",
+      "name_en": "Set: Sentiotec Scandia 8 kW + Harvia CF9 control + 20 kg stones",
+      "price": 757,
+      "heater": "SAWO-SCANDIA-80",
+      "control": "HARVIA-CF9",
+      "kw": 8
+    },
+    "SET-VIRTA-XENIO": {
+      "name_de": "Set: Harvia Virta 9kW + Harvia Xenio Steuerung + 50kg Steine",
+      "name_en": "Set: Harvia Virta 9 kW + Harvia Xenio control + 50 kg stones",
+      "price": 2240,
+      "heater": "HARVIA-VIRTA-90",
+      "control": "HARVIA-XENIO",
+      "kw": 9
+    },
+    "SET-TOPCLASS-COMBI": {
+      "name_de": "Set: Harvia Topclass Combi 8kW + Xenio Combi Steuerung + 20kg Steine (5 l Wassertank)",
+      "name_en": "Set: Harvia Topclass Combi 8 kW + Xenio Combi control + 20 kg stones (5 l tank)",
+      "price": 1980,
+      "heater": "HARVIA-TOPCLASS-C80",
+      "control": "HARVIA-XENIO-COMBI",
+      "kw": 8
+    },
+    "SET-COMBINATOR-COMBI": {
+      "name_de": "Set: Harvia Combinator 8kW schwarz + Xenio Combi Steuerung + 20kg Steine",
+      "name_en": "Set: Harvia Combinator 8 kW black + Xenio Combi control + 20 kg stones",
+      "price": 1980,
+      "heater": "HARVIA-COMBINATOR-80",
+      "control": "HARVIA-XENIO-COMBI",
+      "kw": 8
+    },
+    "SET-VIRTA-COMBI-XENIO": {
+      "name_de": "Set: Harvia Virta Combi 9kW + Xenio Combi Steuerung + 50kg Steine",
+      "name_en": "Set: Harvia Virta Combi 9 kW + Xenio Combi control + 50 kg stones",
+      "price": 2970,
+      "heater": "HARVIA-VIRTA-C90",
+      "control": "HARVIA-XENIO-COMBI",
+      "kw": 9
+    },
+    "SET-SPIRIT-PRO-D2": {
+      "name_de": "Set: Harvia Spirit E 9kW + Sentiotec Pro D2 Steuerung + 60kg Steine (Aussensauna)",
+      "name_en": "Set: Harvia Spirit E 9 kW + Sentiotec Pro D2 control + 60 kg stones (outdoor)",
+      "price": 2052,
+      "heater": "HARVIA-SPIRIT-90",
+      "control": "SENT-PRO-D2",
+      "kw": 9,
+      "outdoor": true
+    }
+  },
+  "chimneys": {
+    "CHIMNEY-1500": {
+      "name_de": "Edelstahlschornstein 1500 fuer Fasssauna mit Zubehoersatz",
+      "name_en": "Stainless chimney 1500 for barrel sauna, with accessory kit",
+      "price": 747,
+      "dims_mm": [
+        130,
+        130,
+        1500
+      ]
+    },
+    "CHIMNEY-AUSSEN-130": {
+      "name_de": "Edelstahl Aussenkamin Komplett-Paket Ø130",
+      "name_en": "Stainless outdoor chimney complete kit Ø130",
+      "price": 1799,
+      "dims_mm": [
+        130,
+        130,
+        3000
+      ]
+    }
+  },
+  "infrared": {
+    "IR-VITALLIGHT-RED": {
+      "name_de": "1x 500W Vitallight-IR-Strahler rot, dimmbar inkl. Steuerung und Rueckenlehnenpolster",
+      "name_en": "1x 500 W Vitallight full-spectrum IR emitter, red, dimmable incl. control and back cushion",
+      "price": 1590,
+      "watts": 500,
+      "dims_mm": [
+        320,
+        60,
+        900
+      ],
+      "color": "red"
+    },
+    "IR-VITALLIGHT-BLACK": {
+      "name_de": "1x 500W Vitallight-IR-Strahler schwarz, dimmbar inkl. Steuerung und Rueckenlehnenpolster",
+      "name_en": "1x 500 W Vitallight full-spectrum IR emitter, black, dimmable incl. control and back cushion",
+      "price": 1590,
+      "watts": 500,
+      "dims_mm": [
+        320,
+        60,
+        900
+      ],
+      "color": "black"
+    },
+    "IR-ECO-2X": {
+      "name_de": "2x ECO Infrarotstrahler inkl. IR-Steuerung (Sentiotec Infra+)",
+      "name_en": "2x ECO infrared emitters incl. IR control (Sentiotec Infra+)",
+      "price": 1430,
+      "watts": 700,
+      "dims_mm": [
+        280,
+        50,
+        800
+      ],
+      "color": "black",
+      "count": 2,
+      "price_note": "Differenz Alaska Corner Infra+ zu Alaska Corner",
+      "price_note_en": "Derived from the Alaska Corner Infra+ vs. Alaska Corner price difference"
+    }
+  },
+  "door_glass": {
+    "clear": {
+      "name_de": "Klarglas 8 mm ESG",
+      "name_en": "Clear toughened glass 8 mm",
+      "price": 0,
+      "tint": [
+        0.87,
+        0.93,
+        0.91
+      ],
+      "opacity": 0.28
+    },
+    "bronze": {
+      "name_de": "Glas bronziert",
+      "name_en": "Bronze-tinted glass",
+      "price": 0,
+      "tint": [
+        0.55,
+        0.42,
+        0.3
+      ],
+      "opacity": 0.55
+    },
+    "grey": {
+      "name_de": "Glas grau getoent",
+      "name_en": "Grey-tinted glass",
+      "price": 0,
+      "tint": [
+        0.45,
+        0.48,
+        0.5
+      ],
+      "opacity": 0.5,
+      "on_request": true
+    },
+    "wood_window": {
+      "name_de": "Holztuere mit kleinem Fenster",
+      "name_en": "Wooden door with small window",
+      "price": 0,
+      "wood": true
+    }
+  },
+  "handles": {
+    "wood_wood": {
+      "name_de": "Griff innen Holz, aussen Holz",
+      "name_en": "Wooden handle inside and outside",
+      "price": 0,
+      "outside": "wood"
+    },
+    "wood_metal": {
+      "name_de": "Griff innen Holz, aussen Metall",
+      "name_en": "Wooden handle inside, metal outside",
+      "price": 0,
+      "outside": "steel"
+    },
+    "wood_steel": {
+      "name_de": "Griff innen Holz, aussen Edelstahl",
+      "name_en": "Wooden handle inside, stainless steel outside",
+      "price": 0,
+      "outside": "steel"
+    },
+    "wood_glass": {
+      "name_de": "Griff innen Holz, aussen Glas",
+      "name_en": "Wooden handle inside, glass outside",
+      "price": 0,
+      "outside": "glass"
+    },
+    "beech_black": {
+      "name_de": "Griff innen Buche, aussen Edelstahl schwarz",
+      "name_en": "Beech handle inside, black stainless outside",
+      "price": 0,
+      "outside": "black"
+    }
+  },
+  "window_types": {
+    "none": {
+      "name_de": "Kein Fenster",
+      "name_en": "No window",
+      "price": 0
+    },
+    "auto": {
+      "name_de": "Wandhohes Fenster",
+      "name_en": "Full-height window",
+      "price": 0
+    },
+    "60": {
+      "name_de": "Fenster 60 cm",
+      "name_en": "60 cm window",
+      "price": 0
+    },
+    "two_fixed": {
+      "name_de": "2 Fenster festverglast (Isolierglas)",
+      "name_en": "2 fixed insulated-glass windows",
+      "price": 330
+    },
+    "tilt_open": {
+      "name_de": "2 Fenster zum Kippen und Oeffnen",
+      "name_en": "2 tilt-and-open windows",
+      "price": 390,
+      "barrel_only": true
+    },
+    "round_half": {
+      "name_de": "Rundes Rueckwandfenster bis zur Haelfte",
+      "name_en": "Round rear window, half height",
+      "price": 832,
+      "barrel_only": true
+    },
+    "round_full": {
+      "name_de": "Rundes Rueckwandfenster vollflaechig",
+      "name_en": "Round rear window, full",
+      "price": 1781,
+      "barrel_only": true
+    }
+  },
+  "insulation": {
+    "roof": {
+      "name_de": "Zwischensparrendaemmung im Dach",
+      "name_en": "Roof insulation between rafters",
+      "price": 1290
+    },
+    "floor": {
+      "name_de": "Daemmung im Fussboden",
+      "name_en": "Floor insulation",
+      "price": 390
+    }
+  },
+  "roof_colours": {
+    "black": {
+      "name_de": "Dacheindeckung schwarz",
+      "name_en": "Black roof shingles",
+      "price": 0
+    },
+    "red": {
+      "name_de": "Dacheindeckung rot",
+      "name_en": "Red roof shingles",
+      "price": 0
+    }
+  },
+  "warranty": {
+    "de": "5 Jahre Garantie auf Holzkonstruktion (Swissmade), 2 Jahre auf Elektrokomponenten – Details gemaess AGB.",
+    "en": "5-year warranty on the timber construction (Swiss-made), 2 years on electrical components – see terms.",
+    "note": "Placeholder wording; confirm with Holzbau Boscheri GmbH before publishing."
+  },
+  "electrical": {
+    "single_phase_max_kw": 3.6,
+    "three_phase_volts": 400,
+    "note_en": "Heaters above 8 kW need a dedicated 400 V three-phase circuit; heat-resistant silicone cable inside the cabin; installation by a licensed electrician.",
+    "note_de": "Oefen ueber 8 kW benoetigen einen eigenen 400-V-Drehstromanschluss; hitzebestaendiges Silikonkabel in der Kabine; Installation durch Elektrofachkraft."
+  }
+}
