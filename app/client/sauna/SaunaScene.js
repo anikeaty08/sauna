@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildSauna } from './geometry.js';
+import { buildSauna } from './geometry/index.js';
 
 /**
  * Owns the renderer/scene/camera for the live customizer: rebuilds the
@@ -139,6 +139,7 @@ export class SaunaScene {
     this.doorSign = built.doorSign;
     this.bounds = built.bounds;
     this.heaterInfo = built.heaterInfo;
+    this.interiorView = built.interiorView || null;
 
     // Attach the new doorRoot and capture its rest rotation immediately,
     // before any applyDoor() call can overwrite it.
@@ -149,7 +150,7 @@ export class SaunaScene {
 
     this.frame(built.bounds);
     if (typeof window !== 'undefined') {
-      window.__saunaDebug = { bounds: built.bounds, cameraPos: this.camera.position.toArray(), target: this.controls.target.toArray(), size: this.size, centre: this.centre?.toArray(), registryCount: this.registry.length, fov: this.camera.fov, aspect: this.camera.aspect, hostSize: [this.host.clientWidth, this.host.clientHeight] };
+      window.__saunaDebug = { bounds: built.bounds, cameraPos: this.camera.position.toArray(), target: this.controls.target.toArray(), size: this.size, centre: this.centre?.toArray(), registryCount: this.registry.length, fov: this.camera.fov, aspect: this.camera.aspect, hostSize: [this.host.clientWidth, this.host.clientHeight], registry: this.registry, THREE_DEBUG: THREE, camera: this.camera, renderer: this.renderer, scene: this.scene };
     }
 
     // When first loading interior view, open door; otherwise preserve the
@@ -216,10 +217,12 @@ export class SaunaScene {
     // which sits at half height) from well above roof level, so the roof and
     // all four walls read clearly - the same framing the Blender renders use.
     const exteriorLook = new THREE.Vector3(this.centre.x, H * 0.32, this.centre.z);
-    // Interior: stand just inside the entrance (the +Z wall) at eye height,
-    // looking toward the back wall so the benches and heater read clearly.
-    const interiorLook = new THREE.Vector3(this.centre.x, 1.45, this.bounds.minZ + size * 0.15);
-    const interiorPos = new THREE.Vector3(this.centre.x + size * 0.14, 1.5, this.bounds.maxZ - size * 0.16);
+    // Interior: stand just inside the entrance at eye height, looking toward
+    // the back wall so the benches and heater read clearly. Rectangular
+    // cabins use this generic entrance-at-+Z formula; shapes whose door isn't
+    // on a +Z wall (barrel, round) supply their own interiorView instead.
+    const interiorLook = this.interiorView?.look || new THREE.Vector3(this.centre.x, 1.45, this.bounds.minZ + size * 0.15);
+    const interiorPos = this.interiorView?.pos || new THREE.Vector3(this.centre.x + size * 0.14, 1.5, this.bounds.maxZ - size * 0.16);
     const targets = {
       exterior: { pos: this.orbitPosition(exteriorLook, size, 34, 30, 2.5), look: exteriorLook },
       interior: { pos: interiorPos, look: interiorLook },

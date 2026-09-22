@@ -5,8 +5,8 @@ import { nameOf, woodHex, heaterSpecLine, fitsVolume, controlSpecLine, shortFami
 import { widthOptions, depthOptions, familyType } from './config';
 
 const TYPE_LABEL = {
-  en: { cabin: 'Indoor', barrel: 'Barrel', house: 'Garden house', infrared: 'Infrared' },
-  de: { cabin: 'Innen', barrel: 'Fass', house: 'Gartenhaus', infrared: 'Infrarot' },
+  en: { cabin: 'Indoor', hex: 'Hexagon', round: 'Round', barrel: 'Barrel', house: 'Garden house', infrared: 'Infrared' },
+  de: { cabin: 'Innen', hex: 'Sechseck', round: 'Rund', barrel: 'Fass', house: 'Gartenhaus', infrared: 'Infrarot' },
 };
 
 /* ── Swatch (selectable option button) ── */

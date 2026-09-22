@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, DoorOpen, ChevronLeft, ChevronDown, Receipt, Download, FileText, Share2, Send, RotateCcw, Check, Undo2, Redo2 } from 'lucide-react';
 import { useCatalog } from './useCatalog';
-import { SaunaScene } from './SaunaScene';
-import { MaterialCache } from './geometry';
 import { defaultConfig, fromPreset, normalizeConfig } from './config';
 import { priceItems } from './pricing';
 import { chf } from './format';
@@ -236,22 +234,30 @@ export default function Customizer() {
   };
   const handlePrintQuote = () => { if (pricing) openPrintableQuote(cfg, catalog, pricing, lang); };
 
-  // Mount the 3D scene once we enter the customizer
+  // Mount the 3D scene once we enter the customizer. three.js (~570 kB) and its
+  // scene/geometry code are only fetched here, not on the preset-picker screen,
+  // which never needs them.
   useEffect(() => {
     if (stage !== 'customize' || !hostRef.current || !catalog) return;
-    materialsRef.current = new MaterialCache(catalog);
-    const scene = new SaunaScene(hostRef.current, materialsRef.current, {
-      onHover: (info, x, y) => setHover({ info, x, y }),
-      onSelect: (info) => {
-        if (info) {
-          setDrawerCategory(info.category);
-          setDrawerName(info.name || '');
-          setOpenSection(info.category);
-        }
-      },
+    let cancelled = false;
+    let scene = null;
+    Promise.all([import('./SaunaScene'), import('./geometry')]).then(([{ SaunaScene }, { MaterialCache }]) => {
+      if (cancelled || !hostRef.current) return;
+      materialsRef.current = new MaterialCache(catalog);
+      scene = new SaunaScene(hostRef.current, materialsRef.current, {
+        onHover: (info, x, y) => setHover({ info, x, y }),
+        onSelect: (info) => {
+          if (info) {
+            setDrawerCategory(info.category);
+            setDrawerName(info.name || '');
+            setOpenSection(info.category);
+          }
+        },
+      });
+      sceneRef.current = scene;
+      if (cfg) scene.setConfig(cfg, catalog, lang);
     });
-    sceneRef.current = scene;
-    return () => { scene.dispose(); sceneRef.current = null; };
+    return () => { cancelled = true; scene?.dispose(); sceneRef.current = null; };
   }, [stage, catalog]);
 
   // Rebuild parametric model on config or language change

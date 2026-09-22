@@ -831,6 +831,142 @@
       "product_url": "https://www.holzsauna.ch/Holzsauna-Bergzauber",
       "datasheet_note": "Datenblatt und Montageanleitung als PDF auf der Produktseite"
     },
+    "zirbe_sechseck": {
+      "name_de": "Designsauna Zirbe Massivholz 6-Eck",
+      "name_en": "Stone pine solid-wood hexagon design sauna",
+      "sku": "H-6E-1",
+      "type": "hex",
+      "wall_wood": "zirbe",
+      "wall_mm": 45,
+      "ceiling_mm": 45,
+      "door_mm": [
+        670,
+        1875
+      ],
+      "door_frame_mm": 100,
+      "entries": [
+        "front",
+        "glasfront"
+      ],
+      "entry_prices": {
+        "front": 0,
+        "glasfront": 1450
+      },
+      "threshold": false,
+      "handle_default": "wood_steel",
+      "sizes": [
+        {
+          "w": 220,
+          "d": 200,
+          "h": 210,
+          "price": 17900,
+          "label": "6-Eck 220"
+        },
+        {
+          "w": 240,
+          "d": 215,
+          "h": 210,
+          "price": 19700,
+          "label": "6-Eck 240"
+        },
+        {
+          "w": 260,
+          "d": 230,
+          "h": 210,
+          "price": 21600,
+          "label": "6-Eck 260"
+        }
+      ],
+      "interior_default": "espe_standard",
+      "interior_options": [
+        "espe_standard",
+        "espe_gerundet",
+        "erle_gerundet"
+      ],
+      "window_types": [
+        "none",
+        "auto",
+        "60"
+      ],
+      "door_glass_options": [
+        "clear",
+        "bronze",
+        "grey"
+      ],
+      "lead_time_weeks": [
+        8,
+        12
+      ],
+      "product_url": "https://www.holzsauna.ch/Sauna-nach-Mass"
+    },
+    "designer_rund": {
+      "name_de": "Designer-Sauna Rund aus Nussbaum",
+      "name_en": "Round design sauna in walnut",
+      "sku": "H-RD-1",
+      "type": "round",
+      "wall_wood": "nussbaum",
+      "wall_mm": 42,
+      "ceiling_mm": 42,
+      "door_mm": [
+        650,
+        1900
+      ],
+      "door_frame_mm": 80,
+      "entries": [
+        "front"
+      ],
+      "entry_prices": {
+        "front": 0
+      },
+      "threshold": false,
+      "handle_default": "wood_steel",
+      "sizes": [
+        {
+          "w": 200,
+          "d": 200,
+          "h": 210,
+          "price": 18400,
+          "label": "Rund 200"
+        },
+        {
+          "w": 220,
+          "d": 220,
+          "h": 210,
+          "price": 20500,
+          "label": "Rund 220"
+        },
+        {
+          "w": 240,
+          "d": 240,
+          "h": 210,
+          "price": 22800,
+          "label": "Rund 240"
+        }
+      ],
+      "interior_default": "espe_standard",
+      "interior_options": [
+        "espe_standard",
+        "espe_gerundet"
+      ],
+      "window_types": [
+        "none"
+      ],
+      "door_glass_options": [
+        "clear",
+        "bronze",
+        "grey"
+      ],
+      "wood_options_outside": [
+        "nussbaum",
+        "eiche_alt",
+        "zirbe"
+      ],
+      "lead_time_weeks": [
+        8,
+        12
+      ],
+      "product_url": "https://www.holzsauna.ch/Sauna-nach-Mass"
+    },
     "saunafass": {
       "name_de": "Saunafass, nordische Fichte 42mm Massivholzbohlen",
       "name_en": "Barrel sauna, 42 mm solid Nordic spruce staves",
@@ -1261,6 +1397,18 @@
       ],
       "grain": 1.3,
       "knots": true,
+      "on_request": true
+    },
+    "nussbaum": {
+      "name_de": "Nussbaum",
+      "name_en": "Walnut",
+      "color": [
+        0.30,
+        0.21,
+        0.15
+      ],
+      "grain": 1.1,
+      "knots": false,
       "on_request": true
     },
     "thermo_kiefer": {

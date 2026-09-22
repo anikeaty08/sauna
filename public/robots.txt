@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sauna-studio.89-117-57-40.sslip.io/sitemap.xml

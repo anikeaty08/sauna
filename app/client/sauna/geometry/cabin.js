@@ -1,334 +1,12 @@
 import * as THREE from 'three';
+import { nameOf } from './names.js';
+import { tag, box, subtractIntervals } from './mesh.js';
+import { planPolygon, classifySegments, add, scale, hexMaxInnerX } from './math.js';
+import { doorHandleMaterials } from './materials.js';
 
-// Parametric sauna builder for the live 3D customizer.
-//
-// Coordinate system (metres): +X width, +Y up, +Z depth. The exterior BACK
-// wall sits on z = 0 and the entrance (front) wall on z = D, so "into the
-// room" is -Z from the front wall and +Z from the back wall. The origin is
-// the centre of the exterior back wall at floor level. Widths and depths read
-// straight across from the catalog; only Blender's Z-up/-Y-front is swapped.
-//
-// Every mesh that represents a priced catalog line gets `mesh.userData.info`
-// = { sku, name, price, dims, category, includedIn } so the viewer can raycast
-// for hover/click without a second lookup table.
-
-const vec = (x, z) => ({ x, z });
-const sub = (a, b) => vec(a.x - b.x, a.z - b.z);
-const add = (a, b) => vec(a.x + b.x, a.z + b.z);
-const scale = (a, k) => vec(a.x * k, a.z * k);
-const length = a => Math.hypot(a.x, a.z);
-const normalize = a => { const l = length(a) || 1; return scale(a, 1 / l); };
-const perp = a => vec(-a.z, a.x);
-
-export const nameOf = (spec, lang = 'en') => (spec && (lang === 'de' ? (spec.name_de || spec.name_en) : (spec.name_en || spec.name_de))) || '';
-
-function subtractIntervals(span, holes) {
-  let pieces = [[...span]];
-  for (const [h0, h1] of holes) {
-    const next = [];
-    for (const [a, b] of pieces) {
-      if (h1 <= a || h0 >= b) next.push([a, b]);
-      else { if (h0 > a) next.push([a, h0]); if (h1 < b) next.push([h1, b]); }
-    }
-    pieces = next;
-  }
-  return pieces.filter(([a, b]) => b - a > 0.004);
-}
-
-function tag(mesh, category, sku, name, price, dimsMm, extra = {}) {
-  mesh.userData.info = { category, sku, name, price, dims: dimsMm, ...extra };
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  return mesh;
-}
-
-// ---------------------------------------------------------------------------
-// Materials: procedural wood grain drawn once per wood type, mapped at a
-// physical scale (1 texture tile = 1 metre) via per-face planar UVs.
-// ---------------------------------------------------------------------------
-
-function woodCanvas([r, g, b], grain, knots, boards) {
-  const size = 1024;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const base = [r * 255, g * 255, b * 255];
-  ctx.fillStyle = `rgb(${base.map(Math.round).join(',')})`;
-  ctx.fillRect(0, 0, size, size);
-  // grain: many faint wavy lines running along the board direction
-  const lines = 260;
-  let seed = 7 + Math.round(r * 100 + g * 10 + b);
-  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-  for (let i = 0; i < lines; i++) {
-    const y = rand() * size;
-    const alpha = 0.04 + rand() * 0.08 * grain;
-    const dark = rand() > 0.5;
-    ctx.strokeStyle = dark ? `rgba(60,35,15,${alpha})` : `rgba(255,240,215,${alpha * 0.8})`;
-    ctx.lineWidth = 0.6 + rand() * 1.8;
-    ctx.beginPath();
-    const amp = 2 + rand() * 6;
-    const freq = 0.004 + rand() * 0.01;
-    const phase = rand() * 10;
-    for (let x = 0; x <= size; x += 16) {
-      const yy = y + Math.sin(x * freq + phase) * amp;
-      if (x === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
-    }
-    ctx.stroke();
-  }
-  if (knots) {
-    for (let i = 0; i < 5; i++) {
-      const cx = rand() * size, cy = rand() * size, rx = 10 + rand() * 18, ry = 6 + rand() * 9;
-      const grad = ctx.createRadialGradient(cx, cy, 1, cx, cy, rx);
-      grad.addColorStop(0, 'rgba(70,40,18,0.55)');
-      grad.addColorStop(0.7, 'rgba(90,55,25,0.25)');
-      grad.addColorStop(1, 'rgba(90,55,25,0)');
-      ctx.fillStyle = grad;
-      ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
-    }
-  }
-  if (boards) {
-    const pitch = size / 9; // ~111 mm boards
-    ctx.strokeStyle = 'rgba(40,25,10,0.28)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    for (let i = 1; i < 9; i++) { ctx.moveTo(0, i * pitch); ctx.lineTo(size, i * pitch); }
-    ctx.stroke();
-    ctx.strokeStyle = 'rgba(255,245,225,0.22)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let i = 1; i < 9; i++) { ctx.moveTo(0, i * pitch + 3); ctx.lineTo(size, i * pitch + 3); }
-    ctx.stroke();
-  }
-  return canvas;
-}
-
-export class MaterialCache {
-  constructor(catalog) { this.catalog = catalog; this.cache = new Map(); this.maxAnisotropy = 8; }
-  wood(key, boards = false) {
-    const cacheKey = `wood:${key}:${boards ? 'b' : 'p'}`;
-    if (this.cache.has(cacheKey)) return this.cache.get(cacheKey);
-    const spec = this.catalog.woods[key] || this.catalog.woods.fichte;
-    let map = null;
-    if (typeof document !== 'undefined') {
-      map = new THREE.CanvasTexture(woodCanvas(spec.color, spec.grain, spec.knots, boards));
-      map.wrapS = map.wrapT = THREE.RepeatWrapping;
-      map.colorSpace = THREE.SRGBColorSpace;
-      map.anisotropy = this.maxAnisotropy;
-    }
-    const mat = new THREE.MeshStandardMaterial({ color: map ? 0xffffff : new THREE.Color(...spec.color), map, roughness: 0.68, metalness: 0 });
-    this.cache.set(cacheKey, mat);
-    return mat;
-  }
-  plain(key, options) {
-    if (this.cache.has(key)) return this.cache.get(key);
-    const mat = new THREE.MeshStandardMaterial(options);
-    this.cache.set(key, mat);
-    return mat;
-  }
-  get glass() { return this.plain('glass', { color: 0xdfeee8, roughness: 0.04, metalness: 0.1, transparent: true, opacity: 0.28, side: THREE.DoubleSide, envMapIntensity: 1.2 }); }
-  get steel() { return this.plain('steel', { color: 0x9aa3a8, roughness: 0.3, metalness: 0.9 }); }
-  get black() { return this.plain('black', { color: 0x15181b, roughness: 0.42, metalness: 0.45 }); }
-  get darkGrille() { return this.plain('darkGrille', { color: 0x0a0c0d, roughness: 0.7, metalness: 0.2 }); }
-  get seal() { return this.plain('seal', { color: 0x1c1e1d, roughness: 0.85, metalness: 0 }); }
-  get stones() { return this.plain('stones', { color: 0x3a3634, roughness: 0.95, metalness: 0 }); }
-  get slate() { return this.plain('slate', { color: 0x2b2e31, roughness: 0.62, metalness: 0.05 }); }
-  get white() { return this.plain('white', { color: 0xe8e6dd, roughness: 0.45, metalness: 0 }); }
-  get ceramic() { return this.plain('ceramic', { color: 0x8c1f14, roughness: 0.35, metalness: 0 }); }
-  get opal() { return this.plain('opal', { color: 0xffe6b8, roughness: 0.5, emissive: 0xffb066, emissiveIntensity: 1.6 }); }
-  get ledWarm() { return this.plain('ledWarm', { color: 0xffb066, roughness: 0.4, emissive: 0xff9a4d, emissiveIntensity: 2.4 }); }
-  get ledRgb() { return this.plain('ledRgb', { color: 0xd6a6ff, roughness: 0.4, emissive: 0x9a5cff, emissiveIntensity: 2.0 }); }
-  get screen() { return this.plain('screen', { color: 0x0e2622, roughness: 0.3, emissive: 0x2fae8f, emissiveIntensity: 1.3 }); }
-  get gold() { return this.plain('gold', { color: 0xc9a24a, roughness: 0.2, metalness: 0.9 }); }
-  get mirror() { return this.plain('mirror', { color: 0xdedede, roughness: 0.05, metalness: 1 }); }
-}
-
-/** Planar per-face UVs at a physical scale so grain reads the same size on every part. */
-function physicalUVs(geometry, tile = 1.0, grainAlong = 'auto') {
-  const pos = geometry.attributes.position, nor = geometry.attributes.normal;
-  const uv = geometry.attributes.uv;
-  const bb = new THREE.Box3().setFromBufferAttribute(pos);
-  const ext = [bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z];
-  for (let i = 0; i < pos.count; i++) {
-    const n = [Math.abs(nor.getX(i)), Math.abs(nor.getY(i)), Math.abs(nor.getZ(i))];
-    const normalAxis = n.indexOf(Math.max(...n));
-    const axes = [0, 1, 2].filter(a => a !== normalAxis);
-    let uAxis = axes[0], vAxis = axes[1];
-    if (grainAlong === 'auto' ? ext[axes[1]] > ext[axes[0]] : grainAlong === 'y') { uAxis = axes[1]; vAxis = axes[0]; }
-    if (grainAlong === 'x' && axes.includes(0)) { uAxis = 0; vAxis = axes.find(a => a !== 0); }
-    const p = [pos.getX(i), pos.getY(i), pos.getZ(i)];
-    uv.setXY(i, p[uAxis] / tile, p[vAxis] / tile);
-  }
-  uv.needsUpdate = true;
-  return geometry;
-}
-
-function box(w, h, d, tile = 1.0, grainAlong = 'auto') {
-  const g = new THREE.BoxGeometry(Math.max(w, 0.003), Math.max(h, 0.003), Math.max(d, 0.003));
-  return physicalUVs(g, tile, grainAlong);
-}
-
-/** Build the exterior footprint polygon, counter-clockwise viewed from above. */
-function planPolygon(cfg, doorBlock) {
-  const W = cfg.widthCm / 100, D = cfg.depthCm / 100;
-  const chamfered = cfg.entry === 'corner' || cfg.entry === 'corner_glasfront';
-  if (!chamfered) return [vec(-W / 2, 0), vec(-W / 2, D), vec(W / 2, D), vec(W / 2, 0)];
-  const c = (doorBlock + 0.12) / Math.SQRT2;
-  if (cfg.door.corner !== 'left') return [vec(-W / 2, 0), vec(-W / 2, D), vec(W / 2 - c, D), vec(W / 2, D - c), vec(W / 2, 0)];
-  return [vec(-W / 2, 0), vec(-W / 2, D - c), vec(-W / 2 + c, D), vec(W / 2, D), vec(W / 2, 0)];
-}
-
-function classifySegments(points, W, D) {
-  const n = points.length, segs = [];
-  for (let i = 0; i < n; i++) {
-    const p0 = points[i], p1 = points[(i + 1) % n];
-    const d = normalize(sub(p1, p0));
-    const nrm = scale(perp(d), -1); // inward
-    let name = 'corner';
-    if (Math.abs(p0.z) < 1e-6 && Math.abs(p1.z) < 1e-6) name = 'back';
-    else if (Math.abs(p0.x + W / 2) < 1e-6 && Math.abs(p1.x + W / 2) < 1e-6) name = 'left';
-    else if (Math.abs(p0.z - D) < 1e-6 && Math.abs(p1.z - D) < 1e-6) name = 'front';
-    else if (Math.abs(p0.x - W / 2) < 1e-6 && Math.abs(p1.x - W / 2) < 1e-6) name = 'right';
-    segs.push({ p0, p1, d, n: nrm, L: length(sub(p1, p0)), name, openings: [], glass: false });
-  }
-  return segs;
-}
-
-/** Inside/outside handle materials for the selected catalog handle option. */
-function doorHandleMaterials(cfg, catalog, materials, benchMat) {
-  const spec = catalog.handles?.[cfg.door.handle] || catalog.handles?.wood_steel || {};
-  const inside = cfg.door.handle === 'beech_black' ? materials.wood('eiche_astig') : benchMat;
-  const outside = { wood: materials.wood('fichte'), glass: materials.glass, black: materials.black }[spec.outside] || materials.steel;
-  const mountMat = spec.outside === 'black' ? materials.black : materials.steel;
-  return { inside, outside, mountMat, spec };
-}
-
-/**
- * Barrel sauna (Saunafass): a horizontal cylinder, axis along X (=width in the
- * catalog), diameter = depth. This is a pilot geometry - round staves are
- * approximated as a smooth shell, and the door sits on the flat front cap
- * rather than following the curve, which real barrel doors do.
- */
-function buildBarrelSauna(cfg, catalog, materials, lang) {
+export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
   const itemTitle = spec => nameOf(spec, lang);
   const isDe = lang === 'de';
-  const group = new THREE.Group();
-  const registry = [];
-  const push = mesh => { if (mesh.userData.info) registry.push(mesh); group.add(mesh); return mesh; };
-  const mm = v => Math.round(v * 1000);
-
-  const family = catalog.families[cfg.family];
-  const length = cfg.widthCm / 100, radius = cfg.depthCm / 200, wallT = family.wall_mm / 1000;
-  const wallMat = materials.wood(family.wall_wood, true);
-  const benchSpec = catalog.interiors[cfg.interior.material];
-  const benchMat = materials.wood(benchSpec.wood, false);
-  const cy = radius;
-
-  const shell = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, length, 40, 1, true), wallMat);
-  shell.rotation.z = Math.PI / 2;
-  shell.position.set(length / 2, cy, radius);
-  physicalUVs(shell.geometry, 1.0, 'x');
-  push(tag(shell, 'cabin', family.sku, `${itemTitle(catalog.woods[family.wall_wood])} ${isDe ? 'Fassdauben' : 'barrel staves'}, ${family.wall_mm} mm`, 0, [mm(length), mm(radius * 2), mm(radius * 2)], { includedIn: 'cabin' }));
-
-  const backCap = new THREE.Mesh(new THREE.CircleGeometry(radius, 40), wallMat);
-  backCap.rotation.y = Math.PI / 2;
-  backCap.position.set(0.01, cy, radius);
-  push(tag(backCap, 'cabin', family.sku, isDe ? 'Rueckwand' : 'Back cap', 0, [mm(radius * 2), mm(radius * 2), family.wall_mm], { includedIn: 'cabin' }));
-
-  const doorW = family.door_mm[0] / 1000, doorH = family.door_mm[1] / 1000;
-  const frontShape = new THREE.Shape();
-  frontShape.absarc(0, 0, radius, 0, Math.PI * 2, false);
-  const hole = new THREE.Path();
-  const hx0 = -doorW / 2, hx1 = doorW / 2, hy0 = -radius + 0.02, hy1 = hy0 + doorH;
-  hole.moveTo(hx0, hy0); hole.lineTo(hx1, hy0); hole.lineTo(hx1, hy1); hole.lineTo(hx0, hy1); hole.closePath();
-  frontShape.holes.push(hole);
-  const frontCap = new THREE.Mesh(new THREE.ShapeGeometry(frontShape, 32), wallMat);
-  frontCap.rotation.y = -Math.PI / 2;
-  frontCap.position.set(length - 0.01, cy, radius);
-  push(tag(frontCap, 'cabin', family.sku, isDe ? 'Frontwand mit Tuer' : 'Front cap with door', 0, [mm(radius * 2), mm(radius * 2), family.wall_mm], { includedIn: 'cabin' }));
-
-  const doorGlassSpec = catalog.door_glass?.[cfg.door.glass] || catalog.door_glass?.clear;
-  const doorMat = cfg.door.glass === 'wood_window' ? materials.wood('fichte') : materials.plain('barrelGlass' + cfg.door.glass, { color: new THREE.Color(...(doorGlassSpec?.tint || [0.87, 0.93, 0.91])), roughness: 0.08, transparent: true, opacity: doorGlassSpec?.opacity ?? 0.3, side: THREE.DoubleSide });
-  const sign = cfg.door.hinge === 'right' ? -1 : 1;   // which edge the door is hinged on
-  const doorRoot = new THREE.Group();
-  doorRoot.position.set(length - wallT - 0.005, cy + hy0 + doorH / 2, radius + (sign > 0 ? hx0 : hx1));
-  const leafParts = [];
-  const leaf = new THREE.Mesh(box(doorH, doorW - 0.01, 0.008), doorMat);
-  leaf.rotation.x = Math.PI / 2; leaf.rotation.z = Math.PI / 2;
-  leaf.position.set(0, 0, sign * (doorW - 0.01) / 2);
-  leafParts.push(leaf);
-  // Handle: inside grip (-X, into the barrel) and outside grip (+X) near the free edge,
-  // materials from the selected catalog handle option.
-  const handle = doorHandleMaterials(cfg, catalog, materials, benchMat);
-  const handleZ = sign * (doorW - 0.09);
-  const handleIn = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.26, 12), handle.inside);
-  handleIn.rotation.x = Math.PI / 2; handleIn.position.set(-0.05, 0, handleZ);
-  const handleOut = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.26, 12), handle.outside);
-  handleOut.rotation.x = Math.PI / 2; handleOut.position.set(0.05, 0, handleZ);
-  leafParts.push(handleIn, handleOut);
-  for (const y of [-0.09, 0.09]) {
-    const mount = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.11, 10), handle.mountMat);
-    mount.position.set(0, y, handleZ);
-    leafParts.push(mount);
-  }
-  const doorName = `${isDe ? 'Fasstuer' : 'Barrel door'}, ${itemTitle(doorGlassSpec)}, ${isDe ? (cfg.door.hinge === 'right' ? 'Anschlag rechts' : 'Anschlag links') : `hinged ${cfg.door.hinge}`}, ${itemTitle(handle.spec)}`;
-  for (const m of leafParts) { doorRoot.add(m); push(tag(m, 'door', family.sku, doorName, 0, [family.door_mm[0], 8, family.door_mm[1]], { includedIn: 'cabin', hinge: cfg.door.hinge })); }
-  group.add(doorRoot);
-
-  const benchZ0 = radius + 0.15, benchZ1 = radius * 2 - wallT - 0.02;
-  const benchY = radius * 0.55;
-  const benchTop = new THREE.Mesh(box(length - 0.6, 0.035, benchZ1 - benchZ0, 1, 'x'), benchMat);
-  benchTop.position.set(length / 2, benchY, benchZ0 + (benchZ1 - benchZ0) / 2);
-  push(tag(benchTop, 'interior', cfg.interior.material, `${isDe ? 'Liege' : 'Bench'}, ${itemTitle(benchSpec)}`, benchSpec.price, [mm(length - 0.6), mm(benchZ1 - benchZ0), 35]));
-
-  const heaterSpec = catalog.heaters[cfg.heater.sku];
-  let heaterInfo = null;
-  if (heaterSpec) {
-    const [hwMm, , hhMm] = heaterSpec.dims_mm;
-    const hw = hwMm / 1000, hh = hhMm / 1000;
-    const bodyMat = heaterSpec.color === 'black' ? materials.black : materials.steel;
-    const hx = 0.35, hz = radius * 2 - wallT - 0.3;
-    const casing = new THREE.Mesh(box(hw, hh, hw * 0.8), bodyMat);
-    casing.position.set(hx, hh / 2, hz);
-    const stones = new THREE.Mesh(new THREE.CylinderGeometry(hw * 0.4, hw * 0.4, 0.05, 16), materials.stones);
-    stones.position.set(hx, hh + 0.03, hz);
-    for (const m of [casing, stones]) push(tag(m, 'heater', cfg.heater.sku, itemTitle(heaterSpec), heaterSpec.price, heaterSpec.dims_mm, { kw: heaterSpec.kw, control: heaterSpec.control, mount: heaterSpec.mount, approx: true }));
-    heaterInfo = { cx: hx, cz: hz, hz0: hz, hz1: hz, base: 0, hh, atBack: false };
-    if (heaterSpec.wood_fired && cfg.chimney && catalog.chimneys?.[cfg.chimney]) {
-      const chimneySpec = catalog.chimneys[cfg.chimney];
-      const flueParts = [];
-      const shellTop = radius * 2;
-      if (cfg.chimney === 'CHIMNEY-AUSSEN-130') {
-        const flueTop = shellTop + 0.55;
-        const vertical = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, flueTop, 20), materials.black);
-        vertical.position.set(hx, flueTop / 2, radius * 2 - wallT + 0.09);
-        flueParts.push(vertical);
-        const elbow = new THREE.Mesh(box(0.15, 0.13, 0.15), materials.black);
-        elbow.position.set(hx, 0.07, radius * 2 - wallT / 2);
-        flueParts.push(elbow);
-      } else {
-        const flueTop = shellTop + 0.4;
-        const vertical = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, flueTop - hh, 24), materials.black);
-        vertical.position.set(hx, hh + (flueTop - hh) / 2, hz);
-        flueParts.push(vertical);
-      }
-      for (const p of flueParts) push(tag(p, 'heater', cfg.chimney, itemTitle(chimneySpec), chimneySpec.price, chimneySpec.dims_mm, { includedIn: 'heater' }));
-    }
-  }
-
-  if (cfg.accessories.includes('TERRACE-70')) {
-    const terrace = new THREE.Mesh(box(length, 0.05, 0.7), materials.wood('fichte', true));
-    terrace.position.set(length / 2, -0.025, radius * 2 + 0.35);
-    push(tag(terrace, 'accessory', 'TERRACE-70', isDe ? 'Terrasse 70 cm' : '70 cm terrace', 0, [mm(length), 700, 50], { includedIn: 'cabin' }));
-  }
-
-  const bounds = { minX: 0, maxX: length, minZ: 0, maxZ: radius * 2, minY: 0, maxY: radius * 2 + 0.05 };
-  return { group, registry, bounds, doorRoot, doorSign: sign, heaterInfo, familyName: itemTitle(family) };
-}
-
-export function buildSauna(cfg, catalog, materials, lang = 'en') {
-  const itemTitle = spec => nameOf(spec, lang);
-  const isDe = lang === 'de';
-  if ((catalog.families[cfg.family] || {}).type === 'barrel') return buildBarrelSauna(cfg, catalog, materials, lang);
   const group = new THREE.Group();
   const registry = [];
   const push = mesh => { if (mesh.userData.info) registry.push(mesh); group.add(mesh); return mesh; };
@@ -354,8 +32,9 @@ export function buildSauna(cfg, catalog, materials, lang = 'en') {
   const mm = v => Math.round(v * 1000);
 
   const doorBlock = doorW + 2 * frame;
-  const points = planPolygon(cfg, doorBlock);
+  const points = planPolygon(cfg, doorBlock, family);
   const segments = classifySegments(points, W, D);
+  const isHex = family.type === 'hex';
   const segByName = name => segments.find(s => s.name === name);
 
   // interior extents (rectangular part)
@@ -475,9 +154,21 @@ export function buildSauna(cfg, catalog, materials, lang = 'en') {
       }
     }
   }
-  // roof + floor + interior ceiling trim
-  const roof = new THREE.Mesh(box(W, tc, D, 1.0, 'x'), wallMat);
-  roof.position.set(0, zC + tc / 2, D / 2);
+  // roof + floor + interior ceiling trim. Hex families use a shape-matched cap
+  // (extruded from the footprint outline) instead of a bounding-box slab, so
+  // the roof/floor actually read as a hexagon rather than overhanging it.
+  function capMesh(thickness, material) {
+    if (isHex) {
+      const shape = new THREE.Shape(points.map(p => new THREE.Vector2(p.x, p.z)));
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false, curveSegments: 1 });
+      const mesh = new THREE.Mesh(geo, material);
+      mesh.rotation.x = Math.PI / 2;
+      return mesh; // solid spans local world-Y [-thickness, 0] at position (0,0,0)
+    }
+    return new THREE.Mesh(box(W, thickness, D, 1.0, 'x'), material);
+  }
+  const roof = capMesh(tc, wallMat);
+  roof.position.set(0, isHex ? zC + tc : zC + tc / 2, isHex ? 0 : D / 2);
   push(tag(roof, 'cabin', family.sku, isDe ? `Decke, ${family.ceiling_mm} mm ${itemTitle(catalog.woods[family.wall_wood])}` : `Ceiling, ${family.ceiling_mm} mm ${itemTitle(catalog.woods[family.wall_wood])}`, 0, [mm(W), mm(D), family.ceiling_mm], { includedIn: 'cabin' }));
   if (family.roof_colours?.length && catalog.roof_colours?.[cfg.roofColour]) {
     const roofColourSpec = catalog.roof_colours[cfg.roofColour];
@@ -486,8 +177,8 @@ export function buildSauna(cfg, catalog, materials, lang = 'en') {
     shingles.position.set(0, zC + tc + 0.015, D / 2);
     push(tag(shingles, 'cabin', cfg.roofColour, itemTitle(roofColourSpec), roofColourSpec.price, [mm(W + 0.06), 30, mm(D + 0.06)], { includedIn: 'cabin' }));
   }
-  const floor = new THREE.Mesh(box(W, 0.045, D, 1.0, 'x'), trimMat);
-  floor.position.set(0, -0.0225, D / 2);
+  const floor = capMesh(0.045, trimMat);
+  floor.position.set(0, isHex ? 0 : -0.0225, isHex ? 0 : D / 2);
   push(tag(floor, 'cabin', family.sku, isDe ? 'Saunaboden' : 'Floor', 0, [mm(W), mm(D), 45], { includedIn: 'cabin' }));
 
   if (cfg.cladding && cfg.cladding !== 'none') {
@@ -553,6 +244,14 @@ export function buildSauna(cfg, catalog, materials, lang = 'en') {
     if (position === 'centre_back') { hx0 = -hw / 2; hx1 = hw / 2; }
     else if (heaterSide > 0) { hx1 = X1 - clearance; hx0 = hx1 - hw; }
     else { hx0 = X0 + clearance; hx1 = hx0 + hw; }
+    // Hex: clamp heater X so it stays inside the angled walls at its Z position.
+    if (isHex) {
+      const wallZ = atBack ? ZB : ZF;
+      const hzMid = wallZ + (atBack ? 1 : -1) * (0.05 + (heaterSpec.dims_mm[1] / 1000) / 2);
+      const maxX = hexMaxInnerX(hzMid, W, D, t);
+      if (hx1 > maxX) { hx1 = maxX; hx0 = hx1 - hw; }
+      if (hx0 < -maxX) { hx0 = -maxX; hx1 = hx0 + hw; }
+    }
     const wallZ = atBack ? ZB : ZF;
     const r = atBack ? 1 : -1;                          // into the room
     const gap = heaterSpec.mount === 'wall' ? 0 : 0.05;
@@ -790,6 +489,15 @@ export function buildSauna(cfg, catalog, materials, lang = 'en') {
     for (const s of sides) {
       let zBack = ZB + upperD, zFront = ZF - 0.30;
       const x0 = s < 0 ? X0 : X1 - upperD, x1 = s < 0 ? X0 + upperD : X1;
+      // Hex: the side walls are angled, so clamp the bench X extents and shorten
+      // Z range so nothing pokes through the angled walls.
+      if (isHex) {
+        const maxXBack = hexMaxInnerX(zBack, W, D, t);
+        const maxXFront = hexMaxInnerX(zFront, W, D, t);
+        const maxXMin = Math.min(maxXBack, maxXFront);
+        // If the bench's outer edge exceeds the hex boundary, skip it entirely
+        if ((s > 0 && x0 > maxXMin) || (s < 0 && -x1 > maxXMin)) continue;
+      }
       if (heaterZone && heaterZone.x0 < x1 && heaterZone.x1 > x0) {
         if ((heaterZone.z0 + heaterZone.z1) / 2 > (zBack + zFront) / 2) zFront = Math.min(zFront, heaterZone.z0 - 0.03);
         else zBack = Math.max(zBack, heaterZone.z1 + 0.03);
@@ -805,6 +513,12 @@ export function buildSauna(cfg, catalog, materials, lang = 'en') {
   let bx0 = X0 + (sideBenches.some(b => b.s < 0) ? upperD : 0);
   let bx1 = X1 - (sideBenches.some(b => b.s > 0) ? upperD : 0);
   if (heaterZone && heaterZone.z0 < ZB + upperD + 0.03) { if (heaterZone.x0 > 0) bx1 = Math.min(bx1, heaterZone.x0); else bx0 = Math.max(bx0, heaterZone.x1); }
+  // Hex: clamp bench width to fit inside the narrower back wall.
+  if (isHex) {
+    const maxX = hexMaxInnerX(ZB + upperD / 2, W, D, t);
+    bx0 = Math.max(bx0, -maxX);
+    bx1 = Math.min(bx1, maxX);
+  }
   const uz0 = ZB, uz1 = ZB + upperD;
   tagInterior(bench(bx0, bx1, uz0, uz1, upperY, 'x', cfg.interior.apron), isDe ? `Obere Liegebank ${cfg.interior.upperDepthCm} cm, ${benchLabel}` : `Upper bench ${cfg.interior.upperDepthCm} cm, ${benchLabel}`, [mm(bx1 - bx0), mm(upperD), mm(upperY)], interiorSpec.price);
   benches.push({ x0: bx0, x1: bx1, z0: uz0, z1: uz1, y: upperY });
@@ -820,6 +534,10 @@ export function buildSauna(cfg, catalog, materials, lang = 'en') {
   // lower bench / sliding stool in front of the upper bench
   let lz0 = uz1, lz1 = uz1 + lowerD, lx0 = bx0, lx1 = bx1;
   if (heaterZone && heaterZone.z1 > lz0 - 0.03 && heaterZone.z0 < lz1 + 0.03) { if (heaterZone.x0 > 0) lx1 = Math.min(lx1, heaterZone.x0); else lx0 = Math.max(lx0, heaterZone.x1); }
+  if (isHex) {
+    const maxX = hexMaxInnerX((lz0 + lz1) / 2, W, D, t);
+    lx0 = Math.max(lx0, -maxX); lx1 = Math.min(lx1, maxX);
+  }
   let lowerBench = null;
   if (lx1 - lx0 > 0.5 && lz1 < ZF - 0.45) {
     tagInterior(bench(lx0 + 0.01, lx1 - 0.01, lz0, lz1, lowerY, 'x', true), isDe ? `Untere Bank${cfg.interior.slidingStool ? ' (Vorrückbank)' : ''} ${cfg.interior.lowerDepthCm} cm, ${benchLabel}` : `Lower bench${cfg.interior.slidingStool ? ' (sliding stool)' : ''} ${cfg.interior.lowerDepthCm} cm, ${benchLabel}`, [mm(lx1 - lx0), mm(lowerD), mm(lowerY)]);
@@ -848,6 +566,7 @@ export function buildSauna(cfg, catalog, materials, lang = 'en') {
     const gzBack = (lowerBench ? lowerBench.z1 : uz1) + 0.02, gzFront = ZF - 0.02;
     let gx0 = X0 + 0.02 + (sideBenches.some(b => b.s < 0) ? upperD : 0), gx1 = X1 - 0.02 - (sideBenches.some(b => b.s > 0) ? upperD : 0);
     if (heaterZone && heaterZone.z1 > gzBack && heaterZone.z0 < gzFront) { if (heaterZone.x0 > 0) gx1 = Math.min(gx1, heaterZone.x0 - 0.02); else gx0 = Math.max(gx0, heaterZone.x1 + 0.02); }
+    if (isHex) { const maxX = hexMaxInnerX((gzBack + gzFront) / 2, W, D, t); gx0 = Math.max(gx0, -maxX); gx1 = Math.min(gx1, maxX); }
     if (gzFront - gzBack > 0.2 && gx1 - gx0 > 0.3) {
       const parts = [];
       for (const x of [gx0 + 0.05, gx1 - 0.05, (gx0 + gx1) / 2]) { const r = new THREE.Mesh(box(0.045, 0.028, gzFront - gzBack), benchMat); r.position.set(x, 0.014, (gzBack + gzFront) / 2); parts.push(r); }
@@ -864,7 +583,8 @@ export function buildSauna(cfg, catalog, materials, lang = 'en') {
     if (!spec) continue;
     const parts = [];
     if (spec.kind === 'wall_lamp') {
-      const wallX = lampSide < 0 ? X0 : X1, z = ZF - 0.42, y = 1.62;
+      let wallX = lampSide < 0 ? X0 : X1, z = ZF - 0.42, y = 1.62;
+      if (isHex) { const maxX = hexMaxInnerX(z, W, D, t); wallX = lampSide < 0 ? Math.max(wallX, -maxX) : Math.min(wallX, maxX); }
       const espe = materials.wood('espe');
       const mount = new THREE.Mesh(box(0.026, 0.315, 0.235), espe); mount.position.set(wallX - lampSide * 0.013, y, z); parts.push(mount);
       const diffuser = new THREE.Mesh(box(0.05, 0.25, 0.19), materials.opal); diffuser.position.set(wallX - lampSide * 0.055, y, z); parts.push(diffuser);
@@ -907,12 +627,14 @@ export function buildSauna(cfg, catalog, materials, lang = 'en') {
     const parts = [];
     if (spec.kind === 'set') {
       const r = spec.bucket_l >= 5 ? 0.11 : 0.095;
-      const x = heaterZone ? (heaterSide > 0 ? heaterZone.x0 - 0.22 : heaterZone.x1 + 0.22) : 0.3, z = ZF - 0.30;
+      let x = heaterZone ? (heaterSide > 0 ? heaterZone.x0 - 0.22 : heaterZone.x1 + 0.22) : 0.3, z = ZF - 0.30;
+      if (isHex) { const maxX = hexMaxInnerX(z, W, D, t); x = Math.max(-maxX + 0.15, Math.min(maxX - 0.15, x)); }
       const bucket = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.88, 0.20, 24), spec.bucket === 'black' ? materials.black : materials.wood('fichte')); bucket.position.set(x, 0.10 + 0.05, z); parts.push(bucket);
       const handle = new THREE.Mesh(new THREE.TorusGeometry(r, 0.005, 8, 24, Math.PI), materials.steel); handle.position.set(x, 0.24, z); parts.push(handle);
       const ladle = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.42, 10), materials.wood('fichte')); ladle.position.set(x - 0.05, 0.28, z - 0.03); ladle.rotation.z = 0.5; ladle.rotation.x = 0.3; parts.push(ladle);
       if (!spec.no_wall) {
-        const wx = -heaterSide * (W / 2 - t - 0.3);
+        let wx = -heaterSide * (W / 2 - t - 0.3);
+        if (isHex) { const maxX = hexMaxInnerX(ZB + 0.02, W, D, t); wx = Math.max(-maxX + 0.10, Math.min(maxX - 0.10, wx)); }
         const station = new THREE.Mesh(box(0.14, 0.20, 0.024), materials.wood('espe')); station.position.set(wx, 1.58, ZB + 0.012); parts.push(station);
         const dials = new THREE.Mesh(box(0.10, 0.16, 0.004), materials.white); dials.position.set(wx, 1.58, ZB + 0.026); parts.push(dials);
         const hourglass = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.16, 12), materials.glass); hourglass.position.set(wx + heaterSide * 0.25, 1.52, ZB + 0.024); parts.push(hourglass);
@@ -921,7 +643,9 @@ export function buildSauna(cfg, catalog, materials, lang = 'en') {
       const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.09, 0.10, 24), materials.ceramic); pot.position.set(heaterInfo.cx, heaterInfo.stonesTop + 0.05, heaterInfo.cz); parts.push(pot);
       const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.08, 10), materials.steel); stand.position.set(heaterInfo.cx, heaterInfo.stonesTop - 0.02, heaterInfo.cz); parts.push(stand);
     } else if (spec.kind === 'speakers') {
-      for (const x of [X0 + 0.25, X1 - 0.25]) {
+      let spX0 = X0 + 0.25, spX1 = X1 - 0.25;
+      if (isHex) { const maxX = hexMaxInnerX(ZB + 0.04, W, D, t); spX0 = Math.max(spX0, -maxX + 0.15); spX1 = Math.min(spX1, maxX - 0.15); }
+      for (const x of [spX0, spX1]) {
         const frame2 = new THREE.Mesh(box(0.20, 0.20, 0.07), materials.wood('erle')); frame2.position.set(x, zC - 0.16, ZB + 0.035); parts.push(frame2);
         const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.006, 24), materials.white); cone.rotation.x = Math.PI / 2; cone.position.set(x, zC - 0.16, ZB + 0.073); parts.push(cone);
       }
