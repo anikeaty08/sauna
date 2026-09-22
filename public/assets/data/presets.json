@@ -1,0 +1,98 @@
+[
+  {
+    "id": "espoo-compact",
+    "name": "Espoo Compact",
+    "tagline": "The quoted Sauna Espoo klein: 140 x 120 cm, glass door and window, 3.6 kW",
+    "source": "Angebot A202607092848 / holzsauna.ch Sauna Espoo",
+    "config": {
+      "family": "espoo", "width_cm": 140, "depth_cm": 120, "height_cm": 202,
+      "board_orientation": "horizontal", "cladding": "none", "entry": "front",
+      "door": {"hinge": "left", "position": "left", "corner": "right"}, "window": "auto",
+      "interior": {"material": "espe_standard", "layout": "straight", "upper_depth_cm": 50, "lower_depth_cm": 30,
+                   "upper_height_cm": 86, "lower_height_cm": 44, "backrests": true, "side_backrests": true,
+                   "apron": true, "floor_grate": true, "headrests": 1, "sliding_stool": true},
+      "heater": {"sku": "MN-36NB-Z", "position": "front_right"}, "control": "none",
+      "lighting": ["ZS2", "ZS3"], "accessories": ["S2340"], "ventilation": true, "services": ["M", "L1"]
+    }
+  },
+  {
+    "id": "fichte-fenster-l",
+    "name": "Fichte Fenster L",
+    "tagline": "Solid spruce 200 x 180 cm, tall window, L-shaped Espe benches, Virta 9 kW",
+    "source": "holzsauna.ch Holzsauna Fichte Massiv mit Fenster Swissmade",
+    "config": {
+      "family": "fichte", "width_cm": 200, "depth_cm": 180, "height_cm": 202,
+      "board_orientation": "horizontal", "cladding": "none", "entry": "front",
+      "door": {"hinge": "left", "position": "left", "corner": "right"}, "window": "auto",
+      "interior": {"material": "espe_exklusiv_gerade", "layout": "L", "upper_depth_cm": 50, "lower_depth_cm": 30,
+                   "upper_height_cm": 86, "lower_height_cm": 44, "backrests": true, "side_backrests": true,
+                   "apron": true, "floor_grate": true, "headrests": 2, "sliding_stool": true},
+      "heater": {"sku": "HARVIA-VIRTA-90", "position": "front_right"}, "control": "UKU-WIFI-CB",
+      "lighting": ["ZS2", "LED-2.5"], "accessories": ["S2340"], "ventilation": true, "services": ["M", "M-LED", "L1"]
+    }
+  },
+  {
+    "id": "espe-front-vertical",
+    "name": "Espe Vertical",
+    "tagline": "Pale aspen 190 x 170 cm with vertical boards, door only, Delta 3.6 kW",
+    "source": "holzsauna.ch Holzsauna Espe mit Fronteinstieg",
+    "config": {
+      "family": "espe", "width_cm": 190, "depth_cm": 170, "height_cm": 202,
+      "board_orientation": "vertical", "cladding": "none", "entry": "front",
+      "door": {"hinge": "right", "position": "centre", "corner": "right"}, "window": "none",
+      "interior": {"material": "espe_exklusiv_gerundet", "layout": "straight", "upper_depth_cm": 55, "lower_depth_cm": 35,
+                   "upper_height_cm": 88, "lower_height_cm": 45, "backrests": true, "side_backrests": true,
+                   "apron": true, "floor_grate": true, "headrests": 2, "sliding_stool": false},
+      "heater": {"sku": "HARVIA-DELTA-36", "position": "front_left"}, "control": "none",
+      "lighting": ["ZS2"], "accessories": ["ZUB-STD"], "ventilation": true, "services": ["M", "L1"]
+    }
+  },
+  {
+    "id": "fichte-glasfront",
+    "name": "Fichte Glasfront",
+    "tagline": "Full glass front 210 x 190 cm, LED backrest light, Cilindro 9 kW",
+    "source": "holzsauna.ch Holzsauna Glasfront Fichte Massiv",
+    "config": {
+      "family": "fichte", "width_cm": 210, "depth_cm": 190, "height_cm": 202,
+      "board_orientation": "horizontal", "cladding": "none", "entry": "glasfront",
+      "door": {"hinge": "left", "position": "left", "corner": "right"}, "window": "auto",
+      "interior": {"material": "espe_exklusiv_gerade", "layout": "straight", "upper_depth_cm": 60, "lower_depth_cm": 30,
+                   "upper_height_cm": 86, "lower_height_cm": 44, "backrests": true, "side_backrests": true,
+                   "apron": true, "floor_grate": true, "headrests": 2, "sliding_stool": true},
+      "heater": {"sku": "HARVIA-CILINDRO-90", "position": "front_right"}, "control": "UKU-WIFI-GB",
+      "lighting": ["ZS2", "LED-5"], "accessories": ["S2342", "W4408"], "ventilation": true, "services": ["M", "M-LED", "L1"]
+    }
+  },
+  {
+    "id": "zirbe-eck-glasfront",
+    "name": "Zirbe Eck Glasfront",
+    "tagline": "Stone pine 220 x 200 cm, corner entry with glass on both sides, U benches, Virta Combi",
+    "source": "holzsauna.ch Zirbe Massiv-Paneele mit Eckeinstieg und Glasfront",
+    "config": {
+      "family": "zirbe", "width_cm": 220, "depth_cm": 200, "height_cm": 202,
+      "board_orientation": "horizontal", "cladding": "none", "entry": "corner_glasfront",
+      "door": {"hinge": "left", "position": "left", "corner": "right"}, "window": "none",
+      "interior": {"material": "espe_gerundet", "layout": "L", "upper_depth_cm": 55, "lower_depth_cm": 30,
+                   "upper_height_cm": 86, "lower_height_cm": 44, "backrests": true, "side_backrests": true,
+                   "apron": true, "floor_grate": true, "headrests": 2, "sliding_stool": true},
+      "heater": {"sku": "HARVIA-VIRTA-C90", "position": "front_left"}, "control": "UKU-WIFI-CB",
+      "lighting": ["LED-5", "LUMIA-1"], "accessories": ["S2342", "B6622-1"], "ventilation": true, "services": ["M", "M-LED", "L2"]
+    }
+  },
+  {
+    "id": "designer-espe-schiefer",
+    "name": "Designer Espe Schiefer",
+    "tagline": "Glass corner 220 x 203 cm with slate cladding, EOS Mythos, audio and Lumia RGB",
+    "source": "holzsauna.ch Designer-Sauna Espe und Schiefer",
+    "config": {
+      "family": "espe_glasfront", "width_cm": 220, "depth_cm": 203, "height_cm": 202,
+      "board_orientation": "horizontal", "cladding": "schiefer", "entry": "glass_corner",
+      "door": {"hinge": "right", "position": "right", "corner": "right"}, "window": "none",
+      "interior": {"material": "erle_exklusiv_gerundet", "layout": "L", "upper_depth_cm": 60, "lower_depth_cm": 30,
+                   "upper_height_cm": 86, "lower_height_cm": 44, "backrests": true, "side_backrests": true,
+                   "apron": true, "floor_grate": true, "headrests": 2, "sliding_stool": true},
+      "heater": {"sku": "EOS-MYTHOS-S35", "position": "front_left"}, "control": "UKU-WIFI-GB",
+      "lighting": ["LED-5", "LUMIA-2"], "accessories": ["S2343", "SET-A-L-H", "W4408"], "ventilation": true, "services": ["M", "M-LED", "L1"]
+    }
+  }
+]

@@ -4,13 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "assets": "node scripts/prepare-assets.mjs",
     "dev": "node scripts/dev.mjs",
-    "build": "npm run assets && vite build",
+    "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "playwright test",
-    "start": "node server/index.js",
-    "test:unit": "node --test tests/*.test.js"
+    "start": "node app/server/index.js"
   },
   "dependencies": {
     "express": "^5.2.1",

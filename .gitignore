@@ -1,12 +1,30 @@
+# Dependencies & build output
 node_modules/
-.tools/
 dist/
-public/assets/
-public/draco/
-test-results/
-playwright-report/
+
+# Runtime data: sqlite db (quote requests, shared design links) - root only,
+# so this doesn't also match the committed public/assets/data/ (catalog.json etc.)
+/data/
+
+# Tooling logs and local dev servers
+.tools/
 *.log
 
-data/
-public/images/
+# Test artifacts
+test-results/
+playwright-report/
 
+# Scratch/temporary files (see CLAUDE session scratchpad convention)
+tmp/
+
+# Editor/type-checker caches
+.mypy_cache/
+__pycache__/
+blender/__pycache__/
+
+# Blender pipeline's own regenerated working files (renders, .blend, batch
+# output) - never part of the deployed app; see blender/README.md
+/output/
+
+# Local env overrides (never the checked-in Dockerfile/compose file)
+.env

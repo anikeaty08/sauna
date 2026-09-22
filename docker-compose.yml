@@ -1,0 +1,31 @@
+# Sauna Studio - production compose file for a Contabo VPS (or any Docker host).
+#
+#   docker compose up -d --build
+#
+# The app listens on 3001 inside the container; point a reverse proxy
+# (nginx/Caddy/Traefik) at it for TLS + the public domain, or publish the
+# port directly for a quick test. The sqlite database (quote requests,
+# shared design links) persists in the named volume.
+services:
+  sauna-studio:
+    build: .
+    image: sauna-studio:latest
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - sauna-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - HOST=0.0.0.0
+      - SAUNA_DATABASE=/app/data/sauna.sqlite
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+volumes:
+  sauna-data:

@@ -1,0 +1,22 @@
+# The web app build only needs: package.json/lock, index.html, vite/tailwind/
+# postcss configs, app/client/, public/ (committed data+images+models),
+# app/server/. Everything else - the Blender pipeline (blender/, output/),
+# docs, tests, node_modules, dev logs - stays out of the image entirely.
+node_modules
+dist
+/data
+test-results
+playwright-report
+tmp
+.tools
+*.log
+.git
+.claude
+.mypy_cache
+blender
+output
+docs
+tests
+*.blend
+*.blend1
+*.pdf
