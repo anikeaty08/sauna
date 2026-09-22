@@ -1572,7 +1572,7 @@ class SaunaBuilder:
         items, total, warnings = price_items(self.cfg)
         self.warnings = warnings + self.warnings
         summary = {'config': self.cfg, 'items': items, 'total_chf': total,
-                   'total_excl_vat_chf': round(total / (1 + CATALOG['meta']['vat_rate']), 2),
+                   'total_excl_vat_chf': round(total / (1 + CATALOG.get('meta', {}).get('vat_rate', 0.081)), 2),
                    'warnings': self.warnings,
                    'cabin_bounds_m': {'x': [-self.W / 2, self.W / 2], 'y': [-self.D, 0], 'z': [0, self.H]},
                    'volume_m3': round(self.W * self.D * self.H, 2)}
@@ -1631,7 +1631,7 @@ def export_glb(filepath, draco=True):
             obj.select_set(True)
     bpy.ops.export_scene.gltf(
         filepath=str(filepath), export_format='GLB', use_selection=True, use_active_scene=True,
-        export_yup=True, export_animations=False, export_extras=True, export_apply=True,
+        export_yup=True, export_animations=False, export_extras=True,
         export_lights=True,
         export_draco_mesh_compression_enable=draco, export_draco_mesh_compression_level=6,
     )

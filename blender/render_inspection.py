@@ -4,7 +4,7 @@ import bpy
 import math
 from pathlib import Path
 
-OUTPUT = Path(r'C:\Users\anike\Desktop\sauna\output\blender')
+OUTPUT = Path(__file__).resolve().parents[1] / 'output' / 'blender'
 scene = bpy.context.scene
 scene.render.resolution_x = 1100
 scene.render.resolution_y = 1100
