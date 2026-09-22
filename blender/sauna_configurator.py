@@ -1631,7 +1631,7 @@ def export_glb(filepath, draco=True):
             obj.select_set(True)
     bpy.ops.export_scene.gltf(
         filepath=str(filepath), export_format='GLB', use_selection=True, use_active_scene=True,
-        export_yup=True, export_animations=False, export_extras=True,
+        export_yup=True, export_animations=False, export_extras=True, export_apply=True,
         export_lights=True,
         export_draco_mesh_compression_enable=draco, export_draco_mesh_compression_level=6,
     )

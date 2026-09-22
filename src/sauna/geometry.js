@@ -193,9 +193,97 @@ function classifySegments(points, W, D) {
   return segs;
 }
 
+/**
+ * Barrel sauna (Saunafass): a horizontal cylinder, axis along X (=width in the
+ * catalog), diameter = depth. This is a pilot geometry - round staves are
+ * approximated as a smooth shell, and the door sits on the flat front cap
+ * rather than following the curve, which real barrel doors do.
+ */
+function buildBarrelSauna(cfg, catalog, materials, lang) {
+  const itemTitle = spec => nameOf(spec, lang);
+  const isDe = lang === 'de';
+  const group = new THREE.Group();
+  const registry = [];
+  const push = mesh => { if (mesh.userData.info) registry.push(mesh); group.add(mesh); return mesh; };
+  const mm = v => Math.round(v * 1000);
+
+  const family = catalog.families[cfg.family];
+  const length = cfg.widthCm / 100, radius = cfg.depthCm / 200, wallT = family.wall_mm / 1000;
+  const wallMat = materials.wood(family.wall_wood, true);
+  const benchSpec = catalog.interiors[cfg.interior.material];
+  const benchMat = materials.wood(benchSpec.wood, false);
+  const cy = radius;
+
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, length, 40, 1, true), wallMat);
+  shell.rotation.z = Math.PI / 2;
+  shell.position.set(length / 2, cy, radius);
+  physicalUVs(shell.geometry, 1.0, 'x');
+  push(tag(shell, 'cabin', family.sku, `${itemTitle(catalog.woods[family.wall_wood])} ${isDe ? 'Fassdauben' : 'barrel staves'}, ${family.wall_mm} mm`, 0, [mm(length), mm(radius * 2), mm(radius * 2)], { includedIn: 'cabin' }));
+
+  const backCap = new THREE.Mesh(new THREE.CircleGeometry(radius, 40), wallMat);
+  backCap.rotation.y = Math.PI / 2;
+  backCap.position.set(0.01, cy, radius);
+  push(tag(backCap, 'cabin', family.sku, isDe ? 'Rueckwand' : 'Back cap', 0, [mm(radius * 2), mm(radius * 2), family.wall_mm], { includedIn: 'cabin' }));
+
+  const doorW = family.door_mm[0] / 1000, doorH = family.door_mm[1] / 1000;
+  const frontShape = new THREE.Shape();
+  frontShape.absarc(0, 0, radius, 0, Math.PI * 2, false);
+  const hole = new THREE.Path();
+  const hx0 = -doorW / 2, hx1 = doorW / 2, hy0 = -radius + 0.02, hy1 = hy0 + doorH;
+  hole.moveTo(hx0, hy0); hole.lineTo(hx1, hy0); hole.lineTo(hx1, hy1); hole.lineTo(hx0, hy1); hole.closePath();
+  frontShape.holes.push(hole);
+  const frontCap = new THREE.Mesh(new THREE.ShapeGeometry(frontShape, 32), wallMat);
+  frontCap.rotation.y = -Math.PI / 2;
+  frontCap.position.set(length - 0.01, cy, radius);
+  push(tag(frontCap, 'cabin', family.sku, isDe ? 'Frontwand mit Tuer' : 'Front cap with door', 0, [mm(radius * 2), mm(radius * 2), family.wall_mm], { includedIn: 'cabin' }));
+
+  const doorGlassSpec = catalog.door_glass?.[cfg.door.glass] || catalog.door_glass?.clear;
+  const doorMat = cfg.door.glass === 'wood_window' ? materials.wood('fichte') : materials.plain('barrelGlass' + cfg.door.glass, { color: new THREE.Color(...(doorGlassSpec?.tint || [0.87, 0.93, 0.91])), roughness: 0.08, transparent: true, opacity: doorGlassSpec?.opacity ?? 0.3, side: THREE.DoubleSide });
+  const doorRoot = new THREE.Group();
+  doorRoot.position.set(length - wallT - 0.005, cy + hy0 + doorH / 2, radius + hx0);
+  const sign = 1;
+  const leaf = new THREE.Mesh(box(doorH, doorW - 0.01, 0.008), doorMat);
+  leaf.rotation.x = Math.PI / 2; leaf.rotation.z = Math.PI / 2;
+  leaf.position.set(0, 0, (doorW - 0.01) / 2);
+  doorRoot.add(leaf);
+  push(tag(leaf, 'door', family.sku, `${isDe ? 'Fasstuer' : 'Barrel door'}, ${itemTitle(doorGlassSpec)}`, 0, [family.door_mm[0], 8, family.door_mm[1]], { includedIn: 'cabin', hinge: cfg.door.hinge }));
+  group.add(doorRoot);
+
+  const benchZ0 = radius + 0.15, benchZ1 = radius * 2 - wallT - 0.02;
+  const benchY = radius * 0.55;
+  const benchTop = new THREE.Mesh(box(length - 0.6, 0.035, benchZ1 - benchZ0, 1, 'x'), benchMat);
+  benchTop.position.set(length / 2, benchY, benchZ0 + (benchZ1 - benchZ0) / 2);
+  push(tag(benchTop, 'interior', cfg.interior.material, `${isDe ? 'Liege' : 'Bench'}, ${itemTitle(benchSpec)}`, benchSpec.price, [mm(length - 0.6), mm(benchZ1 - benchZ0), 35]));
+
+  const heaterSpec = catalog.heaters[cfg.heater.sku];
+  let heaterInfo = null;
+  if (heaterSpec) {
+    const [hwMm, , hhMm] = heaterSpec.dims_mm;
+    const hw = hwMm / 1000, hh = hhMm / 1000;
+    const bodyMat = heaterSpec.color === 'black' ? materials.black : materials.steel;
+    const hx = 0.35, hz = radius * 2 - wallT - 0.3;
+    const casing = new THREE.Mesh(box(hw, hh, hw * 0.8), bodyMat);
+    casing.position.set(hx, hh / 2, hz);
+    const stones = new THREE.Mesh(new THREE.CylinderGeometry(hw * 0.4, hw * 0.4, 0.05, 16), materials.stones);
+    stones.position.set(hx, hh + 0.03, hz);
+    for (const m of [casing, stones]) push(tag(m, 'heater', cfg.heater.sku, itemTitle(heaterSpec), heaterSpec.price, heaterSpec.dims_mm, { kw: heaterSpec.kw, control: heaterSpec.control, mount: heaterSpec.mount, approx: true }));
+    heaterInfo = { cx: hx, cz: hz, hz0: hz, hz1: hz, base: 0, hh, atBack: false };
+  }
+
+  if (cfg.accessories.includes('TERRACE-70')) {
+    const terrace = new THREE.Mesh(box(length, 0.05, 0.7), materials.wood('fichte', true));
+    terrace.position.set(length / 2, -0.025, radius * 2 + 0.35);
+    push(tag(terrace, 'accessory', 'TERRACE-70', isDe ? 'Terrasse 70 cm' : '70 cm terrace', 0, [mm(length), 700, 50], { includedIn: 'cabin' }));
+  }
+
+  const bounds = { minX: 0, maxX: length, minZ: 0, maxZ: radius * 2, minY: 0, maxY: radius * 2 + 0.05 };
+  return { group, registry, bounds, doorRoot, doorSign: sign, heaterInfo, familyName: itemTitle(family) };
+}
+
 export function buildSauna(cfg, catalog, materials, lang = 'en') {
   const itemTitle = spec => nameOf(spec, lang);
   const isDe = lang === 'de';
+  if ((catalog.families[cfg.family] || {}).type === 'barrel') return buildBarrelSauna(cfg, catalog, materials, lang);
   const group = new THREE.Group();
   const registry = [];
   const push = mesh => { if (mesh.userData.info) registry.push(mesh); group.add(mesh); return mesh; };

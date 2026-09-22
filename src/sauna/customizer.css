@@ -721,3 +721,87 @@
   .preset-picker-intro h1 { font-size: 36px; }
   .opt-grid-3 { grid-template-columns: 1fr 1fr; }
 }
+
+/* ── Type filter (family product type pills) ────────────────────────────────── */
+.type-filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.type-filter button {
+  padding: 6px 12px; border-radius: 20px; font-size: 10.5px; font-weight: 650;
+  border: 1px solid var(--line); background: var(--paper); color: var(--muted);
+  transition: all 0.15s ease;
+}
+.type-filter button.is-active { background: var(--pine); color: #fafbf7; border-color: var(--pine); }
+.type-filter button:hover:not(.is-active) { border-color: var(--sage); color: var(--pine); }
+
+/* ── Room fit check ──────────────────────────────────────────────────────────── */
+.room-input {
+  width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid var(--line);
+  font-size: 12px; font-family: inherit; color: var(--pine); margin-top: 4px;
+}
+.room-input:focus { outline: none; border-color: var(--sage); }
+.fit-result {
+  display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; padding: 10px 12px;
+  border-radius: 9px; font-size: 11px; line-height: 1.6;
+}
+.fit-result.is-ok { background: #eaf3ea; color: #2d4a38; }
+.fit-result.is-bad { background: #fdeeea; color: #a04426; }
+.fit-result svg { flex-shrink: 0; margin-top: 1px; }
+
+/* ── Panel notes (electrical / ventilation / lead time / warranty) ──────────── */
+.panel-notes { display: flex; flex-direction: column; gap: 6px; }
+.panel-note {
+  display: flex; align-items: flex-start; gap: 7px; font-size: 10.5px; color: var(--muted);
+  line-height: 1.6; margin: 0; padding: 8px 10px; background: var(--mineral); border-radius: 8px;
+}
+.panel-note svg { flex-shrink: 0; margin-top: 2px; color: var(--sage); }
+
+/* ── Quote request CTA + modal ───────────────────────────────────────────────── */
+.quote-cta { margin-top: 4px; }
+.quote-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(20, 30, 24, 0.55); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.quote-modal {
+  background: var(--paper); border-radius: 14px; width: 100%; max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto;
+}
+.quote-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px; border-bottom: 1px solid var(--line);
+}
+.quote-modal-head h3 { margin: 0; font-size: 16px; font-weight: 650; }
+.quote-form { display: flex; flex-direction: column; gap: 12px; padding: 20px; }
+.quote-summary { font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+.quote-summary b { color: var(--pine); }
+.quote-form label { display: flex; flex-direction: column; gap: 5px; font-size: 11px; font-weight: 650; color: var(--muted); }
+.quote-form input, .quote-form textarea {
+  padding: 9px 11px; border-radius: 8px; border: 1.5px solid var(--line);
+  font: inherit; font-size: 12.5px; color: var(--pine); resize: vertical;
+}
+.quote-form input:focus, .quote-form textarea:focus { outline: none; border-color: var(--sage); }
+.quote-error { font-size: 11px; color: #a04426; margin: 0; }
+.quote-done { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 32px 24px; text-align: center; }
+.quote-done p { margin: 0; font-size: 13px; }
+.quote-id { font-size: 10.5px; color: var(--muted) !important; font-family: monospace; }
+
+/* ── Export row: pairs of secondary actions side by side, to keep the sticky
+   total-bar compact instead of stacking every button full-width ────────── */
+.export-row { display: flex; gap: 8px; margin-top: 0; }
+.export-row .export-btn { width: auto; flex: 1; min-width: 0; padding: 9px 8px; font-size: 10.5px; }
+.export-row .export-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.quote-cta { margin-top: 2px; min-height: 42px; }
+
+/* ── Share link box (under the total bar) + header share state ──────────── */
+.share-box { display: flex; gap: 6px; }
+.share-box input {
+  flex: 1; min-width: 0; padding: 8px 10px; border-radius: 7px; border: 1.5px solid var(--line);
+  font: inherit; font-size: 11px; color: var(--pine); background: var(--mineral);
+}
+.share-box button {
+  padding: 8px 12px; border-radius: 7px; border: 1.5px solid var(--pine); background: var(--pine);
+  color: #fafbf7; font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.share-btn.is-done { border-color: var(--sage); color: var(--pine); background: #eaf3ea; }
+.header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 640px) {
+  .customizer-back { padding: 6px 9px; font-size: 11px; }
+}

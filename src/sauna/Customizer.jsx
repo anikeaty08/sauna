@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, DoorOpen, ChevronLeft, ChevronDown, Receipt, Download, FileText } from 'lucide-react';
+import { Box, DoorOpen, ChevronLeft, ChevronDown, Receipt, Download, FileText, Share2, Send, RotateCcw, Check } from 'lucide-react';
 import { useCatalog } from './useCatalog';
 import { SaunaScene } from './SaunaScene';
 import { MaterialCache } from './geometry';
 import { defaultConfig, fromPreset, normalizeConfig } from './config';
 import { priceItems } from './pricing';
 import { chf } from './format';
-import { downloadSpecification } from './exportSpec';
 import { getTranslation } from './i18n';
+import { createShareURL, loadSharedConfig, copyToClipboard } from './shareLink';
+import { openPrintableQuote } from './printQuote';
+import QuoteModal from './QuoteModal';
 import PresetPicker from './PresetPicker';
 import { ConfiguratorPanel, ComponentDrawer } from './Panel';
 import './customizer.css';
@@ -64,6 +66,10 @@ export default function Customizer() {
   const [hover, setHover] = useState({ info: null, x: 0, y: 0 });
   const [exportingGLB, setExportingGLB] = useState(false);
   const [exportMessage, setExportMessage] = useState('');
+  const [share, setShare] = useState({ url: '', copied: false, busy: false });
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  const initialCfgRef = useRef(null);
+  const sharedPresetRef = useRef(null);
 
   // Bilingual state (English / German)
   const [lang, setLang] = useState(() => {
@@ -101,15 +107,6 @@ export default function Customizer() {
     }
   };
 
-  const handleExportSpec = () => {
-    if (!cfg || !catalog) return;
-    const familySlug = cfg?.family || 'custom';
-    const filename = `${familySlug}-sauna-${cfg?.widthCm || 200}x${cfg?.depthCm || 180}-${isDe ? 'spezifikation' : 'specification'}`;
-    downloadSpecification(cfg, catalog, pricing, filename, lang);
-    setExportMessage(t.msgSpecDownloaded);
-    setTimeout(() => setExportMessage(''), 3500);
-  };
-
   // Price every preset once for the picker screen's "from CHF …" tags
   useEffect(() => {
     if (!catalog || !presets) return;
@@ -122,11 +119,39 @@ export default function Customizer() {
   const setInterior = patch => setCfgRaw(prev => catalog ? normalizeConfig({ ...prev, interior: { ...prev.interior, ...patch } }, catalog) : prev);
   const setDoor = patch => setCfgRaw(prev => catalog ? normalizeConfig({ ...prev, door: { ...prev.door, ...patch } }, catalog) : prev);
   const setHeater = patch => setCfgRaw(prev => catalog ? normalizeConfig({ ...prev, heater: { ...prev.heater, ...patch } }, catalog) : prev);
+  const setBundle = bundleKey => setCfgRaw(prev => catalog ? normalizeConfig({ ...prev, bundle: bundleKey }, catalog) : prev);
   const toggleList = (key, sku) => setCfgRaw(prev => {
     if (!catalog) return prev;
     const list = prev[key].includes(sku) ? prev[key].filter(s => s !== sku) : [...prev[key], sku];
     return normalizeConfig({ ...prev, [key]: list }, catalog);
   });
+
+  // A shared link (?c=...) restores a full configuration straight into the
+  // customizer on load, bypassing the preset picker.
+  useEffect(() => {
+    if (!catalog || sharedPresetRef.current) return;
+    sharedPresetRef.current = true;
+    if (!location.search) return;
+    let cancelled = false;
+    loadSharedConfig(catalog).then(shared => {
+      if (cancelled || !shared) return;
+      const normalized = normalizeConfig(shared, catalog);
+      setCfgRaw(normalized);
+      initialCfgRef.current = normalized;
+      setStage('customize');
+    });
+    return () => { cancelled = true; };
+  }, [catalog]);
+
+  const handleShare = async () => {
+    if (!cfg || share.busy) return;
+    setShare({ url: '', copied: false, busy: true });
+    const { url } = await createShareURL(cfg, pricing?.total);
+    const copied = await copyToClipboard(url);
+    setShare({ url, copied, busy: false });
+  };
+  const handleReset = () => { if (initialCfgRef.current) setCfgRaw(structuredClone(initialCfgRef.current)); };
+  const handlePrintQuote = () => { if (pricing) openPrintableQuote(cfg, catalog, pricing, lang); };
 
   // Mount the 3D scene once we enter the customizer
   useEffect(() => {
@@ -158,14 +183,20 @@ export default function Customizer() {
   const pricing = useMemo(() => (cfg && catalog ? priceItems(cfg, catalog, lang) : null), [cfg, catalog, lang]);
 
   function pickPreset(preset) {
-    setCfgRaw(normalizeConfig(fromPreset(preset), catalog));
+    const normalized = normalizeConfig(fromPreset(preset), catalog);
+    setCfgRaw(normalized);
+    initialCfgRef.current = normalized;
     setStage('customize');
     setView('exterior');
     setDoorOpen(false);
+    history.replaceState(null, '', location.pathname);
   }
   function startBlank() {
-    setCfgRaw(defaultConfig(catalog));
+    const normalized = defaultConfig(catalog);
+    setCfgRaw(normalized);
+    initialCfgRef.current = normalized;
     setStage('customize');
+    history.replaceState(null, '', location.pathname);
   }
 
   if (loading) return <LoadingScreen text={t.loading} />;
@@ -195,13 +226,23 @@ export default function Customizer() {
 
         <div className="header-right">
           {stage === 'customize' && (
-            <button
-              className="customizer-back"
-              onClick={() => setStage('pick')}
-            >
-              <ChevronLeft size={14} />
-              {t.backToPresets}
-            </button>
+            <>
+              <button
+                className="customizer-back"
+                onClick={() => { setStage('pick'); history.replaceState(null, '', location.pathname); }}
+              >
+                <ChevronLeft size={14} />
+                {isDe ? 'Zurück' : 'Back'}
+              </button>
+              <button className="customizer-back" onClick={handleReset} title={isDe ? 'Änderungen verwerfen, zur Ausgangskonfiguration' : 'Discard changes, back to the starting configuration'}>
+                <RotateCcw size={13} />
+                {isDe ? 'Zurücksetzen' : 'Reset'}
+              </button>
+              <button className={`customizer-back share-btn ${share.copied ? 'is-done' : ''}`} onClick={handleShare} disabled={share.busy} title={isDe ? 'Eindeutigen Link zu diesem Entwurf erstellen' : 'Create a unique link to this design'}>
+                {share.copied ? <Check size={13} /> : <Share2 size={13} />}
+                {share.busy ? '…' : share.copied ? (isDe ? 'Link kopiert' : 'Link copied') : (isDe ? 'Link teilen' : 'Share link')}
+              </button>
+            </>
           )}
 
           {/* ── Language Toggle (EN / DE) ── */}
@@ -295,6 +336,7 @@ export default function Customizer() {
               onSetInterior={setInterior}
               onSetDoor={setDoor}
               onSetHeater={setHeater}
+              onSetBundle={setBundle}
               onToggleList={toggleList}
             />
           </section>
@@ -318,11 +360,14 @@ export default function Customizer() {
               openId={openSection}
               volumeM3={pricing?.volumeM3}
               warnings={pricing?.warnings || []}
+              notes={pricing?.notes || []}
+              fit={pricing?.fit}
               lang={lang}
               onSetCfg={setCfg}
               onSetInterior={setInterior}
               onSetDoor={setDoor}
               onSetHeater={setHeater}
+              onSetBundle={setBundle}
               onToggleList={toggleList}
             />
 
@@ -356,33 +401,37 @@ export default function Customizer() {
                 <b>{chf(pricing?.total)}</b>
               </div>
 
-              {/* Export actions */}
-              <div className="export-actions">
-                <button
-                  type="button"
-                  className="export-btn export-btn-primary"
-                  onClick={handleExportGLB}
-                  disabled={exportingGLB}
-                  title={isDe ? '3D-Modell (.glb) für Blender, CAD oder AR herunterladen' : 'Export and download the 3D model (.glb) for Blender, AR or CAD viewers'}
-                >
-                  <Download size={14} />
-                  <span>{exportingGLB ? t.exportingGLB : t.exportGLB}</span>
-                </button>
+              {/* Primary action: request a quote */}
+              <button type="button" className="primary-button quote-cta" onClick={() => setQuoteOpen(true)}>
+                <Send size={15} />
+                <span>{isDe ? 'Offerte anfragen' : 'Request a quote'}</span>
+              </button>
 
-                <button
-                  type="button"
-                  className="export-btn export-btn-secondary"
-                  onClick={handleExportSpec}
-                  title={isDe ? 'Detaillierte Offerte & Datenblatt als Textdatei (.txt) herunterladen' : 'Download an itemized bill of materials and price quote (.txt)'}
-                >
+              {/* One PDF (quote + floor plan + technical notes) and the 3D model */}
+              <div className="export-row">
+                <button type="button" className="export-btn export-btn-secondary" onClick={handlePrintQuote} title={isDe ? 'Offerte mit Grundriss und technischen Hinweisen als PDF' : 'Quotation with floor plan and technical notes as PDF'}>
                   <FileText size={14} />
-                  <span>{t.downloadSpec}</span>
+                  <span>{isDe ? 'PDF-Offerte' : 'PDF quote'}</span>
+                </button>
+                <button type="button" className="export-btn export-btn-secondary" onClick={handleExportGLB} disabled={exportingGLB} title={isDe ? '3D-Modell (.glb) für Blender, CAD oder AR' : '3D model (.glb) for Blender, AR or CAD'}>
+                  <Download size={14} />
+                  <span>{exportingGLB ? t.exportingGLB : (isDe ? '3D-Modell' : '3D model')}</span>
                 </button>
               </div>
+              {share.url && (
+                <div className="share-box">
+                  <input readOnly value={share.url} onFocus={e => e.target.select()} aria-label={isDe ? 'Link zum Entwurf' : 'Link to this design'} />
+                  <button type="button" onClick={async () => { const ok = await copyToClipboard(share.url); setShare(s => ({ ...s, copied: ok })); }}>{share.copied ? (isDe ? 'Kopiert' : 'Copied') : (isDe ? 'Kopieren' : 'Copy')}</button>
+                </div>
+              )}
               {exportMessage && <p className="export-feedback">{exportMessage}</p>}
             </div>
           </aside>
         </div>
+      )}
+
+      {quoteOpen && cfg && pricing && (
+        <QuoteModal cfg={cfg} pricing={pricing} familyName={familyName} lang={lang} onClose={() => setQuoteOpen(false)} />
       )}
     </div>
   );

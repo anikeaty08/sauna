@@ -1,7 +1,13 @@
-import { Check, Plus, X, Flame, Gauge, Lightbulb, PackagePlus, DoorOpen, Ruler, Layers, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Plus, X, Flame, Gauge, Lightbulb, PackagePlus, DoorOpen, Ruler, Layers, Trash2, Home, Zap, Info, Ruler as RulerIcon } from 'lucide-react';
 import { chf, chfDelta } from './format';
 import { nameOf, woodHex, heaterSpecLine, fitsVolume, controlSpecLine, shortFamily } from './options';
-import { widthOptions, depthOptions } from './config';
+import { widthOptions, depthOptions, familyType } from './config';
+
+const TYPE_LABEL = {
+  en: { cabin: 'Indoor', barrel: 'Barrel', house: 'Garden house', infrared: 'Infrared' },
+  de: { cabin: 'Innen', barrel: 'Fass', house: 'Gartenhaus', infrared: 'Infrarot' },
+};
 
 /* ── Swatch (selectable option button) ── */
 function Swatch({ selected, title, subtitle, price, color, onClick, disabled, flag, lang = 'en' }) {
@@ -201,22 +207,34 @@ function ToggleList({ entries, selected, listKey, onToggleList, lang = 'en' }) {
 /* ════════════════════════════════════════════════════════════════════════════ */
 export function ConfiguratorPanel({
   catalog, cfg, openId, volumeM3,
-  onSetCfg, onSetInterior, onSetDoor, onSetHeater, onToggleList, warnings,
+  onSetCfg, onSetInterior, onSetDoor, onSetHeater, onSetBundle, onToggleList, warnings, notes, fit,
   lang = 'en'
 }) {
   const isDe = lang === 'de';
   const family = catalog.families[cfg.family];
+  const type = familyType(family);
   const entriesMap = ENTRY_SHORT[lang] || ENTRY_SHORT.en;
   const claddingMap = CLADDING_SHORT[lang] || CLADDING_SHORT.en;
+  const typeLabels = TYPE_LABEL[lang] || TYPE_LABEL.en;
+  const [typeFilter, setTypeFilter] = useState('all');
+  const familyEntries = Object.entries(catalog.families).filter(([, f]) => typeFilter === 'all' || familyType(f) === typeFilter);
+  const availableTypes = [...new Set(Object.values(catalog.families).map(familyType))];
 
   return (
     <div className="panel-sections">
 
       {/* ── Cabin & size ── */}
       <Section id="cabin" title={isDe ? 'Kabine & Masse' : 'Cabin & size'} icon={Ruler} open={openId === 'cabin' || !openId}>
+        <p className="panel-label">{isDe ? 'Produktart' : 'Product type'}</p>
+        <div className="type-filter" role="group">
+          <button type="button" className={typeFilter === 'all' ? 'is-active' : ''} onClick={() => setTypeFilter('all')}>{isDe ? 'Alle' : 'All'}</button>
+          {availableTypes.map(k => (
+            <button key={k} type="button" className={typeFilter === k ? 'is-active' : ''} onClick={() => setTypeFilter(k)}>{typeLabels[k] || k}</button>
+          ))}
+        </div>
         <p className="panel-label">{isDe ? 'Holz & Konstruktion' : 'Wood & construction'}</p>
         <div className="opt-grid">
-          {Object.entries(catalog.families).map(([key, f]) => (
+          {familyEntries.map(([key, f]) => (
             <Swatch
               key={key}
               selected={cfg.family === key}
@@ -229,6 +247,31 @@ export function ConfiguratorPanel({
             />
           ))}
         </div>
+
+        {(family.wood_options_outside || family.wood_options_inside) && (
+          <>
+            {family.wood_options_outside && (
+              <>
+                <p className="panel-label">{isDe ? 'Paneele aussen (2 Sichtseiten)' : 'Panel wood outside (2 visible sides)'}</p>
+                <div className="opt-grid opt-grid-3">
+                  {family.wood_options_outside.map(k => (
+                    <Swatch key={k} selected={(cfg.woodOutside || family.wood_options_outside[0]) === k} title={nameOf(catalog.woods[k], lang)} price={0} flag={catalog.woods[k]?.on_request ? (isDe ? 'auf Anfrage' : 'on request') : ''} color={woodHex(catalog, k)} lang={lang} onClick={() => onSetCfg({ woodOutside: k })} />
+                  ))}
+                </div>
+              </>
+            )}
+            {family.wood_options_inside && (
+              <>
+                <p className="panel-label">{isDe ? 'Paneele innen' : 'Panel wood inside'}</p>
+                <div className="opt-grid opt-grid-3">
+                  {family.wood_options_inside.map(k => (
+                    <Swatch key={k} selected={(cfg.woodInside || family.wood_options_inside[0]) === k} title={nameOf(catalog.woods[k], lang)} price={0} flag={catalog.woods[k]?.on_request ? (isDe ? 'auf Anfrage' : 'on request') : ''} color={woodHex(catalog, k)} lang={lang} onClick={() => onSetCfg({ woodInside: k })} />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
 
         <p className="panel-label">{isDe ? 'Masse' : 'Dimensions'}</p>
         <div className="dims-row">
@@ -289,6 +332,26 @@ export function ConfiguratorPanel({
             />
           ))}
         </div>
+
+        {family.insulation_options && (
+          <>
+            <p className="panel-label">{isDe ? 'Dämmung' : 'Insulation'}</p>
+            <div className="switch-grid">
+              <label className="mini-switch"><input type="checkbox" checked={!!cfg.insulation?.roof} onChange={e => onSetCfg({ insulation: { ...cfg.insulation, roof: e.target.checked } })} />{isDe ? `Dach (+${chf(catalog.insulation.roof.price)})` : `Roof (+${chf(catalog.insulation.roof.price)})`}</label>
+              <label className="mini-switch"><input type="checkbox" checked={!!cfg.insulation?.floor} onChange={e => onSetCfg({ insulation: { ...cfg.insulation, floor: e.target.checked } })} />{isDe ? `Boden (+${chf(catalog.insulation.floor.price)})` : `Floor (+${chf(catalog.insulation.floor.price)})`}</label>
+            </div>
+          </>
+        )}
+        {family.roof_colours && (
+          <>
+            <p className="panel-label">{isDe ? 'Dacheindeckung' : 'Roof shingles'}</p>
+            <div className="opt-grid opt-grid-2">
+              {family.roof_colours.map(k => (
+                <Swatch key={k} selected={cfg.roofColour === k} title={nameOf(catalog.roof_colours[k], lang)} price={0} color={k === 'black' ? '#20221f' : '#7a2a20'} lang={lang} onClick={() => onSetCfg({ roofColour: k })} />
+              ))}
+            </div>
+          </>
+        )}
       </Section>
 
       {/* ── Door & window ── */}
@@ -322,27 +385,37 @@ export function ConfiguratorPanel({
           </>
         )}
 
-        {['front', 'corner'].includes(cfg.entry) && (
+        {(family.window_types ? family.window_types.length > 1 : ['front', 'corner'].includes(cfg.entry)) && (
           <>
             <p className="panel-label">{isDe ? 'Fenster' : 'Window'}</p>
             <div className="opt-grid opt-grid-3">
-              {[
-                ['none', isDe ? 'Kein Fenster' : 'No window'],
-                ['auto', isDe ? 'Raumhoch' : 'Full-height'],
-                ['60', isDe ? '60 cm breit' : '60 cm wide']
-              ].map(([key, label]) => (
-                <Swatch
-                  key={key}
-                  selected={String(cfg.window) === key}
-                  title={label}
-                  price={key !== 'none' && family.window_price ? family.window_price : 0}
-                  lang={lang}
-                  onClick={() => onSetCfg({ window: key })}
-                />
+              {(family.window_types || ['none', 'auto', '60']).map(key => {
+                const wt = catalog.window_types?.[key];
+                const label = wt ? nameOf(wt, lang) : (key === 'none' ? (isDe ? 'Kein Fenster' : 'No window') : key === 'auto' ? (isDe ? 'Raumhoch' : 'Full-height') : `${key} cm`);
+                const price = wt?.price || (key !== 'none' && family.window_price ? family.window_price : 0);
+                return <Swatch key={key} selected={String(cfg.window) === key} title={label} price={price} lang={lang} onClick={() => onSetCfg({ window: key })} />;
+              })}
+            </div>
+          </>
+        )}
+
+        {(family.door_glass_options?.length > 1 || (catalog.door_glass && !family.door_glass_options)) && (
+          <>
+            <p className="panel-label">{isDe ? 'Glas / Türblatt' : 'Door glass'}</p>
+            <div className="opt-grid opt-grid-3">
+              {(family.door_glass_options || ['clear']).map(key => (
+                <Swatch key={key} selected={cfg.door.glass === key} title={nameOf(catalog.door_glass[key], lang)} price={0} flag={catalog.door_glass[key]?.on_request ? (isDe ? 'auf Anfrage' : 'on request') : ''} lang={lang} onClick={() => onSetDoor({ glass: key })} />
               ))}
             </div>
           </>
         )}
+
+        <p className="panel-label">{isDe ? 'Türgriff' : 'Door handle'}</p>
+        <div className="opt-grid opt-grid-2">
+          {Object.entries(catalog.handles).map(([key, h]) => (
+            <Swatch key={key} selected={cfg.door.handle === key} title={nameOf(h, lang)} price={0} lang={lang} onClick={() => onSetDoor({ handle: key })} />
+          ))}
+        </div>
       </Section>
 
       {/* ── Benches & interior ── */}
@@ -394,8 +467,28 @@ export function ConfiguratorPanel({
       </Section>
 
       {/* ── Heater ── */}
+      {!family.no_heater && (
       <Section id="heater" title={isDe ? 'Saunaofen' : 'Heater'} icon={Flame} open={openId === 'heater'}>
-        <HeaterList catalog={catalog} cfg={cfg} volumeM3={volumeM3} onSetHeater={onSetHeater} lang={lang} />
+        <p className="panel-label">{isDe ? 'Fertige Ofen-Sets (Ofen + Steuerung)' : 'Ready-made sets (heater + control)'}</p>
+        <div className="opt-list">
+          {Object.entries(catalog.bundles).filter(([, b]) => !b.outdoor || family.outdoor).map(([key, b]) => (
+            <Swatch key={key} selected={cfg.bundle === key} title={nameOf(b, lang).replace('Set: ', '')} subtitle={`${b.kw} kW`} price={b.price} lang={lang} onClick={() => onSetBundle(key)} />
+          ))}
+        </div>
+        <p className="panel-label">{isDe ? 'Oder einzeln wählen' : 'Or choose individually'}</p>
+        <HeaterList catalog={catalog} cfg={cfg} volumeM3={volumeM3} onSetHeater={patch => { onSetCfg({ bundle: null }); onSetHeater(patch); }} lang={lang} />
+
+        {catalog.heaters[cfg.heater.sku]?.wood_fired && (
+          <>
+            <p className="panel-label">{isDe ? 'Schornstein-Set (erforderlich)' : 'Chimney kit (required)'}</p>
+            <div className="opt-list">
+              {Object.entries(catalog.chimneys).map(([key, c]) => (
+                <Swatch key={key} selected={cfg.chimney === key} title={nameOf(c, lang)} price={c.price} lang={lang} onClick={() => onSetCfg({ chimney: key })} />
+              ))}
+            </div>
+          </>
+        )}
+
         <p className="panel-label">{isDe ? 'Position' : 'Position'}</p>
         <div className="opt-grid opt-grid-2">
           {[
@@ -411,7 +504,20 @@ export function ConfiguratorPanel({
           <input type="checkbox" checked={cfg.ventilation} onChange={e => onSetCfg({ ventilation: e.target.checked })} />
           {isDe ? 'Zu- & Abluftschieber' : 'Supply & exhaust vents'}
         </label>
+
+        {catalog.infrared && Object.keys(catalog.infrared).length > 0 && (
+          <>
+            <p className="panel-label">{isDe ? 'Infrarot-Strahler (zusätzlich)' : 'Infrared emitter (in addition)'}</p>
+            <div className="opt-list">
+              <Swatch selected={!cfg.infrared} title={isDe ? 'Ohne Infrarot' : 'No infrared'} price={0} lang={lang} onClick={() => onSetCfg({ infrared: null })} />
+              {Object.entries(catalog.infrared).map(([key, ir]) => (
+                <Swatch key={key} selected={cfg.infrared === key} title={nameOf(ir, lang)} price={ir.price} lang={lang} onClick={() => onSetCfg({ infrared: key })} />
+              ))}
+            </div>
+          </>
+        )}
       </Section>
+      )}
 
       {/* ── Control unit ── */}
       <Section id="control" title={isDe ? 'Steuergerät' : 'Control unit'} icon={Gauge} open={openId === 'control'}>
@@ -429,6 +535,39 @@ export function ConfiguratorPanel({
         <p className="panel-label">{isDe ? 'Montage & Lieferung' : 'Assembly & delivery'}</p>
         <ToggleList entries={Object.entries(catalog.services)} selected={cfg.services} listKey="services" onToggleList={onToggleList} lang={lang} />
       </Section>
+
+      {/* ── Room fit ── */}
+      <Section id="room" title={isDe ? 'Platz-Check' : 'Room fit check'} icon={RulerIcon} open={openId === 'room'}>
+        <p className="panel-label">{isDe ? 'Verfügbarer Raum (cm)' : 'Available space (cm)'}</p>
+        <div className="dims-row" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+          {['widthCm', 'depthCm', 'heightCm'].map((k, i) => (
+            <label key={k}>{[isDe ? 'Breite' : 'Width', isDe ? 'Tiefe' : 'Depth', isDe ? 'Höhe' : 'Height'][i]}
+              <input type="number" min="0" className="room-input" value={cfg.room?.[k] || ''}
+                placeholder="—"
+                onChange={e => onSetCfg({ room: { widthCm: cfg.room?.widthCm || 0, depthCm: cfg.room?.depthCm || 0, heightCm: cfg.room?.heightCm || 0, [k]: Number(e.target.value) } })} />
+            </label>
+          ))}
+        </div>
+        {fit && (
+          <div className={`fit-result ${fit.ok ? 'is-ok' : 'is-bad'}`}>
+            <Info size={14} />
+            <span>{fit.text}</span>
+          </div>
+        )}
+        {!cfg.room && <p className="dims-note">{isDe ? 'Masse eingeben, um zu prüfen, ob die Sauna in Ihren Raum passt (inkl. Türschwenk).' : 'Enter your room size to check whether the sauna fits (door swing included).'}</p>}
+      </Section>
+
+      {/* ── Notes: electrical, ventilation, lead time, warranty ── */}
+      {notes && notes.length > 0 && (
+        <div className="panel-notes" style={{ margin: '0 24px 12px' }}>
+          {notes.map((n, i) => (
+            <p key={i} className={`panel-note panel-note-${n.kind}`}>
+              {n.kind === 'electrical' ? <Zap size={12} /> : n.kind === 'lead_time' ? <Home size={12} /> : <Info size={12} />}
+              {n.text}
+            </p>
+          ))}
+        </div>
+      )}
 
       {/* ── Warnings ── */}
       {warnings.length > 0 && (
@@ -505,7 +644,7 @@ export function ComponentDrawer({ category, catalog, cfg, volumeM3, onClose, sel
   } else if (category === 'interior') {
     body = <InteriorList catalog={catalog} cfg={cfg} family={family} onSetInterior={handlers.onSetInterior} lang={lang} />;
   } else if (category === 'heater') {
-    body = <HeaterList catalog={catalog} cfg={cfg} volumeM3={volumeM3} onSetHeater={handlers.onSetHeater} lang={lang} />;
+    body = <HeaterList catalog={catalog} cfg={cfg} volumeM3={volumeM3} onSetHeater={patch => { handlers.onSetCfg({ bundle: null }); handlers.onSetHeater(patch); }} lang={lang} />;
   } else if (category === 'control') {
     body = <ControlList catalog={catalog} cfg={cfg} onSetCfg={handlers.onSetCfg} lang={lang} />;
   } else if (category === 'lighting') {
