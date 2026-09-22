@@ -7,7 +7,7 @@ import { xrSupport, startXR, publishModel, openSceneViewer, arLaunchFailed } fro
 import SpaceChecker, { Modal } from './SpaceChecker';
 
 function download(url, filename) { const anchor = document.createElement('a'); anchor.href = url; anchor.download = filename; anchor.click(); }
-function Wordmark() { return <a className="wordmark" href="#studio" aria-label="Sauna Studio home"><span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>sauna<span className="wordmark-light">studio</span></a>; }
+function Wordmark() { return <a className="wordmark brand-link" href="#studio" aria-label="HolzSauna"><img src="/images/logo.png" alt="HolzSauna" className="brand-logo" /></a>; }
 
 function DoorDiagram({ right }) { return <svg viewBox="0 0 42 36" aria-hidden="true"><path d={right ? 'M9 31V5h23v26M28 5v26H9M28 10h4m-4 15h4' : 'M9 31V5h23v26M13 5v26h19M13 10h-4m4 15h-4'} /><circle cx={right ? 14 : 27} cy="19" r="1" /></svg>; }
 

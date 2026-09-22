@@ -1,8 +1,11 @@
 import { chf } from './format';
 
-export function generateSpecificationText(cfg, catalog, pricing) {
+export function generateSpecificationText(cfg, catalog, pricing, lang = 'en') {
+  const isDe = lang === 'de';
+  const nameOf = spec => (spec && (isDe ? (spec.name_de || spec.name_en) : (spec.name_en || spec.name_de))) || '';
+
   const family = (catalog && catalog.families && catalog.families[cfg.family]) || {};
-  const familyName = family.name_en || family.name_de || 'Bespoke Sauna';
+  const familyName = nameOf(family) || (isDe ? 'Sauna nach Mass' : 'Bespoke Sauna');
   const wood = (catalog && catalog.woods && catalog.woods[cfg.wall_wood || family.wall_wood || 'fichte']) || {};
   const interior = (catalog && catalog.interiors && catalog.interiors[cfg.interior?.material]) || {};
   const heater = (catalog && catalog.heaters && catalog.heaters[cfg.heater?.sku]) || {};
@@ -18,7 +21,47 @@ export function generateSpecificationText(cfg, catalog, pricing) {
 
   const date = new Date().toLocaleDateString('de-CH', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-  const lines = [
+  const lines = isDe ? [
+    '=================================================================',
+    '                   SAUNA STUDIO SCHWEIZ                          ',
+    '                 Individuelle Spezifikation & Offerte            ',
+    '=================================================================',
+    `Datum:                ${date}`,
+    `Modellreihe:          ${familyName}`,
+    '',
+    '-- 1. MASSE & RAUMBEDARF ----------------------------------------',
+    `Aussenmasse:          ${w} × ${d} × ${h} cm (B × T × H)`,
+    `Grundfläche:          ${footprint} m²`,
+    `Kabinenvolumen:       ${volume} m³`,
+    '',
+    '-- 2. KABINE & HOLZSPEZIFIKATION --------------------------------',
+    `Wandkonstruktion:     ${family.wall_mm || 45} mm Massivholz (${nameOf(wood) || 'Fichte'})`,
+    `Schalungsrichtung:    ${cfg.board_orientation === 'vertical' ? 'Vertikale Schalung' : 'Horizontale Nut- & Federbohlen'}`,
+    `Eckverkleidung:       ${nameOf(cladding) || 'Keine'}`,
+    `Einstiegsart:         ${nameOf(entry) || 'Fronteinstieg'}`,
+    `Glastür:              8 mm Einscheibensicherheitsglas (ESG), ${cfg.door?.hinge === 'right' ? 'Rechtsanschlag' : 'Linksanschlag'}`,
+    `Fenster:              ${cfg.window === 'none' ? 'Keines' : 'Grosses Sicherheitsglas-Fenster'}`,
+    '',
+    '-- 3. INNENEINRICHTUNG & BÄNKE ----------------------------------',
+    `Innenausstattung:     ${nameOf(interior) || 'Nordische Espe'}`,
+    `Bankanordnung:        ${cfg.interior?.layout === 'U' ? 'U-Form Bänke' : cfg.interior?.layout === 'L' ? 'L-Form Bänke' : 'Gerade Bänke'}`,
+    `Rückenlehnen:         ${cfg.interior?.backrests ? 'Inbegriffen' : 'Nicht inbegriffen'}`,
+    `Zwischenbankblende:   ${cfg.interior?.apron ? 'Inbegriffen' : 'Nicht inbegriffen'}`,
+    `Bodenrost:            ${cfg.interior?.floor_grate ? 'Inbegriffen' : 'Nicht inbegriffen'}`,
+    `Kopfstützen:          ${cfg.interior?.headrests || 0} Stück`,
+    '',
+    '-- 4. SAUNAOFEN & STEUERUNG -------------------------------------',
+    `Saunaofen:            ${nameOf(heater) || 'Saunaofen'}`,
+    `Leistung:             ${heater.kw || '3.6'} kW (ausgelegt für ${heater.m3 ? heater.m3.join('–') + ' m³' : volume + ' m³'})`,
+    `Steuerung:            ${nameOf(control) || 'Integrierte Drehregler'}`,
+    `Betriebsart:          ${heater.wood_fired ? 'Holzbeheizt' : heater.combi ? 'Bio-Combi (Trockensauna / Kräuterdampf)' : 'Klassisch Finnisch (trocken)'}`,
+    '',
+    '-- 5. BELEUCHTUNG & LÜFTUNG -------------------------------------',
+    `Beleuchtung:          ${(cfg.lighting || []).length > 0 ? (cfg.lighting || []).map(id => nameOf(catalog.lighting[id]) || id).join(', ') : 'Standard-Saunaleuchte'}`,
+    `Lüftung:              ${cfg.ventilation ? 'Zu- und Abluftschieber inbegriffen' : 'Standard-Konvektion'}`,
+    '',
+    '-- 6. DETAILLIERTE PREISAUFSTELLUNG ----------------------------',
+  ] : [
     '=================================================================',
     '                   SAUNA STUDIO SWITZERLAND                      ',
     '                 Bespoke Specification & Quote                   ',
@@ -32,15 +75,15 @@ export function generateSpecificationText(cfg, catalog, pricing) {
     `Cabin Volume:         ${volume} m³`,
     '',
     '-- 2. CABIN & TIMBER SPECIFICATION ------------------------------',
-    `Wall Construction:    ${family.wall_mm || 45} mm solid timber (${wood.name_en || wood.name_de || 'Spruce'})`,
+    `Wall Construction:    ${family.wall_mm || 45} mm solid timber (${nameOf(wood) || 'Spruce'})`,
     `Board Orientation:    ${cfg.board_orientation === 'vertical' ? 'Vertical cladding' : 'Horizontal tongue & groove'}`,
-    `Corner Cladding:      ${cladding.name_en || cladding.name_de || 'None'}`,
-    `Entry Type:           ${entry.name_en || entry.name_de || 'Front entrance'}`,
+    `Corner Cladding:      ${nameOf(cladding) || 'None'}`,
+    `Entry Type:           ${nameOf(entry) || 'Front entrance'}`,
     `Door:                 8 mm tempered safety glass, ${cfg.door?.hinge || 'left'} hinge`,
     `Window:               ${cfg.window === 'none' ? 'None' : 'Panoramic safety glass window'}`,
     '',
     '-- 3. INTERIOR & SEATING ----------------------------------------',
-    `Interior Material:    ${interior.name_en || interior.name_de || 'Nordic Aspen'}`,
+    `Interior Material:    ${nameOf(interior) || 'Nordic Aspen'}`,
     `Bench Layout:         ${cfg.interior?.layout === 'U' ? 'U-Shape benches' : cfg.interior?.layout === 'L' ? 'L-Shape benches' : 'Straight benches'}`,
     `Backrests:            ${cfg.interior?.backrests ? 'Included' : 'Not included'}`,
     `Bench Apron:          ${cfg.interior?.apron ? 'Included' : 'Not included'}`,
@@ -48,13 +91,13 @@ export function generateSpecificationText(cfg, catalog, pricing) {
     `Headrests:            ${cfg.interior?.headrests || 0} unit(s)`,
     '',
     '-- 4. HEATER & CONTROLS -----------------------------------------',
-    `Heater Model:         ${heater.name_en || heater.name_de || 'Sauna Heater'}`,
+    `Heater Model:         ${nameOf(heater) || 'Sauna Heater'}`,
     `Power Rating:         ${heater.kw || '3.6'} kW (recommended for ${heater.m3 ? heater.m3.join('–') + ' m³' : volume + ' m³'})`,
-    `Control Unit:         ${control.name_en || control.name_de || 'Integrated on-heater dials'}`,
+    `Control Unit:         ${nameOf(control) || 'Integrated on-heater dials'}`,
     `Operating Mode:       ${heater.wood_fired ? 'Wood-fired' : heater.combi ? 'Bio-Combi (Dry Sauna / Herbal Steam)' : 'Electric Finnish sauna'}`,
     '',
     '-- 5. LIGHTING & VENTILATION ------------------------------------',
-    `Lighting:             ${(cfg.lighting || []).length > 0 ? (cfg.lighting || []).map(id => (catalog.lighting[id]?.name_en || catalog.lighting[id]?.name_de || id)).join(', ') : 'Standard sauna lighting'}`,
+    `Lighting:             ${(cfg.lighting || []).length > 0 ? (cfg.lighting || []).map(id => nameOf(catalog.lighting[id]) || id).join(', ') : 'Standard sauna lighting'}`,
     `Ventilation:          ${cfg.ventilation ? 'Inflow & outflow ventilation louvers included' : 'Standard passive convection'}`,
     '',
     '-- 6. ITEMIZED BILL OF MATERIALS & PRICING ----------------------',
@@ -74,25 +117,41 @@ export function generateSpecificationText(cfg, catalog, pricing) {
   const vat = Math.round((total * 0.081) / 1.081);
   const net = total - vat;
 
-  lines.push(
-    '-----------------------------------------------------------------',
-    `Subtotal (net excl. VAT):                        ${chf(net).padStart(14, ' ')}`,
-    `VAT (8.1% included):                             ${chf(vat).padStart(14, ' ')}`,
-    '-----------------------------------------------------------------',
-    `TOTAL INDICATIVE PRICE:                          ${chf(total).padStart(14, ' ')}`,
-    '=================================================================',
-    '',
-    'Notes & Conditions:',
-    '• Indicative quote based on official Swiss manufacturer catalog rates.',
-    '• Please verify electrical connection (400V 3N~ or 230V 1N~), flooring level, and wall clearances with your local electrician/contractor.',
-    '• Generated from Sauna Studio 3D Configurator.'
-  );
+  if (isDe) {
+    lines.push(
+      '-----------------------------------------------------------------',
+      `Zwischentotal (netto exkl. MWST):                ${chf(net).padStart(14, ' ')}`,
+      `MWST (8.1% inbegriffen):                         ${chf(vat).padStart(14, ' ')}`,
+      '-----------------------------------------------------------------',
+      `GESAMTRICHTPREIS:                                ${chf(total).padStart(14, ' ')}`,
+      '=================================================================',
+      '',
+      'Hinweise & Bedingungen:',
+      '• Richtofferte basierend auf offiziellen Schweizer Hersteller-Katalogpreisen.',
+      '• Elektroanschluss (400V 3N~ oder 230V 1N~), Bodenbeschaffenheit und Wandabstände sind vor Baubeginn bauseits zu prüfen.',
+      '• Erstellt mit Sauna Studio 3D Konfigurator.'
+    );
+  } else {
+    lines.push(
+      '-----------------------------------------------------------------',
+      `Subtotal (net excl. VAT):                        ${chf(net).padStart(14, ' ')}`,
+      `VAT (8.1% included):                             ${chf(vat).padStart(14, ' ')}`,
+      '-----------------------------------------------------------------',
+      `TOTAL INDICATIVE PRICE:                          ${chf(total).padStart(14, ' ')}`,
+      '=================================================================',
+      '',
+      'Notes & Conditions:',
+      '• Indicative quote based on official Swiss manufacturer catalog rates.',
+      '• Please verify electrical connection (400V 3N~ or 230V 1N~), flooring level, and wall clearances with your local electrician/contractor.',
+      '• Generated from Sauna Studio 3D Configurator.'
+    );
+  }
 
   return lines.join('\n');
 }
 
-export function downloadSpecification(cfg, catalog, pricing, filename = 'sauna-specification') {
-  const text = generateSpecificationText(cfg, catalog, pricing);
+export function downloadSpecification(cfg, catalog, pricing, filename = 'sauna-specification', lang = 'en') {
+  const text = generateSpecificationText(cfg, catalog, pricing, lang);
   const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

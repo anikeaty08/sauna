@@ -20,7 +20,7 @@ const length = a => Math.hypot(a.x, a.z);
 const normalize = a => { const l = length(a) || 1; return scale(a, 1 / l); };
 const perp = a => vec(-a.z, a.x);
 
-export const nameOf = spec => (spec && (spec.name_en || spec.name_de)) || '';
+export const nameOf = (spec, lang = 'en') => (spec && (lang === 'de' ? (spec.name_de || spec.name_en) : (spec.name_en || spec.name_de))) || '';
 
 function subtractIntervals(span, holes) {
   let pieces = [[...span]];
@@ -193,13 +193,15 @@ function classifySegments(points, W, D) {
   return segs;
 }
 
-export function buildSauna(cfg, catalog, materials) {
+export function buildSauna(cfg, catalog, materials, lang = 'en') {
+  const itemTitle = spec => nameOf(spec, lang);
+  const isDe = lang === 'de';
   const group = new THREE.Group();
   const registry = [];
   const push = mesh => { if (mesh.userData.info) registry.push(mesh); group.add(mesh); return mesh; };
 
   const family = catalog.families[cfg.family];
-  const familyName = nameOf(family);
+  const familyName = itemTitle(family);
   const W = cfg.widthCm / 100, D = cfg.depthCm / 100, H = cfg.heightCm / 100;
   const t = family.wall_mm / 1000, tc = family.ceiling_mm / 1000;
   const [doorWmm, doorHmm] = family.door_mm;
@@ -211,7 +213,7 @@ export function buildSauna(cfg, catalog, materials) {
   const wallMat = materials.wood(family.wall_wood, true);
   const trimMat = materials.wood(family.wall_wood, false);
   const interiorSpec = catalog.interiors[cfg.interior.material];
-  const interiorName = nameOf(interiorSpec);
+  const interiorName = itemTitle(interiorSpec);
   const benchMat = materials.wood(interiorSpec.wood, false);
   const mm = v => Math.round(v * 1000);
 
@@ -297,7 +299,7 @@ export function buildSauna(cfg, catalog, materials) {
       const rowHoles = holes.filter(h => h[2] <= y0 + 1e-6 && h[3] >= y1 - 1e-6).map(h => [h[0], h[1]]);
       for (const [a, b] of subtractIntervals([0, seg.L], rowHoles)) {
         const mesh = panel(seg, a, b, y0, y1, wallMat, t, 0, vertical ? 'y' : 'x');
-        push(tag(mesh, 'cabin', family.sku, `${nameOf(catalog.woods[family.wall_wood])} wall, ${family.wall_mm} mm solid`, 0, [mm(b - a), family.wall_mm, mm(y1 - y0)], { includedIn: 'cabin' }));
+        push(tag(mesh, 'cabin', family.sku, isDe ? `${itemTitle(catalog.woods[family.wall_wood])} Wand, ${family.wall_mm} mm massiv` : `${itemTitle(catalog.woods[family.wall_wood])} wall, ${family.wall_mm} mm solid`, 0, [mm(b - a), family.wall_mm, mm(y1 - y0)], { includedIn: 'cabin' }));
       }
     }
   }
@@ -305,12 +307,12 @@ export function buildSauna(cfg, catalog, materials) {
     for (const o of seg.openings) {
       if (o.kind === 'door' && !seg.glass) {
         const parts = [panel(seg, o.u0, o.u0 + frame, 0, o.z1, trimMat), panel(seg, o.u1 - frame, o.u1, 0, o.z1, trimMat), panel(seg, o.u0 + frame, o.u1 - frame, doorTop, o.z1, trimMat)];
-        for (const m of parts) push(tag(m, 'cabin', family.sku, 'Door frame, threshold-free', 0, [mm(o.u1 - o.u0), family.wall_mm, mm(o.z1)], { includedIn: 'cabin' }));
+        for (const m of parts) push(tag(m, 'cabin', family.sku, isDe ? 'Türrahmen, schwellenlos' : 'Door frame, threshold-free', 0, [mm(o.u1 - o.u0), family.wall_mm, mm(o.z1)], { includedIn: 'cabin' }));
       } else if (o.kind === 'window') {
         const [gx0, gx1, gz0, gz1] = o.glass;
         const parts = [panel(seg, o.u0, o.u0 + 0.05, o.z0, o.z1, trimMat), panel(seg, o.u1 - 0.05, o.u1, o.z0, o.z1, trimMat), panel(seg, o.u0 + 0.05, o.u1 - 0.05, o.z0, gz0, trimMat), panel(seg, o.u0 + 0.05, o.u1 - 0.05, gz1, o.z1, trimMat)];
-        for (const m of parts) push(tag(m, 'cabin', family.sku, 'Window frame', 0, [mm(o.u1 - o.u0), family.wall_mm, mm(o.z1 - o.z0)], { includedIn: 'cabin' }));
-        push(tag(panel(seg, gx0, gx1, gz0, gz1, materials.glass, 0.008, t / 2), 'cabin', family.sku, 'Full-height window, 8 mm toughened clear glass', 0, [mm(gx1 - gx0), 8, mm(gz1 - gz0)], { includedIn: 'cabin' }));
+        for (const m of parts) push(tag(m, 'cabin', family.sku, isDe ? 'Fensterrahmen' : 'Window frame', 0, [mm(o.u1 - o.u0), family.wall_mm, mm(o.z1 - o.z0)], { includedIn: 'cabin' }));
+        push(tag(panel(seg, gx0, gx1, gz0, gz1, materials.glass, 0.008, t / 2), 'cabin', family.sku, isDe ? 'Raumhohes Fenster, 8 mm Sicherheitsglas (ESG)' : 'Full-height window, 8 mm toughened clear glass', 0, [mm(gx1 - gx0), 8, mm(gz1 - gz0)], { includedIn: 'cabin' }));
       } else if (o.kind === 'glass') {
         const hasDoor = doorInfo.seg === seg;
         const d0 = hasDoor ? doorInfo.u0 - frame : null, d1 = hasDoor ? doorInfo.u1 + frame : null;
@@ -325,19 +327,19 @@ export function buildSauna(cfg, catalog, materials) {
           const pw = (b - a) / count;
           for (let i = 0; i < count; i++) { panes.push([a + i * pw, a + (i + 1) * pw]); profileU.add(a + i * pw); profileU.add(a + (i + 1) * pw); }
         }
-        for (const u of profileU) push(tag(panel(seg, u - profile / 2, u + profile / 2, 0, o.z1, materials.steel, t * 0.7, t * 0.15), 'cabin', family.sku, 'Glass front aluminium profile', 0, [40, family.wall_mm, mm(o.z1)], { includedIn: 'cabin' }));
-        push(tag(panel(seg, o.u0, o.u1, o.z1 - 0.045, o.z1, materials.steel, t * 0.7, t * 0.15), 'cabin', family.sku, 'Glass front head profile', 0, [mm(o.u1 - o.u0), family.wall_mm, 45], { includedIn: 'cabin' }));
-        for (const [a, b] of panes) push(tag(panel(seg, a + profile / 2, b - profile / 2, 0.012, o.z1 - 0.045, materials.glass, 0.008, t / 2), 'cabin', family.sku, 'Glass front, 8 mm clear glass', 0, [mm(b - a), 8, mm(o.z1)], { includedIn: 'cabin' }));
+        for (const u of profileU) push(tag(panel(seg, u - profile / 2, u + profile / 2, 0, o.z1, materials.steel, t * 0.7, t * 0.15), 'cabin', family.sku, isDe ? 'Glasfront Aluminium-Einfassprofil' : 'Glass front aluminium profile', 0, [40, family.wall_mm, mm(o.z1)], { includedIn: 'cabin' }));
+        push(tag(panel(seg, o.u0, o.u1, o.z1 - 0.045, o.z1, materials.steel, t * 0.7, t * 0.15), 'cabin', family.sku, isDe ? 'Glasfront Deckenabschlussprofil' : 'Glass front head profile', 0, [mm(o.u1 - o.u0), family.wall_mm, 45], { includedIn: 'cabin' }));
+        for (const [a, b] of panes) push(tag(panel(seg, a + profile / 2, b - profile / 2, 0.012, o.z1 - 0.045, materials.glass, 0.008, t / 2), 'cabin', family.sku, isDe ? 'Glasfront, 8 mm Einscheibensicherheitsglas (ESG)' : 'Glass front, 8 mm clear glass', 0, [mm(b - a), 8, mm(o.z1)], { includedIn: 'cabin' }));
       }
     }
   }
   // roof + floor + interior ceiling trim
   const roof = new THREE.Mesh(box(W, tc, D, 1.0, 'x'), wallMat);
   roof.position.set(0, zC + tc / 2, D / 2);
-  push(tag(roof, 'cabin', family.sku, `Ceiling, ${family.ceiling_mm} mm ${nameOf(catalog.woods[family.wall_wood])}`, 0, [mm(W), mm(D), family.ceiling_mm], { includedIn: 'cabin' }));
+  push(tag(roof, 'cabin', family.sku, isDe ? `Decke, ${family.ceiling_mm} mm ${itemTitle(catalog.woods[family.wall_wood])}` : `Ceiling, ${family.ceiling_mm} mm ${itemTitle(catalog.woods[family.wall_wood])}`, 0, [mm(W), mm(D), family.ceiling_mm], { includedIn: 'cabin' }));
   const floor = new THREE.Mesh(box(W, 0.045, D, 1.0, 'x'), trimMat);
   floor.position.set(0, -0.0225, D / 2);
-  push(tag(floor, 'cabin', family.sku, 'Floor', 0, [mm(W), mm(D), 45], { includedIn: 'cabin' }));
+  push(tag(floor, 'cabin', family.sku, isDe ? 'Saunaboden' : 'Floor', 0, [mm(W), mm(D), 45], { includedIn: 'cabin' }));
 
   if (cfg.cladding && cfg.cladding !== 'none') {
     const claddingSpec = catalog.claddings[cfg.cladding];
@@ -348,7 +350,7 @@ export function buildSauna(cfg, catalog, materials) {
       const holes = seg.openings.map(o => [o.u0 - 0.01, o.u1 + 0.01]);
       for (const [a, b] of subtractIntervals([0, seg.L], holes)) {
         const mesh = panel(seg, a, b, 0.002, zC + tc, mat, thickness, -thickness - 0.001);
-        push(tag(mesh, 'cabin', `CLADDING-${cfg.cladding.toUpperCase()}`, nameOf(claddingSpec), claddingSpec.price, [mm(seg.L), mm(thickness), mm(zC)]));
+        push(tag(mesh, 'cabin', `CLADDING-${cfg.cladding.toUpperCase()}`, itemTitle(claddingSpec), claddingSpec.price, [mm(seg.L), mm(thickness), mm(zC)]));
       }
     }
   }
@@ -382,7 +384,9 @@ export function buildSauna(cfg, catalog, materials) {
     clamp.position.set(sign * 0.03, y, 0);
     doorParts.push(clamp);
   }
-  const doorName = `Toughened glass door 8 mm, ${doorWmm} x ${doorHmm} mm, hinged ${hinge}`;
+  const doorName = isDe
+    ? `Glastür 8 mm ESG, ${doorWmm} × ${doorHmm} mm, ${hinge === 'right' ? 'Rechtsanschlag' : 'Linksanschlag'}`
+    : `Toughened glass door 8 mm, ${doorWmm} x ${doorHmm} mm, hinged ${hinge}`;
   for (const m of doorParts) { tag(m, 'door', family.sku, doorName, 0, [doorWmm, 8, doorHmm], { includedIn: 'cabin', hinge }); doorRoot.add(m); registry.push(m); }
   group.add(doorRoot);
 
@@ -485,7 +489,7 @@ export function buildSauna(cfg, catalog, materials) {
       flue.position.set(cx, base + hh + (H + 0.4 - (base + hh)) / 2, cz);
       parts.push(flue);
     }
-    for (const p of parts) push(tag(p, 'heater', cfg.heater.sku, nameOf(heaterSpec), heaterSpec.price, heaterSpec.dims_mm, { kw: heaterSpec.kw, control: heaterSpec.control, mount: heaterSpec.mount, approx: !!heaterSpec.approx }));
+    for (const p of parts) push(tag(p, 'heater', cfg.heater.sku, itemTitle(heaterSpec), heaterSpec.price, heaterSpec.dims_mm, { kw: heaterSpec.kw, control: heaterSpec.control, mount: heaterSpec.mount, approx: !!heaterSpec.approx }));
     heaterInfo = { cx, cz, hz0, hz1, base, hh, atBack, stonesTop: stonesY + 0.08, hw, hd };
     const gx0 = Math.max(hx0 - clearance, X0), gx1 = Math.min(hx1 + clearance, X1);
     const gz0 = Math.max(hz0 - clearance, ZB), gz1 = Math.min(hz1 + clearance, ZF);
@@ -526,10 +530,10 @@ export function buildSauna(cfg, catalog, materials) {
     screen.position.set(x + heaterSide * (cd / 2 + 0.0025), y + ch * 0.12, z);
     const dial = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.006, 20), materials.steel);
     dial.rotation.z = Math.PI / 2; dial.position.set(x + heaterSide * (cd / 2 + 0.004), y - ch * 0.25, z);
-    for (const m of [unit, face, screen, dial]) push(tag(m, 'control', cfg.control, nameOf(controlSpec), controlSpec.price, controlSpec.dims_mm, { wifi: !!controlSpec.wifi, series: controlSpec.series || '' }));
+    for (const m of [unit, face, screen, dial]) push(tag(m, 'control', cfg.control, itemTitle(controlSpec), controlSpec.price, controlSpec.dims_mm, { wifi: !!controlSpec.wifi, series: controlSpec.series || '' }));
     const sensor = new THREE.Mesh(box(0.03, 0.06, 0.02), materials.white);
     sensor.position.set(heaterInfo.cx, Math.min(zC - 0.12, heaterInfo.base + heaterInfo.hh + 0.35), heaterInfo.atBack ? ZB + 0.011 : ZF - 0.011);
-    push(tag(sensor, 'control', cfg.control, `Temperature sensor for ${nameOf(controlSpec)}`, 0, [30, 20, 60], { includedIn: cfg.control }));
+    push(tag(sensor, 'control', cfg.control, `Temperature sensor for ${itemTitle(controlSpec)}`, 0, [30, 20, 60], { includedIn: cfg.control }));
   }
 
   // ---- benches ------------------------------------------------------------------
@@ -625,10 +629,10 @@ export function buildSauna(cfg, catalog, materials) {
         else zBack = Math.max(zBack, heaterZone.z1 + 0.03);
       }
       if (zFront - zBack < 0.45) continue;
-      tagInterior(bench(x0, x1, zBack, zFront, upperY, 'z', cfg.interior.apron), `Side bench, ${benchLabel}`, [mm(x1 - x0), mm(zFront - zBack), mm(upperY)]);
+      tagInterior(bench(x0, x1, zBack, zFront, upperY, 'z', cfg.interior.apron), isDe ? `Seitenbank, ${benchLabel}` : `Side bench, ${benchLabel}`, [mm(x1 - x0), mm(zFront - zBack), mm(upperY)]);
       sideBenches.push({ s, x0, x1, zBack, zFront });
-      if (cfg.interior.backrests) tagInterior(backrest(zBack + 0.02, zFront - 0.02, s < 0 ? 'left' : 'right'), `Side backrest, ${benchLabel}`, [27, 220, mm(zFront - zBack)]);
-      if (cfg.interior.apron) tagInterior(cladding(zBack, zFront, s < 0 ? x1 + 0.007 : x0 - 0.007, 0.10, upperY - slatT - 0.10, 'z'), 'Under-bench cladding (included)', [14, mm(upperY - 0.2), mm(zFront - zBack)]);
+      if (cfg.interior.backrests) tagInterior(backrest(zBack + 0.02, zFront - 0.02, s < 0 ? 'left' : 'right'), isDe ? `Seitliche Rückenlehne, ${benchLabel}` : `Side backrest, ${benchLabel}`, [27, 220, mm(zFront - zBack)]);
+      if (cfg.interior.apron) tagInterior(cladding(zBack, zFront, s < 0 ? x1 + 0.007 : x0 - 0.007, 0.10, upperY - slatT - 0.10, 'z'), isDe ? 'Zwischenbankblende (inbegriffen)' : 'Under-bench cladding (included)', [14, mm(upperY - 0.2), mm(zFront - zBack)]);
     }
   }
   // main upper bench along the back wall
@@ -636,14 +640,14 @@ export function buildSauna(cfg, catalog, materials) {
   let bx1 = X1 - (sideBenches.some(b => b.s > 0) ? upperD : 0);
   if (heaterZone && heaterZone.z0 < ZB + upperD + 0.03) { if (heaterZone.x0 > 0) bx1 = Math.min(bx1, heaterZone.x0); else bx0 = Math.max(bx0, heaterZone.x1); }
   const uz0 = ZB, uz1 = ZB + upperD;
-  tagInterior(bench(bx0, bx1, uz0, uz1, upperY, 'x', cfg.interior.apron), `Upper bench ${cfg.interior.upperDepthCm} cm, ${benchLabel}`, [mm(bx1 - bx0), mm(upperD), mm(upperY)], interiorSpec.price);
+  tagInterior(bench(bx0, bx1, uz0, uz1, upperY, 'x', cfg.interior.apron), isDe ? `Obere Liegebank ${cfg.interior.upperDepthCm} cm, ${benchLabel}` : `Upper bench ${cfg.interior.upperDepthCm} cm, ${benchLabel}`, [mm(bx1 - bx0), mm(upperD), mm(upperY)], interiorSpec.price);
   benches.push({ x0: bx0, x1: bx1, z0: uz0, z1: uz1, y: upperY });
   if (cfg.interior.backrests) {
-    tagInterior(backrest(bx0 + 0.02, bx1 - 0.02, 'back'), `Backrest, ${benchLabel}`, [mm(bx1 - bx0), 220, 27]);
+    tagInterior(backrest(bx0 + 0.02, bx1 - 0.02, 'back'), isDe ? `Rückenlehne, ${benchLabel}` : `Backrest, ${benchLabel}`, [mm(bx1 - bx0), 220, 27]);
     if (cfg.interior.sideBackrests && layout === 'straight') {
       for (const s of [-1, 1]) {
         if (heaterZone && ((s > 0 && heaterZone.x1 > X1 - 0.1 && heaterZone.z0 < ZB + upperD) || (s < 0 && heaterZone.x0 < X0 + 0.1 && heaterZone.z0 < ZB + upperD))) continue;
-        tagInterior(backrest(ZB + 0.05, ZB + upperD, s < 0 ? 'left' : 'right'), `Side backrest, ${benchLabel}`, [27, 220, mm(upperD)]);
+        tagInterior(backrest(ZB + 0.05, ZB + upperD, s < 0 ? 'left' : 'right'), isDe ? `Seitliche Rückenlehne, ${benchLabel}` : `Side backrest, ${benchLabel}`, [27, 220, mm(upperD)]);
       }
     }
   }
@@ -652,7 +656,7 @@ export function buildSauna(cfg, catalog, materials) {
   if (heaterZone && heaterZone.z1 > lz0 - 0.03 && heaterZone.z0 < lz1 + 0.03) { if (heaterZone.x0 > 0) lx1 = Math.min(lx1, heaterZone.x0); else lx0 = Math.max(lx0, heaterZone.x1); }
   let lowerBench = null;
   if (lx1 - lx0 > 0.5 && lz1 < ZF - 0.45) {
-    tagInterior(bench(lx0 + 0.01, lx1 - 0.01, lz0, lz1, lowerY, 'x', true), `Lower bench${cfg.interior.slidingStool ? ' (sliding stool)' : ''} ${cfg.interior.lowerDepthCm} cm, ${benchLabel}`, [mm(lx1 - lx0), mm(lowerD), mm(lowerY)]);
+    tagInterior(bench(lx0 + 0.01, lx1 - 0.01, lz0, lz1, lowerY, 'x', true), isDe ? `Untere Bank${cfg.interior.slidingStool ? ' (Vorrückbank)' : ''} ${cfg.interior.lowerDepthCm} cm, ${benchLabel}` : `Lower bench${cfg.interior.slidingStool ? ' (sliding stool)' : ''} ${cfg.interior.lowerDepthCm} cm, ${benchLabel}`, [mm(lx1 - lx0), mm(lowerD), mm(lowerY)]);
     lowerBench = { x0: lx0, x1: lx1, z0: lz0, z1: lz1, y: lowerY };
   }
   if (cfg.interior.apron) {
@@ -662,16 +666,16 @@ export function buildSauna(cfg, catalog, materials) {
       spans.push([lowerBench.x0, lowerBench.x1, lowerY + 0.01]);
       if (bx1 - lowerBench.x1 > 0.05) spans.push([lowerBench.x1 + 0.01, bx1, 0.10]);
     } else spans.push([bx0, bx1, 0.10]);
-    for (const [a, b, y0] of spans) tagInterior(cladding(a, b, uz1 - 0.007, y0, upperY - slatT - 0.10, 'x'), 'Under-bench cladding (included)', [mm(b - a), mm(upperY - 0.2), 14]);
+    for (const [a, b, y0] of spans) tagInterior(cladding(a, b, uz1 - 0.007, y0, upperY - slatT - 0.10, 'x'), isDe ? 'Zwischenbankblende (inbegriffen)' : 'Under-bench cladding (included)', [mm(b - a), mm(upperY - 0.2), 14]);
   }
   // headrests
   const headrests = Number(cfg.interior.headrests) || 0;
   let placed = 0;
-  if (headrests && sideBenches.length) { const sb = sideBenches[0]; tagInterior(headrest((sb.x0 + sb.x1) / 2, sb.zFront - 0.25, upperY, 'z'), 'Headrest (included)', [400, 60, 300]); placed++; }
+  if (headrests && sideBenches.length) { const sb = sideBenches[0]; tagInterior(headrest((sb.x0 + sb.x1) / 2, sb.zFront - 0.25, upperY, 'z'), isDe ? 'Kopfstütze (inbegriffen)' : 'Headrest (included)', [400, 60, 300]); placed++; }
   if (headrests > placed) {
     const x = (sideBenches.length && sideBenches[0].s > 0) || !sideBenches.length ? bx0 + 0.30 : bx1 - 0.30;
-    tagInterior(headrest(x, uz0 + upperD / 2, upperY, 'x'), 'Headrest (included)', [400, 60, 300]); placed++;
-    if (headrests > placed && bx1 - bx0 > 1.2) tagInterior(headrest(x < 0 ? bx1 - 0.30 : bx0 + 0.30, uz0 + upperD / 2, upperY, 'x'), 'Headrest (included)', [400, 60, 300]);
+    tagInterior(headrest(x, uz0 + upperD / 2, upperY, 'x'), isDe ? 'Kopfstütze (inbegriffen)' : 'Headrest (included)', [400, 60, 300]); placed++;
+    if (headrests > placed && bx1 - bx0 > 1.2) tagInterior(headrest(x < 0 ? bx1 - 0.30 : bx0 + 0.30, uz0 + upperD / 2, upperY, 'x'), isDe ? 'Kopfstütze (inbegriffen)' : 'Headrest (included)', [400, 60, 300]);
   }
   // floor grating
   if (cfg.interior.floorGrate) {
@@ -683,7 +687,7 @@ export function buildSauna(cfg, catalog, materials) {
       for (const x of [gx0 + 0.05, gx1 - 0.05, (gx0 + gx1) / 2]) { const r = new THREE.Mesh(box(0.045, 0.028, gzFront - gzBack), benchMat); r.position.set(x, 0.014, (gzBack + gzFront) / 2); parts.push(r); }
       const count = Math.floor((gzFront - gzBack) / 0.075);
       for (let i = 0; i < count; i++) { const s = new THREE.Mesh(box(gx1 - gx0, 0.022, 0.06, 1, 'x'), benchMat); s.position.set((gx0 + gx1) / 2, 0.028 + 0.011, gzBack + (i + 0.5) * (gzFront - gzBack) / count); parts.push(s); }
-      for (const m of parts) push(tag(m, 'interior', 'FLOOR-GRATE', 'Floor grating (included)', 0, [mm(gx1 - gx0), mm(gzFront - gzBack), 50], { includedIn: 'cabin' }));
+      for (const m of parts) push(tag(m, 'interior', 'FLOOR-GRATE', isDe ? 'Bodenrost (inbegriffen)' : 'Floor grating (included)', 0, [mm(gx1 - gx0), mm(gzFront - gzBack), 50], { includedIn: 'cabin' }));
     }
   }
 
@@ -711,7 +715,7 @@ export function buildSauna(cfg, catalog, materials) {
       for (let i = 0; i < n; i++) { const s = new THREE.Mesh(box(Math.min(0.67, pitch - 0.02), 0.005, 0.012), materials.ledRgb); s.position.set(b.x0 + 0.1 + (i + 0.5) * pitch, upperY - slatT - 0.11, uz1 - 0.03); parts.push(s); }
       const light = new THREE.PointLight(0xb28cff, 4, 1.8, 2); light.position.set((b.x0 + b.x1) / 2, upperY - 0.2, uz1 + 0.05); group.add(light);
     } else continue;
-    for (const m of parts) push(tag(m, 'lighting', sku, nameOf(spec), spec.price, spec.dims_mm));
+    for (const m of parts) push(tag(m, 'lighting', sku, itemTitle(spec), spec.price, spec.dims_mm));
   }
 
   // ---- accessories -----------------------------------------------------------------
@@ -749,17 +753,17 @@ export function buildSauna(cfg, catalog, materials) {
     } else if (spec.kind === 'plunge_lid') {
       const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.61, 0.61, 0.03, 32), materials.wood('laerche')); lid.scale.z = 0.7; lid.position.set(-heaterSide * (W / 2 + 0.9), 1.015, D / 2); parts.push(lid);
     } else continue;
-    for (const m of parts) push(tag(m, 'accessory', sku, nameOf(spec), spec.price, spec.dims_mm, { approx: !!spec.approx }));
+    for (const m of parts) push(tag(m, 'accessory', sku, itemTitle(spec), spec.price, spec.dims_mm, { approx: !!spec.approx }));
   }
 
   // ---- ventilation -------------------------------------------------------------------
   if (cfg.ventilation && heaterInfo) {
     const supplyZ = heaterInfo.atBack ? ZB + 0.011 : ZF - 0.011;
     const supply = new THREE.Mesh(box(0.15, 0.10, 0.022), benchMat); supply.position.set(heaterInfo.cx, 0.15, supplyZ);
-    push(tag(supply, 'cabin', 'VENT', 'Supply air vent (included)', 0, [150, 24, 100], { includedIn: 'cabin' }));
+    push(tag(supply, 'cabin', 'VENT', isDe ? 'Zuluftschieber (inbegriffen)' : 'Supply air vent (included)', 0, [150, 24, 100], { includedIn: 'cabin' }));
     const exhaustZ = heaterInfo.atBack ? ZF - 0.011 : ZB + 0.011;
     const exhaust = new THREE.Mesh(box(0.20, 0.10, 0.022), benchMat); exhaust.position.set(-heaterSide * (W / 2 - t - 0.25), zC - 0.20, exhaustZ);
-    push(tag(exhaust, 'cabin', 'VENT', 'Exhaust air vent (included)', 0, [200, 24, 100], { includedIn: 'cabin' }));
+    push(tag(exhaust, 'cabin', 'VENT', isDe ? 'Abluftschieber (inbegriffen)' : 'Exhaust air vent (included)', 0, [200, 24, 100], { includedIn: 'cabin' }));
   }
 
   const bounds = { minX: -W / 2, maxX: W / 2, minZ: 0, maxZ: D, minY: 0, maxY: H };

@@ -93,6 +93,13 @@
     line-height: 1;
   }
   .wordmark-light { font-weight: 350; }
+  .brand-logo {
+    height: 40px;
+    width: auto;
+    max-width: 170px;
+    object-fit: contain;
+    display: block;
+  }
   .brand-mark {
     @apply flex items-center gap-1 mr-3;
     height: 28px;

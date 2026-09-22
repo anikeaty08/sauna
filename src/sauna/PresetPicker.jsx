@@ -1,31 +1,35 @@
-import { ArrowRight, Sparkles, Download, Zap } from 'lucide-react';
+import { ArrowRight, Sparkles, Download } from 'lucide-react';
 import { chf } from './format';
+import { getTranslation } from './i18n';
 
 /* Featured preset order and copy */
 const FEATURED = ['espoo-compact', 'fichte-fenster-l', 'designer-espe-schiefer'];
 
-const COPY = {
-  'espoo-compact': {
-    name: 'Compact Espoo',
-    blurb: 'Fits a bathroom or home gym. The most affordable way into your own sauna.',
-    badge: 'Most affordable',
-  },
-  'fichte-fenster-l': {
-    name: 'Spruce with window',
-    blurb: 'Our most popular format: light Nordic spruce, a full-height window and L-shaped benches.',
-    badge: 'Most popular',
-  },
-  'designer-espe-schiefer': {
-    name: 'Designer glass corner',
-    blurb: 'Glass corner with slate cladding, RGB mood lighting and audio — for a premium wellness space.',
-    badge: 'Premium',
-  },
-  'espe-front-vertical': { name: 'Aspen, vertical boards' },
-  'fichte-glasfront':    { name: 'Spruce glass front' },
-  'zirbe-eck-glasfront': { name: 'Stone pine corner glass' },
-};
+export default function PresetPicker({ presets, totals, onPick, onStartBlank, lang = 'en' }) {
+  const t = getTranslation(lang);
+  const isDe = lang === 'de';
 
-export default function PresetPicker({ presets, totals, onPick, onStartBlank }) {
+  const copyMap = {
+    'espoo-compact': {
+      name: t.presetEspooName,
+      blurb: t.presetEspooBlurb,
+      badge: t.badgeMostAffordable,
+    },
+    'fichte-fenster-l': {
+      name: t.presetSpruceWindowName,
+      blurb: t.presetSpruceWindowBlurb,
+      badge: t.badgeMostPopular,
+    },
+    'designer-espe-schiefer': {
+      name: t.presetDesignerName,
+      blurb: t.presetDesignerBlurb,
+      badge: t.badgePremium,
+    },
+    'espe-front-vertical': { name: t.presetAspenVertical },
+    'fichte-glasfront':    { name: t.presetSpruceGlassFront },
+    'zirbe-eck-glasfront': { name: t.presetZirbeCornerGlass },
+  };
+
   const featured = FEATURED.map(id => presets.find(p => p.id === id)).filter(Boolean);
   const more = presets.filter(p => !FEATURED.includes(p.id));
 
@@ -35,20 +39,16 @@ export default function PresetPicker({ presets, totals, onPick, onStartBlank }) 
       <div className="preset-picker-intro">
         <span className="collection-label">
           <Sparkles size={12} />
-          Sauna configurator
+          {t.saunaConfigurator}
         </span>
-        <h1>Design your<br />own sauna</h1>
-        <p>
-          Start from one of our designs, then change anything — size, wood,
-          heater, lighting and accessories. Every part shows its price, and
-          the total updates as you go.
-        </p>
+        <h1 style={{ whiteSpace: 'pre-line' }}>{t.designYourOwn}</h1>
+        <p>{t.pickerBlurb}</p>
       </div>
 
       {/* ── Featured cards ── */}
       <div className="preset-grid">
         {featured.map((preset, i) => {
-          const copy = COPY[preset.id] || {};
+          const copy = copyMap[preset.id] || {};
           return (
             <button
               key={preset.id}
@@ -89,9 +89,9 @@ export default function PresetPicker({ presets, totals, onPick, onStartBlank }) 
               {/* body */}
               <span className="preset-card-body">
                 <b>{copy.name || preset.name}</b>
-                <small>{copy.blurb || preset.tagline}</small>
+                <small>{copy.blurb || (isDe ? preset.tagline_de || preset.tagline : preset.tagline)}</small>
                 <span className="preset-card-price">
-                  from {chf(totals[preset.id] ?? 0)}
+                  {t.from} {chf(totals[preset.id] ?? 0)}
                   <ArrowRight size={15} />
                 </span>
               </span>
@@ -102,7 +102,7 @@ export default function PresetPicker({ presets, totals, onPick, onStartBlank }) 
                 href={`/models/presets/${preset.id}.glb`}
                 download
                 onClick={e => e.stopPropagation()}
-                title="Download the original Blender 3D model (.glb)"
+                title={isDe ? "Originales Blender 3D-Modell (.glb) herunterladen" : "Download the original Blender 3D model (.glb)"}
               >
                 <Download size={11} />.glb
               </a>
@@ -114,7 +114,7 @@ export default function PresetPicker({ presets, totals, onPick, onStartBlank }) 
       {/* ── More starting points ── */}
       {more.length > 0 && (
         <div className="preset-more">
-          <p>More starting points</p>
+          <p>{t.moreConfigurations}</p>
           <div className="preset-more-list">
             {more.map(preset => (
               <button
@@ -123,8 +123,8 @@ export default function PresetPicker({ presets, totals, onPick, onStartBlank }) 
                 className="preset-chip"
                 onClick={() => onPick(preset)}
               >
-                {COPY[preset.id]?.name || preset.name}
-                <span>from {chf(totals[preset.id] ?? 0)}</span>
+                {copyMap[preset.id]?.name || (isDe ? preset.name_de || preset.name : preset.name)}
+                <span>{t.from} {chf(totals[preset.id] ?? 0)}</span>
               </button>
             ))}
           </div>
@@ -137,7 +137,7 @@ export default function PresetPicker({ presets, totals, onPick, onStartBlank }) 
         className="text-button preset-blank"
         onClick={onStartBlank}
       >
-        Or start with an empty cabin
+        {isDe ? 'Oder mit einer leeren Kabine starten' : 'Or start with an empty cabin'}
         <ArrowRight size={14} />
       </button>
     </div>

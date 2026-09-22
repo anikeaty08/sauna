@@ -129,10 +129,10 @@ export class SaunaScene {
     this.renderer.setSize(w, h, false);
   }
 
-  setConfig(cfg, catalog) {
+  setConfig(cfg, catalog, lang = 'en') {
     for (const obj of this.model.children.slice()) this.model.remove(obj);
     this.disposeGroup(this.lastGroup);
-    const built = buildSauna(cfg, catalog, this.materials);
+    const built = buildSauna(cfg, catalog, this.materials, lang);
     this.lastGroup = built.group;
     this.model.add(built.group);
     this.registry = built.registry;

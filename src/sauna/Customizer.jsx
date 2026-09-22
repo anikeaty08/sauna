@@ -7,26 +7,27 @@ import { defaultConfig, fromPreset, normalizeConfig } from './config';
 import { priceItems } from './pricing';
 import { chf } from './format';
 import { downloadSpecification } from './exportSpec';
+import { getTranslation } from './i18n';
 import PresetPicker from './PresetPicker';
 import { ConfiguratorPanel, ComponentDrawer } from './Panel';
 import './customizer.css';
 
 /* ── Wordmark ── */
-function Wordmark() {
+function Wordmark({ homeAria }) {
   return (
-    <a className="wordmark" href="#top" aria-label="Sauna Studio home">
-      <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>
-      sauna<span className="wordmark-light">studio</span>
+    <a className="wordmark brand-link" href="#top" aria-label={homeAria || "HolzSauna"}>
+      <img src="/images/logo.png" alt="HolzSauna" className="brand-logo" />
     </a>
   );
 }
 
 /* ── Hover tooltip ── */
-function HoverTip({ info, x, y }) {
+function HoverTip({ info, x, y, lang = 'en' }) {
   if (!info) return null;
+  const isDe = lang === 'de';
   const price = info.price
     ? chf(info.price)
-    : (info.includedIn ? 'Included' : 'CHF 0.–');
+    : (info.includedIn ? (isDe ? 'Inbegriffen' : 'Included') : 'CHF 0.–');
   return (
     <div className="hover-tip" style={{ left: x + 16, top: y + 16 }}>
       <b>{info.name}</b>
@@ -36,7 +37,7 @@ function HoverTip({ info, x, y }) {
 }
 
 /* ── Loading screen ── */
-function LoadingScreen() {
+function LoadingScreen({ text }) {
   return (
     <div className="customizer-loading">
       <span style={{
@@ -44,7 +45,7 @@ function LoadingScreen() {
         background: 'var(--sage)', display: 'inline-block',
         animation: 'breathe 1.2s ease-in-out infinite',
       }} />
-      Loading configurator…
+      {text || 'Loading configurator…'}
     </div>
   );
 }
@@ -63,6 +64,20 @@ export default function Customizer() {
   const [hover, setHover] = useState({ info: null, x: 0, y: 0 });
   const [exportingGLB, setExportingGLB] = useState(false);
   const [exportMessage, setExportMessage] = useState('');
+
+  // Bilingual state (English / German)
+  const [lang, setLang] = useState(() => {
+    try { return localStorage.getItem('sauna_lang') || 'en'; }
+    catch { return 'en'; }
+  });
+  const t = getTranslation(lang);
+  const isDe = lang === 'de';
+
+  const switchLang = newLang => {
+    setLang(newLang);
+    try { localStorage.setItem('sauna_lang', newLang); } catch {}
+  };
+
   const hostRef = useRef(null);
   const sceneRef = useRef(null);
   const materialsRef = useRef(null);
@@ -70,16 +85,16 @@ export default function Customizer() {
   const handleExportGLB = async () => {
     if (!sceneRef.current) return;
     setExportingGLB(true);
-    setExportMessage('Generating 3D model (.glb)...');
+    setExportMessage(t.msgGeneratingGlb);
     try {
       const familySlug = cfg?.family || 'custom';
       const filename = `${familySlug}-sauna-${cfg?.widthCm || 200}x${cfg?.depthCm || 180}`;
       await sceneRef.current.exportGLB(filename);
-      setExportMessage('3D model (.glb) downloaded!');
+      setExportMessage(t.msgGlbDownloaded);
       setTimeout(() => setExportMessage(''), 3500);
     } catch (err) {
       console.error('Failed to export GLB:', err);
-      setExportMessage('Export failed. Please try again.');
+      setExportMessage(t.msgExportFailed);
       setTimeout(() => setExportMessage(''), 4000);
     } finally {
       setExportingGLB(false);
@@ -89,9 +104,9 @@ export default function Customizer() {
   const handleExportSpec = () => {
     if (!cfg || !catalog) return;
     const familySlug = cfg?.family || 'custom';
-    const filename = `${familySlug}-sauna-${cfg?.widthCm || 200}x${cfg?.depthCm || 180}-specification`;
-    downloadSpecification(cfg, catalog, pricing, filename);
-    setExportMessage('Quote & specification (.txt) downloaded!');
+    const filename = `${familySlug}-sauna-${cfg?.widthCm || 200}x${cfg?.depthCm || 180}-${isDe ? 'spezifikation' : 'specification'}`;
+    downloadSpecification(cfg, catalog, pricing, filename, lang);
+    setExportMessage(t.msgSpecDownloaded);
     setTimeout(() => setExportMessage(''), 3500);
   };
 
@@ -99,9 +114,9 @@ export default function Customizer() {
   useEffect(() => {
     if (!catalog || !presets) return;
     const totals = {};
-    for (const preset of presets) totals[preset.id] = priceItems(fromPreset(preset), catalog).total;
+    for (const preset of presets) totals[preset.id] = priceItems(fromPreset(preset), catalog, lang).total;
     setPresetTotals(totals);
-  }, [catalog, presets]);
+  }, [catalog, presets, lang]);
 
   const setCfg = patch => setCfgRaw(prev => catalog ? normalizeConfig({ ...prev, ...patch }, catalog) : prev);
   const setInterior = patch => setCfgRaw(prev => catalog ? normalizeConfig({ ...prev, interior: { ...prev.interior, ...patch } }, catalog) : prev);
@@ -131,16 +146,16 @@ export default function Customizer() {
     return () => { scene.dispose(); sceneRef.current = null; };
   }, [stage, catalog]);
 
-  // Rebuild parametric model on config change
+  // Rebuild parametric model on config or language change
   useEffect(() => {
     if (!sceneRef.current || !cfg || !catalog) return;
-    sceneRef.current.setConfig(cfg, catalog);
-  }, [cfg, catalog]);
+    sceneRef.current.setConfig(cfg, catalog, lang);
+  }, [cfg, catalog, lang]);
 
   useEffect(() => { sceneRef.current?.setView(view); }, [view]);
   useEffect(() => { sceneRef.current?.setDoorOpen(doorOpen); }, [doorOpen]);
 
-  const pricing = useMemo(() => (cfg && catalog ? priceItems(cfg, catalog) : null), [cfg, catalog]);
+  const pricing = useMemo(() => (cfg && catalog ? priceItems(cfg, catalog, lang) : null), [cfg, catalog, lang]);
 
   function pickPreset(preset) {
     setCfgRaw(normalizeConfig(fromPreset(preset), catalog));
@@ -153,35 +168,64 @@ export default function Customizer() {
     setStage('customize');
   }
 
-  if (loading) return <LoadingScreen />;
+  if (loading) return <LoadingScreen text={t.loading} />;
   if (error || !catalog) return (
     <div className="customizer-loading">
-      Catalog could not be loaded.{' '}
+      {isDe ? 'Katalog konnte nicht geladen werden.' : 'Catalog could not be loaded.'}{' '}
       <button onClick={() => location.reload()} style={{ textDecoration: 'underline', color: 'var(--pine)' }}>
-        Reload page
+        {isDe ? 'Seite neu laden' : 'Reload page'}
       </button>
     </div>
   );
 
   const family = cfg ? catalog.families[cfg.family] : null;
   const familyName = family
-    ? (family.name_en || family.name_de || '').replace(', Swiss-made to measure', '')
+    ? (isDe ? (family.name_de || family.name_en) : (family.name_en || family.name_de))
+        .replace(', Swiss-made to measure', '')
+        .replace(', nach Mass gefertigt in der Schweiz', '')
+        .replace(', solid spruce 45 mm, front entry with window', '')
+        .replace(', Massivholz 45mm mit Fronteinstieg und Fenster', '')
     : '';
 
   return (
     <div className="customizer-app">
       {/* ── Header ── */}
       <header className="site-header">
-        <Wordmark />
-        {stage === 'customize' && (
-          <button
-            className="customizer-back"
-            onClick={() => setStage('pick')}
-          >
-            <ChevronLeft size={14} />
-            Choose a different preset
-          </button>
-        )}
+        <Wordmark homeAria={t.homeAria} />
+
+        <div className="header-right">
+          {stage === 'customize' && (
+            <button
+              className="customizer-back"
+              onClick={() => setStage('pick')}
+            >
+              <ChevronLeft size={14} />
+              {t.backToPresets}
+            </button>
+          )}
+
+          {/* ── Language Toggle (EN / DE) ── */}
+          <div className="lang-toggle" role="group" aria-label={t.langLabel}>
+            <button
+              type="button"
+              className={`lang-btn ${lang === 'en' ? 'is-active' : ''}`}
+              onClick={() => switchLang('en')}
+              title="English"
+              aria-pressed={lang === 'en'}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              className={`lang-btn ${lang === 'de' ? 'is-active' : ''}`}
+              onClick={() => switchLang('de')}
+              title="Deutsch"
+              aria-pressed={lang === 'de'}
+            >
+              DE
+            </button>
+          </div>
+        </div>
       </header>
 
       {/* ── Preset picker ── */}
@@ -191,6 +235,7 @@ export default function Customizer() {
           totals={presetTotals}
           onPick={pickPreset}
           onStartBlank={startBlank}
+          lang={lang}
         />
       )}
 
@@ -199,24 +244,24 @@ export default function Customizer() {
         <div className="customize-layout">
 
           {/* ── 3D Viewer ── */}
-          <section className="viewer3d" aria-label="3D sauna preview">
+          <section className="viewer3d" aria-label={isDe ? 'Interaktive 3D-Vorschau' : '3D sauna preview'}>
             <div className="viewer3d-host" ref={hostRef} />
-            <HoverTip info={hover.info} x={hover.x} y={hover.y} />
+            <HoverTip info={hover.info} x={hover.x} y={hover.y} lang={lang} />
 
             {/* toolbar */}
             <div className="viewer3d-toolbar">
-              <div className="view-switch-pill" role="group" aria-label="Camera view">
+              <div className="view-switch-pill" role="group" aria-label={isDe ? 'Kameraperspektive' : 'Camera view'}>
                 <button
                   aria-pressed={view === 'exterior'}
                   onClick={() => setView('exterior')}
                 >
-                  <Box size={14} />Exterior
+                  <Box size={14} />{t.exterior}
                 </button>
                 <button
                   aria-pressed={view === 'interior'}
                   onClick={() => setView('interior')}
                 >
-                  <DoorOpen size={14} />Interior
+                  <DoorOpen size={14} />{t.interior}
                 </button>
               </div>
 
@@ -224,17 +269,17 @@ export default function Customizer() {
                 className="viewer3d-door-btn"
                 onClick={() => setDoorOpen(o => !o)}
                 aria-pressed={doorOpen}
-                title={doorOpen ? 'Close door' : 'Open door'}
+                title={doorOpen ? t.closeDoor : t.openDoor}
               >
                 <DoorOpen size={16} />
                 <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.02em' }}>
-                  {doorOpen ? 'Close' : 'Open'}
+                  {doorOpen ? t.close : t.open}
                 </span>
               </button>
             </div>
 
             <p className="viewer3d-hint">
-              Drag to orbit · Scroll to zoom · Click a part to configure it
+              {t.viewerHint}
             </p>
 
             {/* click-to-configure drawer */}
@@ -244,6 +289,7 @@ export default function Customizer() {
               cfg={cfg}
               volumeM3={pricing?.volumeM3}
               selectedName={drawerName}
+              lang={lang}
               onClose={() => setDrawerCategory(null)}
               onSetCfg={setCfg}
               onSetInterior={setInterior}
@@ -254,14 +300,14 @@ export default function Customizer() {
           </section>
 
           {/* ── Right panel ── */}
-          <aside className="customizer-panel" aria-label="Configure your sauna">
+          <aside className="customizer-panel" aria-label={isDe ? 'Sauna konfigurieren' : 'Configure your sauna'}>
             {/* sticky heading */}
             <div className="panel-head">
-              <span className="collection-label">Your configuration</span>
+              <span className="collection-label">{isDe ? 'Ihre Konfiguration' : 'Your configuration'}</span>
               <h2>{familyName}</h2>
               <p>
                 {cfg.widthCm} × {cfg.depthCm} × {cfg.heightCm} cm
-                {pricing ? ` · ${pricing.volumeM3} m³ volume` : ''}
+                {pricing ? (isDe ? ` · ${pricing.volumeM3} m³ Volumen` : ` · ${pricing.volumeM3} m³ volume`) : ''}
               </p>
             </div>
 
@@ -272,6 +318,7 @@ export default function Customizer() {
               openId={openSection}
               volumeM3={pricing?.volumeM3}
               warnings={pricing?.warnings || []}
+              lang={lang}
               onSetCfg={setCfg}
               onSetInterior={setInterior}
               onSetDoor={setDoor}
@@ -284,7 +331,7 @@ export default function Customizer() {
               <details className="price-breakdown">
                 <summary>
                   <Receipt size={14} />
-                  Price breakdown
+                  {t.priceBreakdown}
                   <ChevronDown size={13} />
                 </summary>
                 <ul>
@@ -296,15 +343,15 @@ export default function Customizer() {
                   ))}
                 </ul>
                 <div className="price-breakdown-total">
-                  <span>incl. 8.1% VAT</span>
+                  <span>{t.vatIncluded}</span>
                   <span>{chf(pricing?.total)}</span>
                 </div>
               </details>
 
               <div className="grand-total">
                 <div>
-                  <span>Total price</span>
-                  <p className="grand-total-note">Indicative · incl. VAT</p>
+                  <span>{t.totalPrice}</span>
+                  <p className="grand-total-note">{t.indicativeVat}</p>
                 </div>
                 <b>{chf(pricing?.total)}</b>
               </div>
@@ -316,20 +363,20 @@ export default function Customizer() {
                   className="export-btn export-btn-primary"
                   onClick={handleExportGLB}
                   disabled={exportingGLB}
-                  title="Export and download the 3D model (.glb) for Blender, AR or CAD viewers"
+                  title={isDe ? '3D-Modell (.glb) für Blender, CAD oder AR herunterladen' : 'Export and download the 3D model (.glb) for Blender, AR or CAD viewers'}
                 >
                   <Download size={14} />
-                  <span>{exportingGLB ? 'Exporting 3D...' : 'Export 3D Model (.glb)'}</span>
+                  <span>{exportingGLB ? t.exportingGLB : t.exportGLB}</span>
                 </button>
 
                 <button
                   type="button"
                   className="export-btn export-btn-secondary"
                   onClick={handleExportSpec}
-                  title="Download an itemized bill of materials and price quote (.txt)"
+                  title={isDe ? 'Detaillierte Offerte & Datenblatt als Textdatei (.txt) herunterladen' : 'Download an itemized bill of materials and price quote (.txt)'}
                 >
                   <FileText size={14} />
-                  <span>Download Quote & Spec</span>
+                  <span>{t.downloadSpec}</span>
                 </button>
               </div>
               {exportMessage && <p className="export-feedback">{exportMessage}</p>}

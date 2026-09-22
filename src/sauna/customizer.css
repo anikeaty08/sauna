@@ -5,6 +5,8 @@
   gap: 10px;
 }
 .customizer-app { min-height: 100svh; display: flex; flex-direction: column; }
+.brand-link { display: inline-flex; align-items: center; }
+.brand-logo { height: 38px; width: auto; max-width: 170px; object-fit: contain; display: block; }
 
 /* ── Preset picker ──────────────────────────────────────────────────────────── */
 .preset-picker {
@@ -642,6 +644,48 @@
   text-align: center;
   margin: 2px 0 0;
   animation: fadeIn 0.2s ease-out both;
+}
+
+/* Customizer header actions */
+.header-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Language toggle pill */
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--mineral);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 2.5px 3px;
+  gap: 2px;
+}
+
+.lang-btn {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 16px;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  line-height: 1;
+}
+
+.lang-btn:hover {
+  color: var(--pine);
+}
+
+.lang-btn.is-active {
+  background: var(--pine);
+  color: #fafbf7;
+  box-shadow: 0 1px 3px rgba(45, 74, 56, 0.22);
 }
 
 /* Customizer header "back" button */
