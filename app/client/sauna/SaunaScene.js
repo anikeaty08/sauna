@@ -26,7 +26,11 @@ export class SaunaScene {
     // Subtle warm fog for depth
     this.scene.fog = new THREE.FogExp2(0xdde5da, 0.018);
 
-    this.camera = new THREE.PerspectiveCamera(36, 1, 0.02, 80);
+    // 36 deg is a flattering near-telephoto for the exterior, but standing
+    // inside a 2 m cabin with it shows barely one object - interiors get a
+    // wide angle, the way interior photography actually works.
+    this.fovExterior = 36; this.fovInterior = 62;
+    this.camera = new THREE.PerspectiveCamera(this.fovExterior, 1, 0.02, 80);
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
@@ -56,7 +60,8 @@ export class SaunaScene {
     env.dispose(); pmrem.dispose();
 
     // Warm hemisphere (sky warm, ground earthy)
-    this.scene.add(new THREE.HemisphereLight(0xfff8f0, 0x7a8c70, 1.1));
+    this.hemi = new THREE.HemisphereLight(0xfff8f0, 0x7a8c70, 1.1);
+    this.scene.add(this.hemi);
 
     // Key light — warm afternoon sun
     this.sun = new THREE.DirectionalLight(0xfff0d8, 2.8);
@@ -73,6 +78,16 @@ export class SaunaScene {
     // Subtle rim light from behind for depth separation
     this.rim = new THREE.DirectionalLight(0xfff8e8, 0.30);
     this.scene.add(this.rim);
+
+    // The key/fill/rim rig above is set up for the exterior hero shot. Left at
+    // full strength it blows out an interior: pale aspen benches a metre from
+    // the lens under a 2.8-intensity sun clip to flat white. Interiors dim the
+    // outdoor rig right down so the cabin's own lamps and LEDs carry the shot.
+    this.lightRig = [
+      [this.hemi, 1.1, 0.34], [this.sun, 2.8, 0.42],
+      [this.fill, 0.55, 0.30], [this.rim, 0.30, 0.12],
+    ];
+    this.exposure = { exterior: 1.18, interior: 0.95 };
 
     // Reflective floor with subtle shadow
     this.floor = new THREE.Mesh(
@@ -150,7 +165,10 @@ export class SaunaScene {
 
     this.frame(built.bounds);
     if (typeof window !== 'undefined') {
-      window.__saunaDebug = { bounds: built.bounds, cameraPos: this.camera.position.toArray(), target: this.controls.target.toArray(), size: this.size, centre: this.centre?.toArray(), registryCount: this.registry.length, fov: this.camera.fov, aspect: this.camera.aspect, hostSize: [this.host.clientWidth, this.host.clientHeight], registry: this.registry, THREE_DEBUG: THREE, camera: this.camera, renderer: this.renderer, scene: this.scene };
+      // cfg/family are exposed so harnesses can test against the REAL footprint.
+      // Deriving W/D from the registry bounding box instead silently picks up
+      // the roof overhang and validates against a footprint that is too large.
+      window.__saunaDebug = { bounds: built.bounds, cameraPos: this.camera.position.toArray(), target: this.controls.target.toArray(), size: this.size, centre: this.centre?.toArray(), registryCount: this.registry.length, fov: this.camera.fov, aspect: this.camera.aspect, hostSize: [this.host.clientWidth, this.host.clientHeight], registry: this.registry, THREE_DEBUG: THREE, camera: this.camera, renderer: this.renderer, scene: this.scene, controls: this.controls, cfg, family: catalog?.families?.[cfg?.family] };
     }
 
     // When first loading interior view, open door; otherwise preserve the
@@ -210,6 +228,7 @@ export class SaunaScene {
 
   setView(view, instant = false) {
     this.view = view;
+    this.applyLighting(view);
     if (!this.centre || !this.bounds) return;
     const size = this.size || 1.6;
     const H = this.bounds.maxY - this.bounds.minY;
@@ -224,22 +243,75 @@ export class SaunaScene {
     const interiorLook = this.interiorView?.look || new THREE.Vector3(this.centre.x, 1.45, this.bounds.minZ + size * 0.15);
     const interiorPos = this.interiorView?.pos || new THREE.Vector3(this.centre.x + size * 0.14, 1.5, this.bounds.maxZ - size * 0.16);
     const targets = {
-      exterior: { pos: this.orbitPosition(exteriorLook, size, 34, 30, 2.5), look: exteriorLook },
-      interior: { pos: interiorPos, look: interiorLook },
+      exterior: { pos: this.orbitPosition(exteriorLook, size, 34, 30, 2.5), look: exteriorLook, fov: this.fovExterior },
+      interior: { pos: interiorPos, look: interiorLook, fov: this.fovInterior },
     };
     const t = targets[view] || targets.exterior;
     this.doorTarget = view === 'interior' ? 1 : 0;
     if (instant) {
       this.camera.position.copy(t.pos);
       this.controls.target.copy(t.look);
+      this.camera.fov = t.fov;
+      this.camera.updateProjectionMatrix();
       this.controls.update();
     } else {
-      this.animateTo(t.pos, t.look);
+      this.animateTo(t.pos, t.look, 900, t.fov);
     }
   }
 
-  animateTo(pos, look) {
-    this.anim = { from: this.camera.position.clone(), to: pos.clone(), fromLook: this.controls.target.clone(), toLook: look.clone(), t: 0 };
+  /** Swap the outdoor light rig between exterior strength and interior strength. */
+  applyLighting(view) {
+    if (!this.lightRig) return;
+    const inside = view === 'interior';
+    for (const [light, ext, int] of this.lightRig) if (light) light.intensity = inside ? int : ext;
+    this.renderer.toneMappingExposure = inside ? this.exposure.interior : this.exposure.exterior;
+  }
+
+  animateTo(pos, look, durationMs = 900, fov = this.camera.fov) {
+    this.anim = { from: this.camera.position.clone(), to: pos.clone(), fromLook: this.controls.target.clone(), toLook: look.clone(), fromFov: this.camera.fov, toFov: fov, t: 0, durationMs, start: performance.now() };
+  }
+
+  /**
+   * Render exterior, top and side views into PNG data URLs for the PDF quote,
+   * without disturbing whatever the customer is currently looking at (camera,
+   * orbit target and door state are all restored afterwards).
+   */
+  captureViews() {
+    if (!this.centre || !this.bounds) return null;
+    const savedPos = this.camera.position.clone();
+    const savedTarget = this.controls.target.clone();
+    const savedAnim = this.anim;
+    const savedDoorT = this.doorOpenT;
+    this.anim = null;
+
+    const size = this.size || 1.6;
+    const H = this.bounds.maxY - this.bounds.minY;
+    const exteriorLook = new THREE.Vector3(this.centre.x, H * 0.32, this.centre.z);
+    const shots = {
+      exterior: { pos: this.orbitPosition(exteriorLook, size, 34, 30, 2.5), look: exteriorLook },
+      top: { pos: this.orbitPosition(exteriorLook, size, 20, 87, 2.8), look: exteriorLook },
+      side: { pos: this.orbitPosition(exteriorLook, size, 90, 14, 2.6), look: exteriorLook },
+    };
+
+    this.doorOpenT = 0;
+    this.applyDoor();
+    const out = {};
+    for (const [name, t] of Object.entries(shots)) {
+      this.camera.position.copy(t.pos);
+      this.controls.target.copy(t.look);
+      this.controls.update();
+      this.renderer.render(this.scene, this.camera);
+      out[name] = this.renderer.domElement.toDataURL('image/png');
+    }
+
+    this.camera.position.copy(savedPos);
+    this.controls.target.copy(savedTarget);
+    this.controls.update();
+    this.doorOpenT = savedDoorT;
+    this.applyDoor();
+    this.anim = savedAnim;
+    this.renderer.render(this.scene, this.camera);
+    return out;
   }
 
   applyDoor() {
@@ -276,14 +348,25 @@ export class SaunaScene {
 
   tick() {
     if (this.disposed) return;
-    this.controls.update();
     if (this.anim) {
-      this.anim.t = Math.min(1, this.anim.t + 0.045);
+      // Time-based, not frame-count-based: a fixed per-frame increment would
+      // make this transition take several seconds on a slow/throttled device
+      // instead of the intended well-under-a-second camera move.
+      this.anim.t = Math.min(1, (performance.now() - this.anim.start) / this.anim.durationMs);
       const e = 1 - Math.pow(1 - this.anim.t, 3);
       this.camera.position.lerpVectors(this.anim.from, this.anim.to, e);
       this.controls.target.lerpVectors(this.anim.fromLook, this.anim.toLook, e);
+      if (this.anim.toFov !== this.anim.fromFov) {
+        this.camera.fov = this.anim.fromFov + (this.anim.toFov - this.anim.fromFov) * e;
+        this.camera.updateProjectionMatrix();
+      }
       if (this.anim.t >= 1) this.anim = null;
     }
+    // controls.update() re-orients the camera to face controls.target and is
+    // needed every frame, including mid-animation - it's what keeps the
+    // camera actually looking at the target as both move during the lerp
+    // above, not just OrbitControls' own user-drag damping.
+    this.controls.update();
     if (Math.abs(this.doorOpenT - this.doorTarget) > 0.002) {
       this.doorOpenT += (this.doorTarget - this.doorOpenT) * 0.12;
       this.applyDoor();

@@ -1,4 +1,4 @@
-import { ArrowRight, Sparkles, Download } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { chf } from './format';
 import { getTranslation } from './i18n';
 
@@ -95,17 +95,6 @@ export default function PresetPicker({ presets, totals, onPick, onStartBlank, la
                   <ArrowRight size={15} />
                 </span>
               </span>
-
-              {/* .glb download */}
-              <a
-                className="preset-card-glb"
-                href={`/assets/models/presets/${preset.id}.glb`}
-                download
-                onClick={e => e.stopPropagation()}
-                title={isDe ? "Originales Blender 3D-Modell (.glb) herunterladen" : "Download the original Blender 3D model (.glb)"}
-              >
-                <Download size={11} />.glb
-              </a>
             </button>
           );
         })}

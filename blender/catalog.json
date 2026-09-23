@@ -859,21 +859,21 @@
           "w": 220,
           "d": 200,
           "h": 210,
-          "price": 17900,
+          "price": 19990,
           "label": "6-Eck 220"
         },
         {
           "w": 240,
           "d": 215,
           "h": 210,
-          "price": 19700,
+          "price": 22900,
           "label": "6-Eck 240"
         },
         {
           "w": 260,
           "d": 230,
           "h": 210,
-          "price": 21600,
+          "price": 26400,
           "label": "6-Eck 260"
         }
       ],
@@ -897,7 +897,7 @@
         8,
         12
       ],
-      "product_url": "https://www.holzsauna.ch/Sauna-nach-Mass"
+      "product_url": "https://www.holzsauna.ch/designsauna-zirbe-massivholz-swissmade-6-eck-glasfront-schieferplatten"
     },
     "designer_rund": {
       "name_de": "Designer-Sauna Rund aus Nussbaum",
@@ -905,8 +905,8 @@
       "sku": "H-RD-1",
       "type": "round",
       "wall_wood": "nussbaum",
-      "wall_mm": 42,
-      "ceiling_mm": 42,
+      "wall_mm": 59,
+      "ceiling_mm": 59,
       "door_mm": [
         650,
         1900
@@ -925,21 +925,21 @@
           "w": 200,
           "d": 200,
           "h": 210,
-          "price": 18400,
+          "price": 49500,
           "label": "Rund 200"
         },
         {
           "w": 220,
           "d": 220,
           "h": 210,
-          "price": 20500,
+          "price": 56100,
           "label": "Rund 220"
         },
         {
           "w": 240,
           "d": 240,
           "h": 210,
-          "price": 22800,
+          "price": 62900,
           "label": "Rund 240"
         }
       ],
@@ -965,7 +965,7 @@
         8,
         12
       ],
-      "product_url": "https://www.holzsauna.ch/Sauna-nach-Mass"
+      "product_url": "https://www.holzsauna.ch/designersauna-nussbaum-runde-glasfront"
     },
     "saunafass": {
       "name_de": "Saunafass, nordische Fichte 42mm Massivholzbohlen",

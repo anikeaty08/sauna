@@ -9,11 +9,24 @@ import { tag, box } from './mesh.js';
 //
 // Every builder returns an array of meshes already tagged for hover/click.
 
+/**
+ * Orientation basis for a wall-mounted fixture whose `dir` points INTO the
+ * room. Every builder below lays its parts out at positive local Z meaning
+ * "proud of the wall", so local +Z has to end up along `dir`.
+ *
+ * Matrix4.lookAt puts local +Z along (eye - target), so the target is -dir.
+ * Aiming it at +dir instead - as this did - flips every fixture around and
+ * buries it in the wall; on the curved shells that pushed the lamp shade
+ * ~90 mm out through the staves.
+ */
+const faceInto = dir => new THREE.Matrix4().lookAt(
+  new THREE.Vector3(0, 0, 0), new THREE.Vector3(-dir.x, 0, -dir.z), new THREE.Vector3(0, 1, 0));
+
 /** Wall lamp with a slatted aspen shade. `dir` is the unit vector from the lamp INTO the room. */
 export function wallLamp(materials, spec, sku, lang, pos, dir, group) {
   const parts = [];
   const espe = materials.wood('espe');
-  const basis = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), new THREE.Vector3(dir.x, 0, dir.z), new THREE.Vector3(0, 1, 0));
+  const basis = faceInto(dir);
   const place = (m, off) => { m.position.set(off.x, off.y, off.z).applyMatrix4(basis).add(pos); m.quaternion.setFromRotationMatrix(basis); return m; };
   parts.push(place(new THREE.Mesh(box(0.235, 0.315, 0.026), espe), new THREE.Vector3(0, 0, 0.013)));
   parts.push(place(new THREE.Mesh(box(0.19, 0.25, 0.05), materials.opal), new THREE.Vector3(0, 0, 0.055)));
@@ -59,7 +72,7 @@ export function controlUnit(materials, spec, sku, lang, pos, dir, benchMat) {
   const isGlass = spec.series === 'glass';
   const body = spec.color === 'white' ? materials.white : spec.color === 'wood' ? benchMat : materials.black;
   const faceMat = isGlass ? (spec.color === 'mirror' ? materials.mirror : spec.color === 'gold' ? materials.gold : materials.black) : body;
-  const basis = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), new THREE.Vector3(dir.x, 0, dir.z), new THREE.Vector3(0, 1, 0));
+  const basis = faceInto(dir);
   const place = (m, off) => { m.position.set(off.x, off.y, off.z).applyMatrix4(basis).add(pos); m.quaternion.setFromRotationMatrix(basis); return m; };
   const unit = place(new THREE.Mesh(box(cw, ch, cd), body), new THREE.Vector3(0, 0, cd / 2));
   const face = place(new THREE.Mesh(box(cw - 0.006, ch - 0.006, 0.002), faceMat), new THREE.Vector3(0, 0, cd + 0.001));
@@ -75,7 +88,7 @@ export function controlUnit(materials, spec, sku, lang, pos, dir, benchMat) {
 export function ventSlider(materials, benchMat, lang, pos, dir, kind) {
   const isDe = lang === 'de';
   const w = kind === 'supply' ? 0.15 : 0.20;
-  const basis = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), new THREE.Vector3(dir.x, 0, dir.z), new THREE.Vector3(0, 1, 0));
+  const basis = faceInto(dir);
   const m = new THREE.Mesh(box(w, 0.10, 0.022), benchMat);
   m.position.set(0, 0, 0.011).applyMatrix4(basis).add(pos);
   m.quaternion.setFromRotationMatrix(basis);
@@ -90,7 +103,7 @@ export function infraredPanel(materials, spec, sku, lang, pos, dir) {
   const glowMat = spec.color === 'red'
     ? materials.plain('irRed', { color: 0x3a0c08, roughness: 0.5, emissive: 0xff3a1a, emissiveIntensity: 1.8 })
     : materials.plain('irBlack', { color: 0x0c0c0d, roughness: 0.35, metalness: 0.3, emissive: 0xb23a1a, emissiveIntensity: 0.9 });
-  const basis = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), new THREE.Vector3(dir.x, 0, dir.z), new THREE.Vector3(0, 1, 0));
+  const basis = faceInto(dir);
   const m = new THREE.Mesh(box(iw, ih, id), glowMat);
   m.position.set(0, 0, id / 2 + 0.006).applyMatrix4(basis).add(pos);
   m.quaternion.setFromRotationMatrix(basis);
@@ -103,7 +116,7 @@ export function heaterUnit(materials, spec, sku, lang, pos, dir, base = 0) {
   const [hwMm, hdMm, hhMm] = spec.dims_mm;
   const hw = hwMm / 1000, hd = hdMm / 1000, hh = hhMm / 1000;
   const bodyMat = spec.color === 'black' ? materials.black : materials.steel;
-  const basis = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), new THREE.Vector3(dir.x, 0, dir.z), new THREE.Vector3(0, 1, 0));
+  const basis = faceInto(dir);
   const place = (m, off) => { m.position.set(off.x, off.y, off.z).applyMatrix4(basis).add(pos); m.quaternion.setFromRotationMatrix(basis); return m; };
   const parts = [];
   let stonesTop;

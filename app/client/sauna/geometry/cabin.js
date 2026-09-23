@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { nameOf } from './names.js';
 import { tag, box, subtractIntervals } from './mesh.js';
-import { planPolygon, classifySegments, add, scale, hexMaxInnerX } from './math.js';
+import { planPolygon, classifySegments, add, scale, hexMaxInnerX, polyEdges, shiftInside } from './math.js';
 import { doorHandleMaterials } from './materials.js';
 
 export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
@@ -40,6 +40,44 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
   // interior extents (rectangular part)
   const X0 = -W / 2 + t, X1 = W / 2 - t;   // left/right inner faces
   const ZB = t, ZF = D - t;                 // back inner face, front inner face
+  /**
+   * Usable half-width for anything spanning z0..z1. A rectangle is the same
+   * everywhere; a hex narrows toward both end walls, so take the tightest
+   * point over the span - evaluating only the midpoint lets the ends poke
+   * out through the angled corner walls.
+   */
+  const innerHalfWidth = (z0, z1 = z0) => isHex
+    ? Math.min(hexMaxInnerX(z0, W, D, t), hexMaxInnerX(z1, W, D, t))
+    : X1;
+
+  /**
+   * Backstop for fixture placement on angled footprints: nudge a whole
+   * assembly inward until none of it is buried in, or poking through, a wall.
+   * Applied to the assembled parts so the pieces keep their relative layout -
+   * clamping each mesh on its own would pull assemblies apart.
+   *
+   * Only hex needs it; rectangular walls are already handled by X0/X1/ZB/ZF.
+   */
+  const hullEdges = isHex ? polyEdges(points) : null;
+  const keepInside = (meshes, clearance = t + 0.01) => {
+    if (!hullEdges || !meshes.length) return;
+    const pts = [];
+    for (const m of meshes) {
+      if (!m.geometry) continue;
+      m.updateMatrix();
+      if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+      const bb = m.geometry.boundingBox;
+      for (const cx of [bb.min.x, bb.max.x])
+        for (const cy of [bb.min.y, bb.max.y])
+          for (const cz of [bb.min.z, bb.max.z]) {
+            const v = new THREE.Vector3(cx, cy, cz).applyMatrix4(m.matrix);
+            pts.push({ x: v.x, z: v.z });
+          }
+    }
+    const s = shiftInside(hullEdges, pts, clearance);
+    if (!s) return;
+    for (const m of meshes) { m.position.x += s.x; m.position.z += s.z; m.updateMatrix(); }
+  };
 
   // ---- door and glass layout -----------------------------------------------
   const chamfered = cfg.entry === 'corner' || cfg.entry === 'corner_glasfront';
@@ -154,11 +192,32 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
       }
     }
   }
-  // roof + floor + interior ceiling trim. Hex families use a shape-matched cap
-  // (extruded from the footprint outline) instead of a bounding-box slab, so
-  // the roof/floor actually read as a hexagon rather than overhanging it.
+  // An all-glass corner is two adjacent glazed walls, and each one's glazing
+  // starts t+0.03 in from the end - so without this the corner is an empty
+  // notch with the roof corner hanging over nothing. Real all-glass corners
+  // are closed with a slim vertical mullion; add it at the shared vertex.
+  if (glassCorner) {
+    const cornerSeg = segByName(cfg.door.corner === 'left' ? 'left' : 'right');
+    const frontSeg = segByName('front');
+    if (cornerSeg && frontSeg) {
+      const shared = [cornerSeg.p0, cornerSeg.p1].find(a =>
+        [frontSeg.p0, frontSeg.p1].some(b => Math.hypot(a.x - b.x, a.z - b.z) < 1e-6));
+      if (shared) {
+        const postW = 0.055;
+        const inX = shared.x > 0 ? -1 : 1, inZ = shared.z > D / 2 ? -1 : 1;
+        const mullion = new THREE.Mesh(box(postW, doorTop + 0.045, postW), materials.steel);
+        mullion.position.set(shared.x + inX * postW / 2, (doorTop + 0.045) / 2, shared.z + inZ * postW / 2);
+        push(tag(mullion, 'cabin', family.sku, isDe ? 'Glasfront Eckpfosten' : 'Glass corner mullion', 0, [mm(postW), family.wall_mm, mm(doorTop)], { includedIn: 'cabin' }));
+      }
+    }
+  }
+  // roof + floor + interior ceiling trim. Any non-rectangular footprint (hex,
+  // or a chamfered corner-entry cabin) gets a shape-matched cap - extruded
+  // from the actual footprint outline - instead of a plain bounding-box slab,
+  // which would overhang past the cut corner/angled wall into empty space.
+  const usesShapeCap = isHex || chamfered;
   function capMesh(thickness, material) {
-    if (isHex) {
+    if (usesShapeCap) {
       const shape = new THREE.Shape(points.map(p => new THREE.Vector2(p.x, p.z)));
       const geo = new THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false, curveSegments: 1 });
       const mesh = new THREE.Mesh(geo, material);
@@ -168,7 +227,7 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
     return new THREE.Mesh(box(W, thickness, D, 1.0, 'x'), material);
   }
   const roof = capMesh(tc, wallMat);
-  roof.position.set(0, isHex ? zC + tc : zC + tc / 2, isHex ? 0 : D / 2);
+  roof.position.set(0, usesShapeCap ? zC + tc : zC + tc / 2, usesShapeCap ? 0 : D / 2);
   push(tag(roof, 'cabin', family.sku, isDe ? `Decke, ${family.ceiling_mm} mm ${itemTitle(catalog.woods[family.wall_wood])}` : `Ceiling, ${family.ceiling_mm} mm ${itemTitle(catalog.woods[family.wall_wood])}`, 0, [mm(W), mm(D), family.ceiling_mm], { includedIn: 'cabin' }));
   if (family.roof_colours?.length && catalog.roof_colours?.[cfg.roofColour]) {
     const roofColourSpec = catalog.roof_colours[cfg.roofColour];
@@ -178,7 +237,7 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
     push(tag(shingles, 'cabin', cfg.roofColour, itemTitle(roofColourSpec), roofColourSpec.price, [mm(W + 0.06), 30, mm(D + 0.06)], { includedIn: 'cabin' }));
   }
   const floor = capMesh(0.045, trimMat);
-  floor.position.set(0, isHex ? 0 : -0.0225, isHex ? 0 : D / 2);
+  floor.position.set(0, usesShapeCap ? 0 : -0.0225, usesShapeCap ? 0 : D / 2);
   push(tag(floor, 'cabin', family.sku, isDe ? 'Saunaboden' : 'Floor', 0, [mm(W), mm(D), 45], { includedIn: 'cabin' }));
 
   if (cfg.cladding && cfg.cladding !== 'none') {
@@ -240,23 +299,23 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
     const position = cfg.heater.position;
     const atBack = position.startsWith('back') || position === 'centre_back';
     const clearance = 0.05;
-    let hx0, hx1;
-    if (position === 'centre_back') { hx0 = -hw / 2; hx1 = hw / 2; }
-    else if (heaterSide > 0) { hx1 = X1 - clearance; hx0 = hx1 - hw; }
-    else { hx0 = X0 + clearance; hx1 = hx0 + hw; }
-    // Hex: clamp heater X so it stays inside the angled walls at its Z position.
-    if (isHex) {
-      const wallZ = atBack ? ZB : ZF;
-      const hzMid = wallZ + (atBack ? 1 : -1) * (0.05 + (heaterSpec.dims_mm[1] / 1000) / 2);
-      const maxX = hexMaxInnerX(hzMid, W, D, t);
-      if (hx1 > maxX) { hx1 = maxX; hx0 = hx1 - hw; }
-      if (hx0 < -maxX) { hx0 = -maxX; hx1 = hx0 + hw; }
-    }
     const wallZ = atBack ? ZB : ZF;
     const r = atBack ? 1 : -1;                          // into the room
     const gap = heaterSpec.mount === 'wall' ? 0 : 0.05;
     const zNear = wallZ + r * gap, zFar = wallZ + r * (gap + hd);
     const hz0 = Math.min(zNear, zFar), hz1 = Math.max(zNear, zFar);
+    let hx0, hx1;
+    if (position === 'centre_back') { hx0 = -hw / 2; hx1 = hw / 2; }
+    else if (heaterSide > 0) { hx1 = X1 - clearance; hx0 = hx1 - hw; }
+    else { hx0 = X0 + clearance; hx1 = hx0 + hw; }
+    // Hex: clamp heater X to the TIGHTEST point over its whole depth. The hex
+    // is narrowest at the wall the heater backs onto, so clamping at the
+    // heater's mid-depth lets the wall-side end punch through the angled wall.
+    if (isHex) {
+      const maxX = innerHalfWidth(hz0, hz1);
+      if (hx1 > maxX) { hx1 = maxX; hx0 = hx1 - hw; }
+      if (hx0 < -maxX) { hx0 = -maxX; hx1 = hx0 + hw; }
+    }
     const cx = (hx0 + hx1) / 2, cz = (hz0 + hz1) / 2;
     const base = heaterSpec.mount === 'wall' ? 0.15 : (cfg.accessories.includes('FLOOR-PLATE') ? 0.006 : 0);
     const bodyMat = heaterSpec.color === 'black' ? materials.black : materials.steel;
@@ -333,6 +392,7 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
       tank.position.set(cx - heaterSide * (hw / 2 + 0.05), base + hh * 0.35, cz);
       parts.push(tank);
     }
+    keepInside(parts);
     for (const p of parts) push(tag(p, 'heater', cfg.heater.sku, itemTitle(heaterSpec), heaterSpec.price, heaterSpec.dims_mm, { kw: heaterSpec.kw, control: heaterSpec.control, mount: heaterSpec.mount, approx: !!heaterSpec.approx }));
     if (heaterSpec.wood_fired && cfg.chimney && catalog.chimneys?.[cfg.chimney]) {
       const chimneySpec = catalog.chimneys[cfg.chimney];
@@ -356,8 +416,11 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
       for (const p of flueParts) push(tag(p, 'heater', cfg.chimney, itemTitle(chimneySpec), chimneySpec.price, chimneySpec.dims_mm, { includedIn: 'heater' }));
     }
     heaterInfo = { cx, cz, hz0, hz1, base, hh, atBack, stonesTop: stonesY + 0.08, hw, hd };
-    const gx0 = Math.max(hx0 - clearance, X0), gx1 = Math.min(hx1 + clearance, X1);
     const gz0 = Math.max(hz0 - clearance, ZB), gz1 = Math.min(hz1 + clearance, ZF);
+    // Clamp the guard zone to the real inner width over its own z-span so the
+    // rails/posts don't run out through a hex's angled wall.
+    const guardLim = innerHalfWidth(gz0, gz1);
+    const gx0 = Math.max(hx0 - clearance, -guardLim), gx1 = Math.min(hx1 + clearance, guardLim);
     heaterZone = { x0: gx0 - 0.02, x1: gx1 + 0.02, z0: gz0 - 0.02, z1: gz1 + 0.02 };
     if (heaterSpec.guard) {
       const guardY = heaterSpec.mount === 'wall' ? 0.72 : Math.min(0.9, base + hh * 0.85);
@@ -372,6 +435,7 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
         const post = new THREE.Mesh(box(0.028, guardY - 0.04, 0.028), benchMat);
         post.position.set(px, (guardY - 0.04) / 2, pz); guardParts.push(post);
       }
+      keepInside(guardParts);
       for (const p of guardParts) push(tag(p, 'interior', 'GUARD', 'Heater guard (included)', 0, [mm(gx1 - gx0), mm(gz1 - gz0), mm(guardY)], { includedIn: 'cabin' }));
     }
   }
@@ -381,8 +445,11 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
   if (controlSpec && heaterInfo) {
     const [cwMm, cdMm, chMm] = controlSpec.dims_mm;
     const cw = cwMm / 1000, cd = cdMm / 1000, ch = chMm / 1000;
-    const x = heaterSide * (W / 2 + cd / 2);            // on the exterior face of the heater-side wall
     const z = heaterInfo.atBack ? ZB + 0.25 : ZF - 0.25;
+    // Mounted on the exterior face of the heater-side wall. On a hex that wall
+    // is angled and sits well inside W/2 at this depth, so anchor to the real
+    // inner width there instead of the bounding box.
+    const x = heaterSide * ((isHex ? innerHalfWidth(z) + t : W / 2) + cd / 2);
     const y = 1.35;
     const isGlass = controlSpec.series === 'glass';
     const body = controlSpec.color === 'white' ? materials.white : controlSpec.color === 'wood' ? benchMat : materials.black;
@@ -451,15 +518,20 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
   }
   function backrest(a, b, wall, y = 1.04) {
     const parts = [];
+    // Side rails run along z from a to b against the left/right wall. On a hex
+    // that wall is angled, so anchor them to the narrowest inner width over
+    // the span rather than to the bounding box edge (X0/X1), which only
+    // touches the wall at the hex's widest point (z = D/2).
+    const sideX = innerHalfWidth(a, b);
     for (const yy of [y, y + 0.13]) {
       let s;
       if (wall === 'back') { s = new THREE.Mesh(box(b - a, 0.095, 0.027, 1, 'x'), benchMat); s.position.set((a + b) / 2, yy + 0.0475, ZB + 0.045 + 0.0135); }
-      else { s = new THREE.Mesh(box(0.027, 0.095, b - a, 1, 'y'), benchMat); s.position.set(wall === 'left' ? X0 + 0.045 + 0.0135 : X1 - 0.045 - 0.0135, yy + 0.0475, (a + b) / 2); }
+      else { s = new THREE.Mesh(box(0.027, 0.095, b - a, 1, 'y'), benchMat); s.position.set(wall === 'left' ? -sideX + 0.045 + 0.0135 : sideX - 0.045 - 0.0135, yy + 0.0475, (a + b) / 2); }
       parts.push(s);
     }
     for (const p of [a + 0.06, b - 0.06]) {
       const st = new THREE.Mesh(box(0.045, 0.265, 0.045), benchMat);
-      if (wall === 'back') st.position.set(p, y + 0.11, ZB + 0.0225); else st.position.set(wall === 'left' ? X0 + 0.0225 : X1 - 0.0225, y + 0.11, p);
+      if (wall === 'back') st.position.set(p, y + 0.11, ZB + 0.0225); else st.position.set(wall === 'left' ? -sideX + 0.0225 : sideX - 0.0225, y + 0.11, p);
       parts.push(st);
     }
     return parts;
@@ -488,16 +560,13 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
     const sides = layout === 'L' ? [-heaterSide] : [-1, 1];
     for (const s of sides) {
       let zBack = ZB + upperD, zFront = ZF - 0.30;
-      const x0 = s < 0 ? X0 : X1 - upperD, x1 = s < 0 ? X0 + upperD : X1;
-      // Hex: the side walls are angled, so clamp the bench X extents and shorten
-      // Z range so nothing pokes through the angled walls.
-      if (isHex) {
-        const maxXBack = hexMaxInnerX(zBack, W, D, t);
-        const maxXFront = hexMaxInnerX(zFront, W, D, t);
-        const maxXMin = Math.min(maxXBack, maxXFront);
-        // If the bench's outer edge exceeds the hex boundary, skip it entirely
-        if ((s > 0 && x0 > maxXMin) || (s < 0 && -x1 > maxXMin)) continue;
-      }
+      // Hex: the side walls are angled, so pull the bench's outer edge in to the
+      // narrowest inner width over its z-span rather than sitting it on the
+      // bounding box edge, which only touches the wall at the hex's widest point.
+      const outerX = innerHalfWidth(zBack, zFront);
+      let x0 = s < 0 ? -outerX : outerX - upperD;
+      let x1 = s < 0 ? -outerX + upperD : outerX;
+      if (x1 - x0 < 0.3) continue;   // no usable width left against this wall
       if (heaterZone && heaterZone.x0 < x1 && heaterZone.x1 > x0) {
         if ((heaterZone.z0 + heaterZone.z1) / 2 > (zBack + zFront) / 2) zFront = Math.min(zFront, heaterZone.z0 - 0.03);
         else zBack = Math.max(zBack, heaterZone.z1 + 0.03);
@@ -513,9 +582,12 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
   let bx0 = X0 + (sideBenches.some(b => b.s < 0) ? upperD : 0);
   let bx1 = X1 - (sideBenches.some(b => b.s > 0) ? upperD : 0);
   if (heaterZone && heaterZone.z0 < ZB + upperD + 0.03) { if (heaterZone.x0 > 0) bx1 = Math.min(bx1, heaterZone.x0); else bx0 = Math.max(bx0, heaterZone.x1); }
-  // Hex: clamp bench width to fit inside the narrower back wall.
+  // Hex: clamp bench width to fit inside the angled walls. The hex narrows
+  // toward z=0 (the back wall), so the bench's back edge (uz0=ZB) is the
+  // tightest constraint, not the midpoint of its depth - using the midpoint
+  // let the bench poke through the angled corner walls near the back.
   if (isHex) {
-    const maxX = hexMaxInnerX(ZB + upperD / 2, W, D, t);
+    const maxX = Math.min(hexMaxInnerX(ZB, W, D, t), hexMaxInnerX(ZB + upperD, W, D, t));
     bx0 = Math.max(bx0, -maxX);
     bx1 = Math.min(bx1, maxX);
   }
@@ -535,7 +607,7 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
   let lz0 = uz1, lz1 = uz1 + lowerD, lx0 = bx0, lx1 = bx1;
   if (heaterZone && heaterZone.z1 > lz0 - 0.03 && heaterZone.z0 < lz1 + 0.03) { if (heaterZone.x0 > 0) lx1 = Math.min(lx1, heaterZone.x0); else lx0 = Math.max(lx0, heaterZone.x1); }
   if (isHex) {
-    const maxX = hexMaxInnerX((lz0 + lz1) / 2, W, D, t);
+    const maxX = Math.min(hexMaxInnerX(lz0, W, D, t), hexMaxInnerX(lz1, W, D, t));
     lx0 = Math.max(lx0, -maxX); lx1 = Math.min(lx1, maxX);
   }
   let lowerBench = null;
@@ -555,7 +627,16 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
   // headrests
   const headrests = Number(cfg.interior.headrests) || 0;
   let placed = 0;
-  if (headrests && sideBenches.length) { const sb = sideBenches[0]; tagInterior(headrest((sb.x0 + sb.x1) / 2, sb.zFront - 0.25, upperY, 'z'), isDe ? 'Kopfstütze (inbegriffen)' : 'Headrest (included)', [400, 60, 300]); placed++; }
+  if (headrests && sideBenches.length) {
+    const sb = sideBenches[0];
+    const hz = sb.zFront - 0.25;
+    // The headrest is ~0.3 wide and spans +/-0.2 in z; keep it inside the
+    // narrowest wall position over that span (matters on a hex).
+    const lim = innerHalfWidth(hz - 0.2, hz + 0.2) - 0.17;
+    const hx = Math.max(-lim, Math.min(lim, (sb.x0 + sb.x1) / 2));
+    tagInterior(headrest(hx, hz, upperY, 'z'), isDe ? 'Kopfstütze (inbegriffen)' : 'Headrest (included)', [400, 60, 300]);
+    placed++;
+  }
   if (headrests > placed) {
     const x = (sideBenches.length && sideBenches[0].s > 0) || !sideBenches.length ? bx0 + 0.30 : bx1 - 0.30;
     tagInterior(headrest(x, uz0 + upperD / 2, upperY, 'x'), isDe ? 'Kopfstütze (inbegriffen)' : 'Headrest (included)', [400, 60, 300]); placed++;
@@ -566,7 +647,7 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
     const gzBack = (lowerBench ? lowerBench.z1 : uz1) + 0.02, gzFront = ZF - 0.02;
     let gx0 = X0 + 0.02 + (sideBenches.some(b => b.s < 0) ? upperD : 0), gx1 = X1 - 0.02 - (sideBenches.some(b => b.s > 0) ? upperD : 0);
     if (heaterZone && heaterZone.z1 > gzBack && heaterZone.z0 < gzFront) { if (heaterZone.x0 > 0) gx1 = Math.min(gx1, heaterZone.x0 - 0.02); else gx0 = Math.max(gx0, heaterZone.x1 + 0.02); }
-    if (isHex) { const maxX = hexMaxInnerX((gzBack + gzFront) / 2, W, D, t); gx0 = Math.max(gx0, -maxX); gx1 = Math.min(gx1, maxX); }
+    if (isHex) { const maxX = Math.min(hexMaxInnerX(gzBack, W, D, t), hexMaxInnerX(gzFront, W, D, t)); gx0 = Math.max(gx0, -maxX); gx1 = Math.min(gx1, maxX); }
     if (gzFront - gzBack > 0.2 && gx1 - gx0 > 0.3) {
       const parts = [];
       for (const x of [gx0 + 0.05, gx1 - 0.05, (gx0 + gx1) / 2]) { const r = new THREE.Mesh(box(0.045, 0.028, gzFront - gzBack), benchMat); r.position.set(x, 0.014, (gzBack + gzFront) / 2); parts.push(r); }
@@ -601,6 +682,7 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
       for (let i = 0; i < n; i++) { const s = new THREE.Mesh(box(Math.min(0.67, pitch - 0.02), 0.005, 0.012), materials.ledRgb); s.position.set(b.x0 + 0.1 + (i + 0.5) * pitch, upperY - slatT - 0.11, uz1 - 0.03); parts.push(s); }
       const light = new THREE.PointLight(0xb28cff, 4, 1.8, 2); light.position.set((b.x0 + b.x1) / 2, upperY - 0.2, uz1 + 0.05); group.add(light);
     } else continue;
+    keepInside(parts);
     for (const m of parts) push(tag(m, 'lighting', sku, itemTitle(spec), spec.price, spec.dims_mm));
   }
 
@@ -659,6 +741,7 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
     } else if (spec.kind === 'plunge_lid') {
       const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.61, 0.61, 0.03, 32), materials.wood('laerche')); lid.scale.z = 0.7; lid.position.set(-heaterSide * (W / 2 + 0.9), 1.015, D / 2); parts.push(lid);
     } else continue;
+    keepInside(parts);
     for (const m of parts) push(tag(m, 'accessory', sku, itemTitle(spec), spec.price, spec.dims_mm, { approx: !!spec.approx }));
   }
 
@@ -673,5 +756,23 @@ export function buildCabinSauna(cfg, catalog, materials, lang = 'en') {
   }
 
   const bounds = { minX: -W / 2, maxX: W / 2, minZ: 0, maxZ: D, minY: 0, maxY: H };
-  return { group, registry, bounds, doorRoot, doorSign: sign, heaterInfo, familyName };
+  // Hex families narrow toward the front/back walls (see hexMaxInnerX) - the
+  // generic entrance-at-+Z formula below assumes the full bounding width is
+  // usable right up to the front wall, which for a hex puts the camera close
+  // to or past the angled corner walls. Anchor it to the hex's actual usable
+  // width at that depth instead.
+  const interiorView = isHex ? (() => {
+    // A straight shot down the centreline points the camera at the narrow
+    // back wall from close range, filling the frame with one flat surface
+    // (the same issue fixed for the barrel's back cap) - look diagonally
+    // across the room at the bench/heater instead.
+    const camZ = ZF - 0.35, lookZ = ZB + 0.5;
+    const camMaxX = hexMaxInnerX(camZ, W, D, t) - 0.25;
+    const lookMaxX = hexMaxInnerX(lookZ, W, D, t) - 0.2;
+    return {
+      pos: new THREE.Vector3(Math.min(camMaxX, 0.55) * heaterSide, 1.4, camZ),
+      look: new THREE.Vector3(-Math.min(lookMaxX, 0.5) * heaterSide, 0.95, lookZ),
+    };
+  })() : undefined;
+  return { group, registry, bounds, doorRoot, doorSign: sign, heaterInfo, familyName, interiorView };
 }

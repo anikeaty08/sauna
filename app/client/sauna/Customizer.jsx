@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, DoorOpen, ChevronLeft, ChevronDown, Receipt, Download, FileText, Share2, Send, RotateCcw, Check, Undo2, Redo2 } from 'lucide-react';
+import { Box, DoorOpen, ChevronLeft, ChevronDown, Receipt, Download, FileText, Share2, Send, RotateCcw, Check, Undo2, Redo2, Globe } from 'lucide-react';
 import { useCatalog } from './useCatalog';
 import { defaultConfig, fromPreset, normalizeConfig } from './config';
 import { priceItems } from './pricing';
@@ -15,9 +15,82 @@ import './customizer.css';
 /* ── Wordmark ── */
 function Wordmark({ homeAria }) {
   return (
-    <a className="wordmark brand-link" href="#top" aria-label={homeAria || "Sauna Studio"}>
-      Sauna Studio
+    <a className="brand-link" href="#top" aria-label={homeAria || "HolzSauna"}>
+      <img src="/assets/images/logo.gif" alt="HolzSauna" className="brand-logo" />
     </a>
+  );
+}
+
+/* ── Language selector ── */
+const LANGUAGES = [
+  ['en', 'English'],
+  ['de', 'Deutsch'],
+  ['fr', 'Français'],
+  ['it', 'Italiano'],
+];
+
+/**
+ * Dropdown rather than a row of four pills: the header already carries back /
+ * undo / redo / reset / share, and four more always-on buttons crowd it —
+ * badly so once a narrow viewport wraps the row.
+ */
+function LanguageSelect({ lang, onSelect, label }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+  const current = LANGUAGES.find(([code]) => code === lang) || LANGUAGES[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = e => { if (!rootRef.current?.contains(e.target)) setOpen(false); };
+    const onKeyDown = e => {
+      if (e.key !== 'Escape') return;
+      setOpen(false);
+      rootRef.current?.querySelector('.lang-trigger')?.focus();
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="lang-select" ref={rootRef}>
+      <button
+        type="button"
+        className={`lang-trigger ${open ? 'is-open' : ''}`}
+        onClick={() => setOpen(o => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`${label}: ${current[1]}`}
+        title={label}
+      >
+        <Globe size={13} aria-hidden="true" />
+        <span className="lang-code">{current[0].toUpperCase()}</span>
+        <ChevronDown size={13} aria-hidden="true" className="lang-caret" />
+      </button>
+
+      {open && (
+        <ul className="lang-menu" role="listbox" aria-label={label}>
+          {LANGUAGES.map(([code, name]) => (
+            <li key={code}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={code === lang}
+                className={`lang-option ${code === lang ? 'is-active' : ''}`}
+                onClick={() => { onSelect(code); setOpen(false); }}
+              >
+                <span className="lang-option-code">{code.toUpperCase()}</span>
+                <span className="lang-option-name">{name}</span>
+                {code === lang && <Check size={13} aria-hidden="true" />}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -343,27 +416,8 @@ export default function Customizer() {
             </>
           )}
 
-          {/* ── Language Toggle (EN / DE) ── */}
-          <div className="lang-toggle" role="group" aria-label={t.langLabel}>
-            <button
-              type="button"
-              className={`lang-btn ${lang === 'en' ? 'is-active' : ''}`}
-              onClick={() => switchLang('en')}
-              title="English"
-              aria-pressed={lang === 'en'}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              className={`lang-btn ${lang === 'de' ? 'is-active' : ''}`}
-              onClick={() => switchLang('de')}
-              title="Deutsch"
-              aria-pressed={lang === 'de'}
-            >
-              DE
-            </button>
-          </div>
+          {/* ── Language selector (EN / DE / FR / IT) ── */}
+          <LanguageSelect lang={lang} onSelect={switchLang} label={t.langLabel} />
         </div>
       </header>
 

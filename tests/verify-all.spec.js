@@ -7,7 +7,10 @@ const total = page => page.locator('.grand-total b').first().textContent();
 const clickSafe = async loc => {
   await loc.scrollIntoViewIfNeeded();
   await loc.evaluate(el => el.scrollIntoView({ block: 'center' }));
-  await loc.click({ timeout: 8000 });
+  // force: bypasses Playwright's stability wait, which can hang against a
+  // continuously-redrawing WebGL canvas (60fps setAnimationLoop) even though
+  // the target button itself is static and perfectly clickable.
+  await loc.click({ timeout: 8000, force: true });
 };
 const openSection = async (page, id) => {
   const el = page.locator(`#section-${id}`);
@@ -32,9 +35,9 @@ test('full configurator: catalog + customer journey', async ({ page, context }) 
   // ---- family types & product families ----
   await openSection(page, 'cabin');
   const typeButtons = page.locator('.type-filter button');
-  await expect.soft(typeButtons).toHaveCount(5);
+  await expect.soft(typeButtons).toHaveCount(7); // All, Indoor, Hexagon, Round, Barrel, Garden house, Infrared
 
-  for (const typeLabel of ['Barrel', 'Garden house', 'Infrared']) {
+  for (const typeLabel of ['Hexagon', 'Round', 'Barrel', 'Garden house', 'Infrared']) {
     await clickSafe(typeButtons.filter({ hasText: typeLabel }));
     await page.waitForTimeout(150);
     const cards = page.locator('#section-cabin .opt-grid').first().locator('.opt-swatch');
@@ -244,7 +247,7 @@ test('full configurator: catalog + customer journey', async ({ page, context }) 
   await printPage.close();
 
   // ---- Reset ----
-  await page.locator('button:has-text("Reset")').click();
+  await clickSafe(page.locator('button:has-text("Reset")').first());
   await page.waitForTimeout(400);
 
   expect(errors, `unexpected console/page errors: ${errors.join('; ')}`).toEqual([]);

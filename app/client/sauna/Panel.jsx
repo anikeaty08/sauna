@@ -7,6 +7,8 @@ import { widthOptions, depthOptions, familyType } from './config';
 const TYPE_LABEL = {
   en: { cabin: 'Indoor', hex: 'Hexagon', round: 'Round', barrel: 'Barrel', house: 'Garden house', infrared: 'Infrared' },
   de: { cabin: 'Innen', hex: 'Sechseck', round: 'Rund', barrel: 'Fass', house: 'Gartenhaus', infrared: 'Infrarot' },
+  fr: { cabin: 'Intérieur', hex: 'Hexagone', round: 'Rond', barrel: 'Tonneau', house: 'Maison de jardin', infrared: 'Infrarouge' },
+  it: { cabin: 'Interno', hex: 'Esagono', round: 'Rotonda', barrel: 'Botte', house: 'Casetta da giardino', infrared: 'Infrarossi' },
 };
 
 /* ── Swatch (selectable option button) ── */
@@ -99,6 +101,20 @@ const ENTRY_SHORT = {
     glasfront:       'Glasfront',
     corner_glasfront:'Eck-Glasfront',
     glass_corner:    'Ganzglaseck',
+  },
+  fr: {
+    front:           'Entrée frontale',
+    corner:          "Entrée d'angle",
+    glasfront:       'Façade vitrée',
+    corner_glasfront:'Angle + vitrage',
+    glass_corner:    'Angle tout vitré',
+  },
+  it: {
+    front:           'Ingresso frontale',
+    corner:          "Ingresso d'angolo",
+    glasfront:       'Fronte vetrato',
+    corner_glasfront:'Angolo + vetro',
+    glass_corner:    'Angolo tutto vetro',
   }
 };
 
@@ -112,6 +128,16 @@ const CLADDING_SHORT = {
     none:    'Naturholz',
     schiefer:'Schieferplatten',
     altholz: 'Altholz-Fichte',
+  },
+  fr: {
+    none:    'Bois naturel',
+    schiefer:"Plaques d'ardoise",
+    altholz: 'Épicéa vieilli',
+  },
+  it: {
+    none:    'Legno naturale',
+    schiefer:"Lastre d'ardesia",
+    altholz: 'Abete anticato',
   }
 };
 

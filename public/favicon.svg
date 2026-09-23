@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#365443"/><g fill="none" stroke="#fafbf7" stroke-width="4" stroke-linecap="round"><path d="M20 46c-12-12 12-16 0-28M32 46c-12-12 12-16 0-28M44 46c-12-12 12-16 0-28"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="HolzSauna">
+  <rect width="64" height="64" rx="14" fill="#662d11"/>
+  <!-- "H" letterform, matching the HolzSauna wordmark -->
+  <path d="M17 15h8v13.5h14V15h8v34h-8V35.5H25V49h-8z" fill="#f5efe9"/>
+  <!-- steam curl, echoing the sauna mark -->
+  <path d="M45.5 52.5c-3.2-3.2 3.2-4.3 0-7.5" fill="none" stroke="#f5efe9"
+        stroke-width="2.6" stroke-linecap="round" opacity="0.8"/>
+</svg>

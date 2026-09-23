@@ -43,6 +43,51 @@ export function hexMaxInnerX(z, W, D, wallT) {
   return maxX - wallT / Math.max(cosA, 0.3) - 0.05;
 }
 
+/** Outward unit normals for a plan polygon, one per edge. */
+export function polyEdges(points) {
+  const cx = points.reduce((s, p) => s + p.x, 0) / points.length;
+  const cz = points.reduce((s, p) => s + p.z, 0) / points.length;
+  return points.map((a, i) => {
+    const b = points[(i + 1) % points.length];
+    const ex = b.x - a.x, ez = b.z - a.z, L = Math.hypot(ex, ez) || 1;
+    let nx = ez / L, nz = -ex / L;
+    // Flip if this normal points at the centroid, so ">0" always means outside.
+    if ((cx - a.x) * nx + (cz - a.z) * nz > 0) { nx = -nx; nz = -nz; }
+    return { a, nx, nz };
+  });
+}
+
+/** Signed distance from (x,z) to the polygon boundary; >0 is outside. */
+export function polyDist(edges, x, z) {
+  let d = -Infinity;
+  for (const e of edges) d = Math.max(d, (x - e.a.x) * e.nx + (z - e.a.z) * e.nz);
+  return d;
+}
+
+/**
+ * Smallest in-plane translation that brings every point inside the polygon
+ * with `clearance` to spare, or null if it already fits.
+ *
+ * This is the backstop for fixture placement. Clamping only |x| at a single z
+ * is not enough on a hex: the walls are angled, so a part that fits at its
+ * midpoint can still punch through the wall at either end.
+ */
+export function shiftInside(edges, pts, clearance) {
+  let dx = 0, dz = 0;
+  for (let iter = 0; iter < 4; iter++) {
+    let worst = null, worstD = -Infinity;
+    for (const e of edges) {
+      let d = -Infinity;
+      for (const p of pts) d = Math.max(d, (p.x + dx - e.a.x) * e.nx + (p.z + dz - e.a.z) * e.nz);
+      if (d > worstD) { worstD = d; worst = e; }
+    }
+    const over = worstD + clearance;
+    if (over <= 1e-4) break;
+    dx -= worst.nx * over; dz -= worst.nz * over;
+  }
+  return (dx || dz) ? { x: dx, z: dz } : null;
+}
+
 export function classifySegments(points, W, D) {
   const n = points.length, segs = [];
   for (let i = 0; i < n; i++) {
