@@ -130,9 +130,14 @@ export function buildRoundSauna(cfg, catalog, materials, lang) {
     registry.push(m);
   }
   group.add(doorRoot);
-  // Rotating doorRoot by +ry swings local +Z toward local +X, so the leaf opens
-  // inward when local +X is inward. applyDoor() uses baseRotY - doorSign*angle.
-  const doorSign = localXInward ? -1 : 1;
+  // Rotating doorRoot by +ry swings local +Z toward local +X. applyDoor() uses
+  // baseRotY - doorSign*angle, so with THIS sign the leaf swings toward local
+  // -X when local +X is inward - i.e. outward, the way a sauna door has to
+  // open (so someone overcome by heat can fall against it rather than needing
+  // to pull it inward). Verified empirically: the leaf's far edge measured
+  // 0.997 m from the room centre closed and 0.682 m open with the old sign -
+  // moving IN as it opened.
+  const doorSign = localXInward ? 1 : -1;
 
   for (const p of [polar(edgeA, radius), polar(edgeB, radius)]) {
     const post = new THREE.Mesh(box(wallT, doorH + 0.03, wallT), trimMat);
