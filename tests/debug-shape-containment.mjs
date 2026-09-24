@@ -32,9 +32,26 @@ const PROBE = `(() => {
   const H = cfg.heightCm / 100;
   const len = cfg.widthCm / 100;
 
+  // Derive the tube axis from the shell itself rather than assuming y = R:
+  // the barrel is lifted onto cradles, so its axis sits above that.
+  let axisY = R, axisZ = R;
+  if (isBarrel) {
+    const shell = new THREE.Box3();
+    for (const m of registry) {
+      const info = m.userData.info || {};
+      if (info.category !== 'cabin' || !/stave|daube/i.test(info.name || '')) continue;
+      m.updateMatrixWorld(true);
+      shell.expandByObject(m);
+    }
+    if (!shell.isEmpty()) {
+      axisY = (shell.min.y + shell.max.y) / 2;
+      axisZ = (shell.min.z + shell.max.z) / 2;
+    }
+  }
+
   // Radial distance from the shell axis, and the along-axis coordinate.
   const radial = v => isBarrel
-    ? Math.hypot(v.y - R, v.z - R)
+    ? Math.hypot(v.y - axisY, v.z - axisZ)
     : Math.hypot(v.x, v.z);
   const along = v => isBarrel ? v.x : v.y;
   const alongMax = isBarrel ? len : H;
@@ -63,7 +80,7 @@ const PROBE = `(() => {
       if (!bag[key] || bag[key].overBy < rec.overBy) bag[key] = rec;
     }
   }
-  return { type: family.type, R, rIn: +rIn.toFixed(3),
+  return { type: family.type, R, rIn: +rIn.toFixed(3), axis: [+axisY.toFixed(3), +axisZ.toFixed(3)],
            count: Object.keys(offenders).length, offenders, expectedOutside };
 })()`;
 

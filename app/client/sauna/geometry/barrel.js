@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { nameOf } from './names.js';
-import { tag, box, cylindricalUVs } from './mesh.js';
+import { tag, box } from './mesh.js';
 import { doorHandleMaterials } from './materials.js';
 import { wallLamp, ledStrip, bucketSet, controlUnit, ventSlider } from './fixtures.js';
 
@@ -10,6 +10,34 @@ import { wallLamp, ledStrip, bucketSet, controlUnit, ventSlider } from './fixtur
  * approximated as a smooth shell, and the door sits on the flat front cap
  * rather than following the curve, which real barrel doors do.
  */
+/**
+ * One cradle bracket: flat on the ground, with a circular bite out of the top
+ * that the barrel sits in. Built in the tube's YZ cross-section (local origin
+ * at the circle centre, so the ground is at local y = -centreHeight) and
+ * rotated so local X -> world Z and local Y -> world Y, with the extrusion
+ * running along the tube axis.
+ *
+ * Modelled as one solid bracket rather than a thin arc band plus separate
+ * feet: the band hid under the barrel and left the feet reading as loose
+ * blocks on the ground.
+ */
+function cradleBracket(radius, centreHeight, halfAngle, thickness) {
+  const a0 = Math.PI + halfAngle, a1 = 2 * Math.PI - halfAngle;  // through straight-down
+  const x0 = Math.cos(a0) * radius, y0 = Math.sin(a0) * radius;
+  const x1 = Math.cos(a1) * radius, y1 = Math.sin(a1) * radius;
+  const ground = -centreHeight;
+  const shape = new THREE.Shape();
+  shape.moveTo(x1, y1);
+  shape.lineTo(x1, ground);
+  shape.lineTo(x0, ground);
+  shape.lineTo(x0, y0);
+  shape.absarc(0, 0, radius, a0, a1, false);   // the seat the barrel rests in
+  shape.closePath();
+  const g = new THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false, curveSegments: 48 });
+  g.rotateY(-Math.PI / 2);
+  return g;
+}
+
 export function buildBarrelSauna(cfg, catalog, materials, lang) {
   const itemTitle = spec => nameOf(spec, lang);
   const isDe = lang === 'de';
@@ -27,28 +55,54 @@ export function buildBarrelSauna(cfg, catalog, materials, lang) {
   const wallMat = materials.wood(family.wall_wood, true, true);
   const benchSpec = catalog.interiors[cfg.interior.material];
   const benchMat = materials.wood(benchSpec.wood, false);
-  const cy = radius;
-  // Height of the walk-in deck. Declared up here because the door opening in
-  // the front cap has to start at the floor you actually stand on, not at the
-  // bottom of the tube.
-  const floorY = radius * 0.30;
+  // The barrel is lifted so its cradles, which wrap OUTSIDE the shell, have
+  // somewhere to go - resting the tube straight on the ground pushed them
+  // below it. Real barrel saunas stand on cradles exactly this way.
+  const standH = 0.12;
+  const cy = radius + standH;
+  // Height of the walk-in deck, measured up from the inside of the tube (not
+  // from the ground, which now sits `standH` lower). Kept low: every cm of
+  // deck is a cm of headroom lost, and a 2.05 m tube has little to spare.
+  const floorY = (cy - radius) + radius * 0.22;
 
-  const shell = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, length, 40, 1, true), wallMat);
-  shell.rotation.z = Math.PI / 2;
-  shell.position.set(length / 2, cy, radius);
-  cylindricalUVs(shell.geometry, radius, 1.0);
-  push(tag(shell, 'cabin', family.sku, `${itemTitle(catalog.woods[family.wall_wood])} ${isDe ? 'Fassdauben' : 'barrel staves'}, ${family.wall_mm} mm`, 0, [mm(length), mm(radius * 2), mm(radius * 2)], { includedIn: 'cabin' }));
+  // Individual staves rather than one smooth cylinder. A Saunafass is built
+  // from solid planks clamped by steel bands, and that plank line is what
+  // makes it read as a barrel at all - a smooth tube just looks like a drum.
+  // Verified against a Blender reference build before porting.
+  //
+  // Each plank's THICKNESS must point along the radius. box() gives dims
+  // (x,y,z), so thickness sits on local Y; rotating about X by (PI/2 - a)
+  // maps local Y onto the radius and local Z onto the tangent. Rotating by
+  // `a` instead lays the planks edge-on and leaves the shell as open fins.
+  const staveCount = Math.max(18, Math.round((Math.PI * 2 * radius) / 0.22));
+  const staveW = (Math.PI * 2 * (radius - wallT / 2)) / staveCount * 0.94;
+  const staveR = radius - wallT / 2;
+  for (let i = 0; i < staveCount; i++) {
+    const a = (i + 0.5) * (Math.PI * 2 / staveCount);
+    const stave = new THREE.Mesh(box(length, wallT, staveW, 1, 'x'), wallMat);
+    stave.position.set(length / 2, cy + Math.sin(a) * staveR, radius + Math.cos(a) * staveR);
+    stave.rotation.x = Math.PI / 2 - a;
+    push(tag(stave, 'cabin', family.sku, `${itemTitle(catalog.woods[family.wall_wood])} ${isDe ? 'Fassdaube' : 'barrel stave'}, ${family.wall_mm} mm`, 0, [mm(length), mm(staveW), family.wall_mm], { includedIn: 'cabin' }));
+  }
 
   const backCap = new THREE.Mesh(new THREE.CircleGeometry(radius, 40), wallMat);
   backCap.rotation.y = -Math.PI / 2;
   backCap.position.set(0.01, cy, radius);
   push(tag(backCap, 'cabin', family.sku, isDe ? 'Rueckwand' : 'Back cap', 0, [mm(radius * 2), mm(radius * 2), family.wall_mm], { includedIn: 'cabin' }));
 
-  const doorW = family.door_mm[0] / 1000, doorH = family.door_mm[1] / 1000;
+  const doorW = family.door_mm[0] / 1000;
+  const hy0 = -radius + floorY;
+  // The opening is cut out of a CIRCULAR end cap, so both top corners must stay
+  // inside the circle. Once the door was raised onto the deck, a catalog height
+  // of 1.8 m pushed them past the rim - and a THREE.Path hole that escapes its
+  // Shape triangulates to nothing, taking the whole cap and door with it. Clamp
+  // the height to what the circle can actually accommodate at this width.
+  const doorTopMax = Math.sqrt(Math.max(0.01, radius * radius - (doorW / 2) * (doorW / 2))) - 0.03;
+  const doorH = Math.min(family.door_mm[1] / 1000, doorTopMax - hy0);
   const frontShape = new THREE.Shape();
   frontShape.absarc(0, 0, radius, 0, Math.PI * 2, false);
   const hole = new THREE.Path();
-  const hx0 = -doorW / 2, hx1 = doorW / 2, hy0 = -radius + floorY, hy1 = hy0 + doorH;
+  const hx0 = -doorW / 2, hx1 = doorW / 2, hy1 = hy0 + doorH;
   hole.moveTo(hx0, hy0); hole.lineTo(hx1, hy0); hole.lineTo(hx1, hy1); hole.lineTo(hx0, hy1); hole.closePath();
   frontShape.holes.push(hole);
   const frontCap = new THREE.Mesh(new THREE.ShapeGeometry(frontShape, 32), wallMat);
@@ -87,7 +141,7 @@ export function buildBarrelSauna(cfg, catalog, materials, lang) {
   // tag() + registry.push() directly, NOT the push() helper: push() also
   // calls group.add(), which would re-parent these off doorRoot (an Object3D
   // can only have one parent) right after doorRoot.add() just set it.
-  for (const m of leafParts) { doorRoot.add(m); tag(m, 'door', family.sku, doorName, 0, [family.door_mm[0], 8, family.door_mm[1]], { includedIn: 'cabin', hinge: cfg.door.hinge }); registry.push(m); }
+  for (const m of leafParts) { doorRoot.add(m); tag(m, 'door', family.sku, doorName, 0, [family.door_mm[0], 8, mm(doorH)], { includedIn: 'cabin', hinge: cfg.door.hinge }); registry.push(m); }
   group.add(doorRoot);
 
   // ---- interior: walk-in deck + two facing slatted benches -----------------
@@ -105,9 +159,13 @@ export function buildBarrelSauna(cfg, catalog, materials, lang) {
   const deckHalf = halfWidthAt(floorY) - 0.015;
   const deckParts = [];
   {
+    // The bearers hang 60 mm below the deck, where the tube is narrower than
+    // at deck level, so size them against the half-width at their own underside.
+    const bearerH = 0.06;
+    const bearerZ = Math.min(deckHalf - 0.08, halfWidthAt(floorY - bearerH) - 0.045);
     for (const s of [-1, 1]) {
-      const bearer = new THREE.Mesh(box(deckX1 - deckX0, 0.06, 0.06, 1, 'x'), benchMat);
-      bearer.position.set((deckX0 + deckX1) / 2, floorY - 0.03, radius + s * (deckHalf - 0.08));
+      const bearer = new THREE.Mesh(box(deckX1 - deckX0, bearerH, 0.06, 1, 'x'), benchMat);
+      bearer.position.set((deckX0 + deckX1) / 2, floorY - bearerH / 2, radius + s * bearerZ);
       deckParts.push(bearer);
     }
     const n = Math.max(4, Math.round((deckX1 - deckX0) / 0.085));
@@ -203,6 +261,42 @@ export function buildBarrelSauna(cfg, catalog, materials, lang) {
     }
   }
 
+  // ---- cradles, tension bands and door trim ------------------------------
+  // What makes a barrel sauna read as one from outside: it sits in curved
+  // cradle saddles rather than resting on its own curve, and steel bands
+  // clamp the staves. Without these it is just a drum lying on the ground.
+  {
+    const deg = d => (d * Math.PI) / 180;
+    const cradleT = 0.10;
+    for (const cxPos of [length * 0.18, length * 0.82]) {
+      const saddle = new THREE.Mesh(cradleBracket(radius, cy, deg(35), cradleT), wallMat);
+      saddle.position.set(cxPos - cradleT / 2, cy, radius);
+      push(tag(saddle, 'cabin', family.sku, isDe ? 'Wiege (inbegriffen)' : 'Cradle support (included)', 0, [mm(cradleT), mm(radius * 1.64), mm(cy)], { includedIn: 'cabin' }));
+    }
+
+    for (const bx of [length * 0.16, length * 0.5, length * 0.84]) {
+      const band = new THREE.Mesh(new THREE.TorusGeometry(radius + 0.012, 0.016, 8, 56), materials.steel);
+      band.rotation.y = Math.PI / 2;               // ring plane -> the tube's YZ cross-section
+      band.position.set(bx, cy, radius);
+      push(tag(band, 'cabin', family.sku, isDe ? 'Spannband Edelstahl' : 'Stainless tension band', 0, [20, mm(radius * 2), 32], { includedIn: 'cabin' }));
+    }
+
+    // Trim framing the doorway on the front cap.
+    const trimT = 0.035, frameX = length - 0.012;
+    for (const [w, h, dy, dz] of [
+      [trimT, doorH + trimT * 2, doorH / 2 + trimT / 2 - doorH / 2, -(doorW / 2 + trimT / 2)],
+      [trimT, doorH + trimT * 2, 0, doorW / 2 + trimT / 2],
+      [trimT, trimT, doorH / 2 + trimT / 2, 0],
+      [trimT, trimT, -(doorH / 2 + trimT / 2), 0],
+    ]) {
+      const horizontal = h === trimT;
+      const piece = new THREE.Mesh(
+        box(w, horizontal ? trimT : doorH + trimT * 2, horizontal ? doorW + trimT * 2 : trimT), wallMat);
+      piece.position.set(frameX, cy + hy0 + doorH / 2 + dy, radius + dz);
+      push(tag(piece, 'cabin', family.sku, isDe ? 'Tuerzarge' : 'Door surround', 0, [mm(doorW), mm(doorH), mm(trimT)], { includedIn: 'cabin' }));
+    }
+  }
+
   if (cfg.accessories.includes('TERRACE-70')) {
     const terrace = new THREE.Mesh(box(length, 0.05, 0.7), materials.wood('fichte', true));
     terrace.position.set(length / 2, -0.025, radius * 2 + 0.35);
@@ -256,7 +350,7 @@ export function buildBarrelSauna(cfg, catalog, materials, lang) {
     }
   }
 
-  const bounds = { minX: 0, maxX: length, minZ: 0, maxZ: radius * 2, minY: 0, maxY: radius * 2 + 0.05 };
+  const bounds = { minX: 0, maxX: length, minZ: 0, maxZ: radius * 2, minY: 0, maxY: cy + radius + 0.05 };
   // The door is on the end cap (max X), so the natural interior shot looks
   // down the length of the tube, with both benches receding toward the back
   // cap. Stand just inside the door on the deck, a little off the centreline
