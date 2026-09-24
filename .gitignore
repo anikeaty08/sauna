@@ -28,3 +28,7 @@ blender/__pycache__/
 
 # Local env overrides (never the checked-in Dockerfile/compose file)
 .env
+
+# Ad-hoc debug screenshots written to the repo root when a script's OUT var
+# isn't set - these belong in the scratchpad, never in the repo.
+/*.png
