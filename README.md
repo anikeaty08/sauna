@@ -19,7 +19,41 @@ docker compose up -d --build
 
 That's it. The image is self-contained: the catalog, product photos and 3D models are committed to the repo (`public/assets/`), so building the container never needs Blender, Python, or the `blender/`/`output/` pipeline to be present. Quote requests and shared-design links persist in a named Docker volume (`sauna-data`) via SQLite.
 
-To deploy on a VPS (e.g. Contabo): copy the repo, run `docker compose up -d --build`, and put a reverse proxy (nginx/Caddy/Traefik) in front of port 3001 for TLS and your domain.
+## Deploying with HTTPS
+
+`docker-compose.prod.yml` is a complete production stack: the app (not exposed
+to the host) behind Caddy, which obtains and renews a Let's Encrypt certificate
+automatically. Use it *instead of* `docker-compose.yml`, not alongside it.
+
+```bash
+# On the server, from the repo root:
+export SITE_ADDRESS=sauna-studio.89-117-57-40.sslip.io   # or your own domain
+export ACME_EMAIL=you@example.com                        # cert expiry notices
+
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+`SITE_ADDRESS` defaults to an [sslip.io](https://sslip.io) name, which resolves
+`<anything>.<ip>.sslip.io` to that IP with no registrar and no purchased domain,
+so TLS works before a domain is bought. Point `SITE_ADDRESS` at a real hostname
+later and restart — nothing else changes.
+
+**Before running on a shared host**, check that nothing else already owns the
+web ports, or the Caddy container will fail to bind:
+
+```bash
+sudo ss -lptn 'sport = :80 or sport = :443'
+```
+
+If another project on the box already runs a reverse proxy, leave this stack's
+Caddy out and point the existing proxy at the app container instead. The stack
+uses an explicitly named network (`sauna-net`) and its own volumes so it cannot
+join or disturb another project's default network.
+
+Requirements: ports 80 and 443 reachable from the internet (Let's Encrypt
+validates over them), and `SITE_ADDRESS` resolving to the server. Certificates
+live in the `caddy-data` volume — keep it, or re-issuing counts against Let's
+Encrypt rate limits.
 
 ## Local development (without Docker)
 
@@ -96,6 +130,7 @@ tests/           Playwright end-to-end test
 blender/         offline Blender asset-authoring pipeline (optional, not part of the deployed app)
 docs/            reference material (the original client quotation)
 Dockerfile, docker-compose.yml, .dockerignore   container build
+docker-compose.prod.yml, Caddyfile              production stack with automatic HTTPS
 ```
 
 ---

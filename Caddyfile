@@ -1,0 +1,44 @@
+# Caddy reverse proxy for the HolzSauna configurator.
+#
+# SITE_ADDRESS is supplied by docker-compose.prod.yml. Caddy provisions and
+# renews a Let's Encrypt certificate automatically, so no cert files or cron
+# jobs are needed - it only requires that ports 80 and 443 reach this host.
+#
+# Default is an sslip.io name, which resolves any <anything>.<ip>.sslip.io to
+# that IP with no DNS registrar and no purchased domain. Swap SITE_ADDRESS for
+# a real domain later without touching anything else here.
+
+{
+	# Where Let's Encrypt sends expiry warnings.
+	email {$ACME_EMAIL:admin@example.com}
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# The app container; "sauna-studio" is the compose service name on the
+	# shared network, so this never leaves the Docker bridge.
+	reverse_proxy sauna-studio:3001
+
+	header {
+		# Sent only over HTTPS; tells browsers to stay on TLS.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "SAMEORIGIN"
+		-Server
+	}
+
+	# Hashed asset filenames are immutable; index.html must not be cached or
+	# clients pin an old bundle after a deploy.
+	@immutable path /assets/* /fonts/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+	@html path / /index.html
+	header @html Cache-Control "no-cache"
+
+	log {
+		output stdout
+		format console
+	}
+}

@@ -1,0 +1,71 @@
+# Production stack: app + Caddy (automatic HTTPS).
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# This is a COMPLETE stack, not an overlay on docker-compose.yml - use one or
+# the other. docker-compose.yml publishes 3001 straight to the host for a
+# quick test; this file keeps the app off the host entirely and puts Caddy in
+# front of it on 80/443.
+#
+# BEFORE RUNNING ON A SHARED HOST: ports 80 and 443 must be free. If another
+# project on the same box already runs a reverse proxy, starting this will
+# fail to bind (it will not silently take the ports, but do check first with
+#   sudo ss -lptn 'sport = :80 or sport = :443'
+# and put this app behind the existing proxy instead if something is there).
+#
+# Set SITE_ADDRESS to the public hostname. The sslip.io default resolves
+# <anything>.<dashed-or-dotted-ip>.sslip.io to that IP with no registrar, so
+# it works before a real domain is bought.
+services:
+  sauna-studio:
+    build: .
+    image: sauna-studio:latest
+    restart: unless-stopped
+    # No host port: only Caddy reaches it, over the internal network.
+    expose:
+      - "3001"
+    volumes:
+      - sauna-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - HOST=0.0.0.0
+      - SAUNA_DATABASE=/app/data/sauna.sqlite
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    networks: [sauna-net]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - sauna-studio
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    environment:
+      - SITE_ADDRESS=${SITE_ADDRESS:-sauna-studio.89-117-57-40.sslip.io}
+      - ACME_EMAIL=${ACME_EMAIL:-admin@example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates and ACME account keys. Keep these: losing them means
+      # re-issuing certs and burning Let's Encrypt rate limit.
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [sauna-net]
+
+volumes:
+  sauna-data:
+  caddy-data:
+  caddy-config:
+
+# Named explicitly so this stack cannot join or disturb another project's
+# default network on a shared host.
+networks:
+  sauna-net:
+    name: sauna-net
