@@ -143,17 +143,25 @@
 .preset-more-list { display: flex; flex-wrap: wrap; gap: 9px; }
 
 .preset-chip {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 16px;
+  border-radius: 10px;
+  padding: 8px 16px 8px 8px;
   font-size: 12px;
   font-weight: 650;
   background: var(--paper);
   transition: border-color 0.2s, background 0.2s, transform 0.2s;
 }
 .preset-chip:hover { border-color: var(--sage); background: var(--mineral); transform: translateY(-1px); }
-.preset-chip span { color: var(--muted); font-weight: 500; }
+.preset-chip-thumb {
+  width: 44px; height: 44px;
+  border-radius: 7px;
+  object-fit: cover;
+  background: var(--mineral);
+  flex-shrink: 0;
+}
+.preset-chip-text { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+.preset-chip-text span { color: var(--muted); font-weight: 500; }
 .preset-blank { margin-top: 30px; font-size: 12px; color: var(--muted); }
 .preset-blank:hover { color: var(--pine); }
 

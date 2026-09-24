@@ -712,6 +712,12 @@ class SaunaBuilder:
         cfg = self.cfg
         corner = cfg['door']['corner'] if cfg['entry'] in ('corner', 'corner_glasfront') else None
         c = (self.door_w + 2 * self.frame + 2 * 0.06) / math.sqrt(2)
+        # Remembered for build_interior(): the back-wall bench sizing below
+        # used to treat the cabin as a plain W x D rectangle even when this
+        # corner chamfer eats into that same wall run, so the back bench (and
+        # its cladding/legs, both derived from its extent) stuck straight out
+        # through the angled glass corner.
+        self.corner_side, self.corner_cut = corner, c
         if corner == 'right':
             points = [(W / 2, 0), (-W / 2, 0), (-W / 2, -D), (W / 2 - c, -D), (W / 2, -D + c)]
         elif corner == 'left':
@@ -1279,6 +1285,19 @@ class SaunaBuilder:
                 y_end = self.y_f + 0.30
                 if zone and ((s > 0 and zone[1] > self.x_r - up_d - 0.05) or (s < 0 and zone[0] < self.x_l + up_d + 0.05)):
                     y_end = max(y_end, zone[3] + 0.03)
+                # A chamfered corner on THIS side shortens the side wall the
+                # bench runs along - it doesn't reach all the way to self.y_f
+                # any more. Verified (Blender MCP, zirbe-eck-glasfront): the
+                # side bench's deep end (y_end) reached -1.66 while the real
+                # wall only starts at -1.28, so the bench (and its cladding,
+                # built from these same bounds) ran 0.38 m past the wall,
+                # straight through the diagonal glass corner.
+                wall_name = 'right' if s > 0 else 'left'
+                if getattr(self, 'corner_side', None) == wall_name:
+                    wall_seg = next((sg for sg in self.segments if sg['name'] == wall_name), None)
+                    if wall_seg:
+                        wall_limit = min(wall_seg['q0'].y, wall_seg['q1'].y)
+                        y_end = max(y_end, wall_limit + 0.03)
                 y_start = self.y_b - up_d
                 if y_start - y_end < 0.45:
                     self.warnings.append('Kabine zu kurz fuer eine seitliche Liege; Layout auf gerade reduziert.')
@@ -1294,6 +1313,14 @@ class SaunaBuilder:
         # main upper bench along the back wall
         bx0 = self.x_l + (up_d if any(s < 0 for s, *_ in side_benches) else 0)
         bx1 = self.x_r - (up_d if any(s > 0 for s, *_ in side_benches) else 0)
+        # A chamfered corner shortens THIS SAME wall run - x_l/x_r are the
+        # plain-rectangle bounds and don't know that. Verified (Blender MCP,
+        # zirbe-eck-glasfront): with no clamp, the back bench's own cladding
+        # slats and legs projected straight through the angled glass corner.
+        if getattr(self, 'corner_side', None) == 'right':
+            bx1 = min(bx1, self.x_r - self.corner_cut - 0.03)
+        elif getattr(self, 'corner_side', None) == 'left':
+            bx0 = max(bx0, self.x_l + self.corner_cut + 0.03)
         if zone and zone[3] > self.y_b - up_d - 0.03:
             # heater at the back wall: keep the bench clear of it
             if zone[0] > 0:
@@ -1657,6 +1684,12 @@ def render(prefix, views=('exterior', 'cutaway', 'interior'), samples=48, size=1
     scene.world.node_tree.nodes['Background'].inputs[1].default_value = 0.35
     outputs = []
     cfg = json.loads(scene['sauna_config'])
+    # Force the door closed before the FIRST view too, not just between views.
+    # The loop below resets to closed AFTER each view, but assumed build() left
+    # it closed to begin with - true for most entry types, but corner_glasfront's
+    # door pivot came out of build() already rotated open, so an exterior-only
+    # render (no cutaway/interior first) shipped with the door hanging ajar.
+    set_door(0)
     for view in views:
         camera = bpy.data.objects.get(f'Camera - {view}')
         if camera is None:

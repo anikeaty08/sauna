@@ -112,8 +112,16 @@ export default function PresetPicker({ presets, totals, onPick, onStartBlank, la
                 className="preset-chip"
                 onClick={() => onPick(preset)}
               >
-                {copyMap[preset.id]?.name || (isDe ? preset.name_de || preset.name : preset.name)}
-                <span>{t.from} {chf(totals[preset.id] ?? 0)}</span>
+                <img
+                  className="preset-chip-thumb"
+                  src={`/assets/images/presets/${preset.id}.png`}
+                  alt=""
+                  loading="lazy"
+                />
+                <span className="preset-chip-text">
+                  {copyMap[preset.id]?.name || (isDe ? preset.name_de || preset.name : preset.name)}
+                  <span>{t.from} {chf(totals[preset.id] ?? 0)}</span>
+                </span>
               </button>
             ))}
           </div>
