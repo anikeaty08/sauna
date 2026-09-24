@@ -94,6 +94,27 @@ function LanguageSelect({ lang, onSelect, label }) {
   );
 }
 
+/* ── Footer (marketing/picker page only - the configurator itself is a fixed-
+   viewport tool, not a scrolling page, so a footer has nowhere to live there) ── */
+function Footer({ lang = 'en' }) {
+  const t = getTranslation(lang);
+  const year = new Date().getFullYear();
+  return (
+    <footer className="site-footer">
+      <a
+        className="footer-credit"
+        href="https://klardatalabs.com"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img src="/assets/images/klardatalabs-mark.png" alt="" className="footer-credit-mark" />
+        <span>{t.footerCredit} <b>Klardatalabs</b></span>
+      </a>
+      <span className="footer-copyright">© {year} Klardatalabs.com</span>
+    </footer>
+  );
+}
+
 /* ── Hover tooltip ── */
 function HoverTip({ info, x, y, lang = 'en' }) {
   if (!info) return null;
@@ -395,9 +416,10 @@ export default function Customizer() {
                 className="customizer-back"
                 onClick={() => history.back()}
                 title={isDe ? 'Zur Vorlagenauswahl (Browser-Zurück)' : 'Back to the presets (browser Back)'}
+                aria-label={isDe ? 'Zurück' : 'Back'}
               >
                 <ChevronLeft size={14} />
-                {isDe ? 'Zurück' : 'Back'}
+                <span className="btn-label">{isDe ? 'Zurück' : 'Back'}</span>
               </button>
               <button className="customizer-back icon-only" onClick={undo} disabled={!canUndo} title={isDe ? 'Rückgängig (Strg+Z)' : 'Undo (Ctrl+Z)'} aria-label={isDe ? 'Rückgängig' : 'Undo'}>
                 <Undo2 size={14} />
@@ -405,13 +427,13 @@ export default function Customizer() {
               <button className="customizer-back icon-only" onClick={redo} disabled={!canRedo} title={isDe ? 'Wiederholen (Strg+Y)' : 'Redo (Ctrl+Y)'} aria-label={isDe ? 'Wiederholen' : 'Redo'}>
                 <Redo2 size={14} />
               </button>
-              <button className="customizer-back" onClick={handleReset} title={isDe ? 'Änderungen verwerfen, zur Ausgangskonfiguration' : 'Discard changes, back to the starting configuration'}>
+              <button className="customizer-back" onClick={handleReset} title={isDe ? 'Änderungen verwerfen, zur Ausgangskonfiguration' : 'Discard changes, back to the starting configuration'} aria-label={isDe ? 'Zurücksetzen' : 'Reset'}>
                 <RotateCcw size={13} />
-                {isDe ? 'Zurücksetzen' : 'Reset'}
+                <span className="btn-label">{isDe ? 'Zurücksetzen' : 'Reset'}</span>
               </button>
-              <button className={`customizer-back share-btn ${share.copied ? 'is-done' : ''}`} onClick={handleShare} disabled={share.busy} title={isDe ? 'Eindeutigen Link zu diesem Entwurf erstellen' : 'Create a unique link to this design'}>
+              <button className={`customizer-back share-btn ${share.copied ? 'is-done' : ''}`} onClick={handleShare} disabled={share.busy} title={isDe ? 'Eindeutigen Link zu diesem Entwurf erstellen' : 'Create a unique link to this design'} aria-label={isDe ? 'Link teilen' : 'Share link'}>
                 {share.copied ? <Check size={13} /> : <Share2 size={13} />}
-                {share.busy ? '…' : share.copied ? (isDe ? 'Link kopiert' : 'Link copied') : (isDe ? 'Link teilen' : 'Share link')}
+                <span className="btn-label">{share.busy ? '…' : share.copied ? (isDe ? 'Link kopiert' : 'Link copied') : (isDe ? 'Link teilen' : 'Share link')}</span>
               </button>
             </>
           )}
@@ -423,13 +445,16 @@ export default function Customizer() {
 
       {/* ── Preset picker ── */}
       {stage === 'pick' && (
-        <PresetPicker
-          presets={presets}
-          totals={presetTotals}
-          onPick={pickPreset}
-          onStartBlank={startBlank}
-          lang={lang}
-        />
+        <>
+          <PresetPicker
+            presets={presets}
+            totals={presetTotals}
+            onPick={pickPreset}
+            onStartBlank={startBlank}
+            lang={lang}
+          />
+          <Footer lang={lang} />
+        </>
       )}
 
       {/* ── Configurator ── */}

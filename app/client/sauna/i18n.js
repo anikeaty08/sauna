@@ -12,6 +12,8 @@ export const translations = {
     pickerBlurb: 'Start from one of our designs, then change anything — size, wood, heater, lighting and accessories. Every part shows its price, and the total updates as you go.',
     from: 'from',
     buildFromScratch: 'Build from scratch',
+    startConfiguring: 'Start configuring',
+    footerCredit: 'Designed and maintained by',
     cleanSlate: 'Start with a clean slate at 200 × 180 cm',
     moreConfigurations: 'More configurations',
 
@@ -26,8 +28,11 @@ export const translations = {
     presetDesignerName: 'Designer glass corner',
     presetDesignerBlurb: 'Glass corner with slate cladding, RGB mood lighting and audio — for a premium wellness space.',
     presetAspenVertical: 'Aspen, vertical boards',
+    presetAspenVerticalBlurb: 'Pale aspen with vertical board cladding — a resin-free wood that stays cool to the touch.',
     presetSpruceGlassFront: 'Spruce glass front',
+    presetSpruceGlassFrontBlurb: 'Full glass front for maximum daylight, with LED backrest lighting and a wall-mounted control panel.',
     presetZirbeCornerGlass: 'Stone pine corner glass',
+    presetZirbeCornerGlassBlurb: 'Aromatic Swiss stone pine with glass on both sides of the corner entry, L-shaped benches.',
 
     // 3D Viewer Toolbar
     exterior: 'Exterior',
@@ -147,6 +152,8 @@ export const translations = {
     pickerBlurb: 'Wählen Sie eines unserer Modelle als Ausgangspunkt und passen Sie Masse, Holzart, Ofen, Beleuchtung und Zubehör individuell an. Jeder Preis wird transparent angezeigt.',
     from: 'ab',
     buildFromScratch: 'Frei planen',
+    startConfiguring: 'Jetzt konfigurieren',
+    footerCredit: 'Design und Betrieb:',
     cleanSlate: 'Ohne Vorlage starten mit Standardmassen 200 × 180 cm',
     moreConfigurations: 'Weitere Modelle',
 
@@ -161,8 +168,11 @@ export const translations = {
     presetDesignerName: 'Designer-Glas-Eck',
     presetDesignerBlurb: 'Glaseck mit Naturstein-Schiefer, RGB-Farblicht und Audiosystem — für höchste Wellness-Ansprüche.',
     presetAspenVertical: 'Espe, vertikale Schalung',
+    presetAspenVerticalBlurb: 'Helle Espe mit vertikaler Schalung — ein harzfreies Holz, das sich kühl anfühlt.',
     presetSpruceGlassFront: 'Fichte mit Glasfront',
+    presetSpruceGlassFrontBlurb: 'Durchgehende Glasfront für maximales Tageslicht, mit LED-Rückenlicht und Wandsteuerung.',
     presetZirbeCornerGlass: 'Zirbe Eck-Glasfront',
+    presetZirbeCornerGlassBlurb: 'Aromatische Zirbe mit Verglasung auf beiden Seiten des Eckeinstiegs, L-förmige Liegebänke.',
 
     // 3D Viewer Toolbar
     exterior: 'Aussenansicht',
@@ -282,6 +292,8 @@ export const translations = {
     pickerBlurb: "Partez de l'un de nos modèles, puis modifiez tout — taille, bois, poêle, éclairage et accessoires. Chaque élément affiche son prix, et le total se met à jour au fur et à mesure.",
     from: 'dès',
     buildFromScratch: 'Créer de zéro',
+    startConfiguring: 'Commencer la configuration',
+    footerCredit: 'Conçu et maintenu par',
     cleanSlate: 'Partir d\'une base vierge à 200 × 180 cm',
     moreConfigurations: 'Autres configurations',
 
@@ -296,8 +308,11 @@ export const translations = {
     presetDesignerName: 'Angle vitré design',
     presetDesignerBlurb: "Angle vitré avec habillage en ardoise, éclairage d'ambiance RVB et audio — pour un espace bien-être haut de gamme.",
     presetAspenVertical: 'Peuplier, lames verticales',
+    presetAspenVerticalBlurb: 'Peuplier clair à lames verticales — un bois sans résine, frais au toucher.',
     presetSpruceGlassFront: 'Épicéa, façade vitrée',
+    presetSpruceGlassFrontBlurb: "Façade entièrement vitrée pour un maximum de lumière, avec éclairage LED dossier et commande murale.",
     presetZirbeCornerGlass: 'Pin cembro, angle vitré',
+    presetZirbeCornerGlassBlurb: "Pin cembro aromatique, vitré des deux côtés de l'angle d'entrée, banquettes en L.",
 
     // 3D Viewer Toolbar
     exterior: 'Extérieur',
@@ -417,6 +432,8 @@ export const translations = {
     pickerBlurb: 'Parti da uno dei nostri modelli, poi modifica tutto — dimensioni, legno, stufa, illuminazione e accessori. Ogni elemento mostra il suo prezzo e il totale si aggiorna in tempo reale.',
     from: 'da',
     buildFromScratch: 'Crea da zero',
+    startConfiguring: 'Inizia a configurare',
+    footerCredit: 'Progettato e gestito da',
     cleanSlate: 'Parti da zero con 200 × 180 cm',
     moreConfigurations: 'Altre configurazioni',
 
@@ -431,8 +448,11 @@ export const translations = {
     presetDesignerName: 'Angolo vetrato design',
     presetDesignerBlurb: "Angolo vetrato con rivestimento in ardesia, luci d'atmosfera RGB e audio — per uno spazio benessere premium.",
     presetAspenVertical: 'Pioppo, doghe verticali',
+    presetAspenVerticalBlurb: 'Pioppo chiaro con doghe verticali — un legno senza resina, fresco al tatto.',
     presetSpruceGlassFront: 'Abete, fronte vetrato',
+    presetSpruceGlassFrontBlurb: 'Fronte interamente vetrato per la massima luce, con illuminazione LED dello schienale e comando a parete.',
     presetZirbeCornerGlass: 'Cirmolo, angolo vetrato',
+    presetZirbeCornerGlassBlurb: "Cirmolo aromatico, vetrato su entrambi i lati dell'angolo d'ingresso, panche a L.",
 
     // 3D Viewer Toolbar
     exterior: 'Esterno',

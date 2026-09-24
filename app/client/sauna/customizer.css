@@ -13,7 +13,7 @@
   flex: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 64px 48px 96px;
+  padding: 64px 48px 56px;
   width: 100%;
 }
 
@@ -48,11 +48,13 @@
   max-width: 480px;
 }
 
-/* preset grid */
+/* preset grid: the full range as one shop-style grid of 7 - six starting
+   designs plus a made-to-measure tile, rather than a hero row backed by a
+   lesser row of text pills. */
 .preset-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
   animation: fadeUp 0.6s 0.1s ease-out both;
 }
 
@@ -126,44 +128,70 @@
   color: var(--pine);
 }
 
-.preset-more {
-  margin-top: 44px;
-  border-top: 1px solid var(--line);
-  padding-top: 26px;
-  animation: fadeUp 0.6s 0.15s ease-out both;
-}
-.preset-more > p {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
+.preset-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  background: rgba(45, 74, 56, 0.92);
+  color: #fafbf7;
+  font-size: 9px;
+  font-weight: 800;
   letter-spacing: 0.06em;
-  margin: 0 0 14px;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 20px;
+  backdrop-filter: blur(6px);
 }
-.preset-more-list { display: flex; flex-wrap: wrap; gap: 9px; }
 
-.preset-chip {
-  display: flex; align-items: center; gap: 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 8px 16px 8px 8px;
+/* The 7th tile: no fixed design to photograph, so it earns its own quieter
+   treatment (a mark, not a render) rather than a placeholder photo. */
+.preset-card-blank { background: var(--paper); }
+.preset-card-image-blank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sage);
+  background:
+    repeating-linear-gradient(135deg, var(--mineral) 0 2px, transparent 2px 14px),
+    var(--paper);
+}
+.preset-card-blank:hover .preset-card-image-blank { color: var(--pine); }
+.preset-card-image-blank::after { content: none; } /* no photo, no need for the legend-shadow gradient */
+
+.site-footer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 48px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--line);
   font-size: 12px;
-  font-weight: 650;
-  background: var(--paper);
-  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  color: var(--muted);
 }
-.preset-chip:hover { border-color: var(--sage); background: var(--mineral); transform: translateY(-1px); }
-.preset-chip-thumb {
-  width: 44px; height: 44px;
-  border-radius: 7px;
-  object-fit: cover;
-  background: var(--mineral);
-  flex-shrink: 0;
+.footer-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.18s;
 }
-.preset-chip-text { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
-.preset-chip-text span { color: var(--muted); font-weight: 500; }
-.preset-blank { margin-top: 30px; font-size: 12px; color: var(--muted); }
-.preset-blank:hover { color: var(--pine); }
+.footer-credit:hover { color: var(--pine); }
+.footer-credit:hover .footer-credit-mark { opacity: 1; }
+.footer-credit b { color: var(--sage); font-weight: 700; }
+.footer-credit:hover b { color: var(--pine); }
+.footer-credit-mark {
+  height: 15px;
+  width: auto;
+  display: block;
+  opacity: 0.75;
+  transition: opacity 0.18s;
+}
+.footer-copyright { color: var(--muted); }
 
 /* ── Customizer 3D layout ───────────────────────────────────────────────────── */
 .customize-layout {
@@ -740,8 +768,12 @@
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 1200px) {
   .customize-layout { grid-template-columns: minmax(0,1fr) 380px; }
+  .preset-grid { grid-template-columns: repeat(3, 1fr); }
+  .preset-picker { padding: 48px 36px 40px; }
+  .site-footer { padding: 24px 36px 32px; }
+}
+@media (max-width: 860px) {
   .preset-grid { grid-template-columns: 1fr 1fr; }
-  .preset-picker { padding: 48px 36px 80px; }
 }
 @media (max-width: 900px) {
   .customize-layout { display: flex; flex-direction: column; height: auto; }
@@ -754,7 +786,8 @@
   .panel-head { padding: 20px 20px 14px; }
 }
 @media (max-width: 640px) {
-  .preset-picker { padding: 32px 20px 64px; }
+  .preset-picker { padding: 32px 20px 28px; }
+  .site-footer { padding: 20px 20px 28px; flex-direction: column; align-items: flex-start; gap: 6px; }
   .preset-grid { grid-template-columns: 1fr; }
   .preset-picker-intro h1 { font-size: 36px; }
   .opt-grid-3 { grid-template-columns: 1fr 1fr; }
@@ -839,9 +872,20 @@
   color: #fafbf7; font-size: 11px; font-weight: 700; white-space: nowrap;
 }
 .share-btn.is-done { border-color: var(--sage); color: var(--pine); background: #eaf3ea; }
-.header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+/* This used to be a second, unconditional .header-right rule (duplicating the
+   one above with flex-wrap added) that won the cascade at every width, not
+   just narrow ones - it made the toolbar wrap even on desktop where it fits,
+   and on mobile the wrapped row had nowhere to go since .site-header is a
+   fixed height, so it visually overlapped the 3D view below. Folded into a
+   single rule, with wrapping now reserved for the mobile fallback below. */
 @media (max-width: 640px) {
   .customizer-back { padding: 6px 9px; font-size: 11px; }
+  /* Collapse Back/Reset/Share to icon-only pills so the whole toolbar fits
+     one row instead of wrapping into the viewer beneath it. The label stays
+     in the DOM (title/aria-label already carry the accessible name). */
+  .customizer-back .btn-label { display: none; }
+  .customizer-back { padding: 7px 8px; }
+  .header-right { gap: 6px; }
 }
 
 /* ── Compact icon-only header buttons (undo/redo) ────────────────────────── */

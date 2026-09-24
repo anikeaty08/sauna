@@ -520,7 +520,10 @@ body:has(dialog[open]) { overflow: hidden; }
 }
 @media (max-width: 760px) {
   html { scroll-padding-top: 65px; }
-  .site-header { height: 65px; padding: 0 20px; }
+  /* min-height, not height: the header toolbar can still wrap on very narrow
+     screens even after collapsing to icon-only buttons, and a fixed height
+     let a wrapped second row overflow, unclipped, into the 3D view below it. */
+  .site-header { min-height: 65px; height: auto; padding: 10px 20px; }
   .site-header nav { display: none; }
   .wordmark { font-size: 23px; }
   .studio { height: auto; max-height: none; min-height: 0; display: block; }

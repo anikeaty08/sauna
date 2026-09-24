@@ -27,7 +27,7 @@ test('full configurator: catalog + customer journey', async ({ page, context }) 
 
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.waitForSelector('.preset-card');
-  await expect.soft(page.locator('.preset-card')).toHaveCount(3);
+  await expect.soft(page.locator('.preset-card')).toHaveCount(7); // 6 presets + the "build from scratch" tile
   await page.locator('.preset-card').nth(1).click();
   await page.waitForSelector('canvas');
   await page.waitForTimeout(1000);
