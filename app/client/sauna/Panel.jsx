@@ -400,18 +400,24 @@ export function ConfiguratorPanel({
             </div>
           </>
         ) : (
-          <>
-            <p className="panel-label">{isDe ? 'Türposition' : 'Door position'}</p>
-            <div className="opt-grid opt-grid-3">
-              {[
-                ['left', isDe ? 'Links' : 'Left'],
-                ['centre', isDe ? 'Mitte' : 'Centre'],
-                ['right', isDe ? 'Rechts' : 'Right']
-              ].map(([key, label]) => (
-                <Swatch key={key} selected={cfg.door.position === key} title={label} price={0} lang={lang} onClick={() => onSetDoor({ position: key })} />
-              ))}
-            </div>
-          </>
+          // Only round.js/barrel.js's shells never read cfg.door.position - the
+          // door sits at a fixed bearing (round) or centred on the end cap
+          // (barrel), by design. Showing Left/Centre/Right there let people
+          // click a control that visibly did nothing.
+          family.type !== 'round' && family.type !== 'barrel' && (
+            <>
+              <p className="panel-label">{isDe ? 'Türposition' : 'Door position'}</p>
+              <div className="opt-grid opt-grid-3">
+                {[
+                  ['left', isDe ? 'Links' : 'Left'],
+                  ['centre', isDe ? 'Mitte' : 'Centre'],
+                  ['right', isDe ? 'Rechts' : 'Right']
+                ].map(([key, label]) => (
+                  <Swatch key={key} selected={cfg.door.position === key} title={label} price={0} lang={lang} onClick={() => onSetDoor({ position: key })} />
+                ))}
+              </div>
+            </>
+          )
         )}
 
         {(family.window_types ? family.window_types.length > 1 : ['front', 'corner'].includes(cfg.entry)) && (

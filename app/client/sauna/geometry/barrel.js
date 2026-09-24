@@ -85,10 +85,39 @@ export function buildBarrelSauna(cfg, catalog, materials, lang) {
     push(tag(stave, 'cabin', family.sku, `${itemTitle(catalog.woods[family.wall_wood])} ${isDe ? 'Fassdaube' : 'barrel stave'}, ${family.wall_mm} mm`, 0, [mm(length), mm(staveW), family.wall_mm], { includedIn: 'cabin' }));
   }
 
-  const backCap = new THREE.Mesh(new THREE.CircleGeometry(radius, 40), wallMat);
+  // Round rear window (holzsauna.ch: "Rundes Rueckwandfenster", solid /
+  // half-height / full-height - a genuine priced option, not decorative).
+  // Cut from the back cap the same way the front door opening is cut from the
+  // front cap: a THREE.Path hole in the cap's Shape.
+  const winKind = cfg.window && cfg.window !== 'none' ? cfg.window : null;
+  const backShape = new THREE.Shape();
+  backShape.absarc(0, 0, radius, 0, Math.PI * 2, false);
+  let winHole = null;
+  if (winKind) {
+    const winR = Math.min(radius * (winKind === 'round_full' ? 0.62 : 0.42), radius - wallT * 2.4);
+    const winCy = winKind === 'round_full' ? 0 : -radius + winR + wallT * 1.5;
+    winHole = new THREE.Path();
+    winHole.absarc(0, winCy, winR, 0, Math.PI * 2, false);
+    backShape.holes.push(winHole);
+  }
+  const backCap = new THREE.Mesh(new THREE.ShapeGeometry(backShape, 40), wallMat);
   backCap.rotation.y = -Math.PI / 2;
   backCap.position.set(0.01, cy, radius);
   push(tag(backCap, 'cabin', family.sku, isDe ? 'Rueckwand' : 'Back cap', 0, [mm(radius * 2), mm(radius * 2), family.wall_mm], { includedIn: 'cabin' }));
+
+  if (winKind) {
+    const winSpec = catalog.window_types?.[winKind];
+    const winR = Math.min(radius * (winKind === 'round_full' ? 0.62 : 0.42), radius - wallT * 2.4);
+    const winCy = winKind === 'round_full' ? 0 : -radius + winR + wallT * 1.5;
+    const glassMat = materials.plain('barrelWindow', { color: 0xdfeee8, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.32, side: THREE.DoubleSide });
+    const pane = new THREE.Mesh(new THREE.CircleGeometry(winR, 40), glassMat);
+    pane.rotation.y = -Math.PI / 2;
+    pane.position.set(0.012, cy + winCy, radius);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(winR, winR + 0.03, 40), materials.black);
+    ring.rotation.y = -Math.PI / 2;
+    ring.position.set(0.011, cy + winCy, radius);
+    for (const m of [pane, ring]) push(tag(m, 'cabin', family.sku, winSpec ? itemTitle(winSpec) : (isDe ? 'Rundfenster' : 'Round window'), 0, [mm(winR * 2), mm(winR * 2), 20], { includedIn: 'cabin' }));
+  }
 
   const doorW = family.door_mm[0] / 1000;
   const hy0 = -radius + floorY;

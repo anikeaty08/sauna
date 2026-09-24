@@ -11,7 +11,7 @@
     ],
     "note": "Heater, control and accessory dimensions marked approx are typical manufacturer sizes, not verified drawings.",
     "sizing_rules": {
-      "kw_per_m3": 1.0,
+      "kw_per_m3": 1,
       "kw_per_m2_glass": 1.2,
       "height_factor_per_30cm_above_200": 0.1,
       "three_phase_above_kw": 8,
@@ -484,26 +484,26 @@
       "handle_default": "wood_wood",
       "base_price": 3620,
       "width_cm": {
-        "144.5": 0,
         "158": 219,
-        "171.5": 400,
         "185": 565,
-        "198.5": 679,
         "212": 860,
-        "225.5": 1120,
         "239": 1425,
+        "144.5": 0,
+        "171.5": 400,
+        "198.5": 679,
+        "225.5": 1120,
         "252.5": 1550
       },
       "depth_cm": {
         "130": 0,
-        "144.5": 115,
         "158": 264,
-        "171.5": 400,
         "185": 560,
-        "198.5": 679,
         "212": 860,
-        "225.5": 1120,
         "239": 1425,
+        "144.5": 115,
+        "171.5": 400,
+        "198.5": 679,
+        "225.5": 1120,
         "252.5": 1550
       },
       "height_cm": 204,
@@ -547,16 +547,16 @@
       "door_position_default": "centre",
       "base_price": 4700,
       "width_cm": {
+        "239": 2930,
         "144.5": 0,
         "171.5": 1899,
-        "198.5": 2120,
-        "239": 2930
+        "198.5": 2120
       },
       "depth_cm": {
         "130": 0,
+        "239": 1495,
         "171.5": 565,
-        "198.5": 910,
-        "239": 1495
+        "198.5": 910
       },
       "height_cm": 204,
       "interior_default": "abachi_standard",
@@ -651,14 +651,14 @@
       "handle_default": "wood_wood",
       "base_price": 4950,
       "width_cm": {
+        "239": 1369,
         "171.5": 0,
-        "198.5": 565,
-        "239": 1369
+        "198.5": 565
       },
       "depth_cm": {
+        "239": 750,
         "171.5": 0,
-        "198.5": 219,
-        "239": 750
+        "198.5": 219
       },
       "height_cm": 204,
       "interior_default": "espe_standard",
@@ -1035,8 +1035,6 @@
       ],
       "window_types": [
         "none",
-        "two_fixed",
-        "tilt_open",
         "round_half",
         "round_full"
       ],
@@ -1272,7 +1270,7 @@
         0.555,
         0.355
       ],
-      "grain": 1.0,
+      "grain": 1,
       "knots": true,
       "name_en": "Nordic spruce"
     },
@@ -1403,7 +1401,7 @@
       "name_de": "Nussbaum",
       "name_en": "Walnut",
       "color": [
-        0.30,
+        0.3,
         0.21,
         0.15
       ],
@@ -2240,7 +2238,7 @@
     "LED-5": {
       "name_de": "LED-Band warmweiss 5m Set mit Transformator",
       "price": 299,
-      "length_m": 5.0,
+      "length_m": 5,
       "kind": "backrest_strip",
       "dims_mm": [
         5000,
@@ -2857,6 +2855,11 @@
     }
   },
   "window_types": {
+    "60": {
+      "name_de": "Fenster 60 cm",
+      "name_en": "60 cm window",
+      "price": 0
+    },
     "none": {
       "name_de": "Kein Fenster",
       "name_en": "No window",
@@ -2865,11 +2868,6 @@
     "auto": {
       "name_de": "Wandhohes Fenster",
       "name_en": "Full-height window",
-      "price": 0
-    },
-    "60": {
-      "name_de": "Fenster 60 cm",
-      "name_en": "60 cm window",
       "price": 0
     },
     "two_fixed": {
