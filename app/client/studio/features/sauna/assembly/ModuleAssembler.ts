@@ -126,7 +126,11 @@ export class ModuleAssembler {
         const pivot = new THREE.Group();
         pivot.name = 'door_pivot';
         pivot.applyMatrix4(facingMatrix(hinge, outward, mirror));
-        pivot.add(this.moduleObject('glass-door'));
+        // The module's leaf glass ends at 1.885 m; fit it to the opening so its top
+        // edge sits 4 mm under the fascia like the fixed panes (no open strip).
+        const leaf = this.moduleObject('glass-door');
+        leaf.scale.y = (layout.height - layout.fascia - 0.004) / 1.885;
+        pivot.add(leaf);
         this.doorPivot = pivot;
         // Opening outward = rotating the leaf's free end towards +Z (outside).
         this.doorOpenSign = mirror ? 1 : -1;
