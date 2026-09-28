@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { MODULES, type Layout, type ModuleGroup, type SaunaConfiguration, type Vec2 } from '../../../../../../packages/configuration-core/index.ts';
+import { MODULES, paneSpan, type Layout, type Segment, type ModuleGroup, type SaunaConfiguration, type Vec2 } from '../../../../../../packages/configuration-core/index.ts';
 import { loadModules, type LoadedModule } from '../modules/moduleLoader.ts';
 import { MaterialLibrary } from '../materials/materialLibrary.ts';
 import { PlanFrame, facingMatrix, runMatrix } from '../geometry/placement.ts';
-import { boxUV, fascia, footprintCap, glassPane, segmentMatrix, solidWall } from '../geometry/structureGenerator.ts';
+import { boxUV, fascia, footprintCap, glassPane, segmentMatrix, slateBlock, solidWall } from '../geometry/structureGenerator.ts';
 
 const GROUPS: ModuleGroup[] = ['structure', 'exterior', 'glass', 'door', 'benches', 'heater', 'lighting', 'accessories'];
 /** Texture size of the bench wood strip (grain along u). */
@@ -84,6 +84,19 @@ export class ModuleAssembler {
           }
         }
         add(this.instances('slate-panel', panels, own));
+        // Close every corner of the slate skin: a post where two slate walls
+        // meet, and a cap over the wall end where a wall meets glass.
+        const s = layout.slate, t = layout.wall, n = layout.segments.length;
+        const block = (seg: Segment, u0: number, u1: number, z0: number, z1: number) => { const m = slateBlock(frame, seg, layout, u0, u1, z0, z1, smats); own(m.geometry); add(m); };
+        layout.segments.forEach((seg, i) => {
+          const next = layout.segments[(i + 1) % n], L = seg.length;
+          // backing behind the tiles: the joints read as dark slate, never as the wood behind
+          if (seg.kind === 'solid') block(seg, 0, L, 0, s - 0.002);
+          const straight = Math.abs(seg.turnB) < 1e-3;
+          if (seg.kind === 'solid' && next.kind === 'solid' && seg.turnB > 0) block(seg, L, L + s, 0, s);
+          else if (seg.kind === 'solid' && next.kind !== 'solid') block(seg, L, L + s, straight ? -t / 2 + layout.glass / 2 : -t, s);
+          else if (seg.kind !== 'solid' && next.kind === 'solid') block(next, -s, 0, Math.abs(next.turnA) < 1e-3 ? -t / 2 + layout.glass / 2 : -t, s);
+        });
         for (const seg of layout.segments) { const f = fascia(frame, seg, layout, smats); own(f.geometry); add(f); }
         break;
       }
@@ -91,7 +104,7 @@ export class ModuleAssembler {
         const profiles: Instance[] = [];
         for (const seg of layout.segments) {
           if (seg.kind === 'solid') continue;
-          const spans: [number, number][] = seg.kind === 'door-glass' ? [layout.door.fixedPane] : [[0.004, seg.length - 0.004]];
+          const spans: [number, number][] = [seg.kind === 'door-glass' ? layout.door.fixedPane : paneSpan(layout, seg)];
           for (const [u0, u1] of spans) {
             const pane = glassPane(frame, seg, layout, u0, u1, smats); own(pane.geometry); add(pane);
             // aluminium profile at the floor (no threshold under the door itself)

@@ -3,7 +3,7 @@ import { zirbe6eck } from './models/zirbe-6eck.ts';
 
 export * from './types.ts';
 export { zirbe6eck } from './models/zirbe-6eck.ts';
-export { computeLayout } from './geometry/zirbe6eckLayout.ts';
+export { computeLayout, paneSpan } from './geometry/zirbe6eckLayout.ts';
 export type { Layout, Placement, Run, Segment } from './geometry/zirbe6eckLayout.ts';
 export { MODULES, modulesForModel } from './modules/registry.ts';
 export type { SaunaModule } from './modules/registry.ts';

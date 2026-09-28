@@ -63,6 +63,19 @@ export function glassPane(frame: PlanFrame, seg: Segment, layout: Layout, u0: nu
   return mesh;
 }
 
+/**
+ * Slate block from the floor to the fascia, in segment space (u along the
+ * segment, z > 0 outside): closes wall corners and wall ends next to glass.
+ */
+export function slateBlock(frame: PlanFrame, seg: Segment, layout: Layout, u0: number, u1: number, z0: number, z1: number, mats: StructureMaterials): THREE.Mesh {
+  const [su, sv] = TEXTURE_METRES.slate;
+  const geo = boxUV(boxGeometry(u0, u1, 0, layout.height - layout.fascia, z0, z1), su, sv);
+  const mesh = new THREE.Mesh(geo, mats.slate);
+  mesh.applyMatrix4(segmentMatrix(frame, seg));
+  mesh.name = `slate_${seg.id}`;
+  return mesh;
+}
+
 /** Slate-wrapped fascia band around the top, closing the corners. */
 export function fascia(frame: PlanFrame, seg: Segment, layout: Layout, mats: StructureMaterials): THREE.Mesh {
   const [su, sv] = TEXTURE_METRES.slate;

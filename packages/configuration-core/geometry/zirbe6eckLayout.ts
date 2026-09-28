@@ -32,6 +32,26 @@ export interface Segment {
   length: number;
   dir: Vec2;     // unit a -> b
   inward: Vec2;  // unit, into the cabin
+  /** Signed turn (rad) at `a` from the previous segment and at `b` into the next; > 0 = convex corner. */
+  turnA: number;
+  turnB: number;
+}
+
+const GLASS_END_GAP = 0.004; // glass that stops at a wall sits 4 mm clear of it
+
+/**
+ * Where a glass pane on the wall's centre plane must start and end so that
+ * glass meets glass at the corners (mitred, both faces closed) and stops 4 mm
+ * short of solid walls.
+ */
+export function paneSpan(layout: Pick<Layout, 'segments' | 'wall' | 'glass'>, seg: Segment): [number, number] {
+  const i = layout.segments.indexOf(seg), n = layout.segments.length;
+  const prev = layout.segments[(i + n - 1) % n], next = layout.segments[(i + 1) % n];
+  const k = layout.wall / 2, h = layout.glass / 2;
+  const miter = (turn: number) => k * Math.tan(turn / 2) - h * Math.tan(Math.abs(turn) / 2);
+  const u0 = prev.kind !== 'solid' ? miter(seg.turnA) : GLASS_END_GAP;
+  const u1 = next.kind !== 'solid' ? seg.length - miter(seg.turnB) : seg.length - GLASS_END_GAP;
+  return [u0, u1];
 }
 
 /** A module placed in plan space. `facing` = where the module's +Z points. */
@@ -123,7 +143,7 @@ export function computeLayout(model: ModelDefinition, config: SaunaConfiguration
   const outline = [P0, P1, P2, P3, P4, P5];
   const seg = (id: Segment['id'], kind: SegmentKind, a: Vec2, b: Vec2): Segment => {
     const d = norm(sub(b, a));
-    return { id, kind, a: pt(a), b: pt(b), length: r3(len(sub(b, a))), dir: d, inward: leftNormal(d) };
+    return { id, kind, a: pt(a), b: pt(b), length: r3(len(sub(b, a))), dir: d, inward: leftNormal(d), turnA: 0, turnB: 0 };
   };
   const segments: Segment[] = [
     seg('back', 'solid', P0, P1),
@@ -134,17 +154,23 @@ export function computeLayout(model: ModelDefinition, config: SaunaConfiguration
     seg('top', 'solid', P4, P5),
     seg('left', 'solid', P5, P0),
   ];
+  segments.forEach((s, i) => {
+    const nx = segments[(i + 1) % segments.length];
+    const turn = Math.atan2(s.dir[0] * nx.dir[1] - s.dir[1] * nx.dir[0], s.dir[0] * nx.dir[0] + s.dir[1] * nx.dir[1]);
+    s.turnB = turn; nx.turnA = turn;
+  });
   const segById = Object.fromEntries(segments.map(s => [s.id, s])) as Record<Segment['id'], Segment>;
 
   if (segById.return.length < 0.15) issues.push({ level: 'error', path: 'dimensions.depthCm', message: 'The glass return beside the door is shorter than 15 cm at this depth.' });
 
   // ── door on the diagonal, hinged at its upper end (P3) ─────────────────────
   const diag = segById.diagonal;
-  // Frameless glass meets glass: the hinge axis sits just off the corner (the
-  // leaf itself starts 4 mm from it) and the fixed pane runs from the other
-  // corner up to a 4 mm seal gap at the handle edge - no open slots.
-  const hingeU = diag.length - 0.004;
-  const fixedPane: [number, number] = [0.004, hingeU - doorW];
+  // Frameless glass meets glass: the leaf's hinge edge (4 mm off the hinge
+  // axis) sits exactly on the mitre with the return glass at P3, and the fixed
+  // pane runs from its mitre at P2 to a 2 mm seal gap at the handle edge.
+  const span = paneSpan({ segments, wall: t, glass: g }, diag);
+  const hingeU = span[1] - 0.004;
+  const fixedPane: [number, number] = [span[0], hingeU - doorW + 0.002];
   if (fixedPane[1] - fixedPane[0] < 0.15) {
     issues.push({ level: 'error', path: 'dimensions', message: `The ${Math.round(doorW * 1000)} mm glass door does not fit the diagonal front at this size (needs a longer diagonal).` });
   }
