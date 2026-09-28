@@ -139,9 +139,15 @@ export class ModuleAssembler {
         for (const p of layout.placements.filter(q => q.module === 'downlight')) {
           const pos = frame.point(p.position, p.elevation);
           lights.push({ matrix: facingMatrix(pos, new THREE.Vector3(0, 0, 1)) });
-          const lamp = new THREE.PointLight(0xffc98f, 3.2, 4.5, 1.5);
-          lamp.position.copy(pos).add(new THREE.Vector3(0, -0.12, 0));
-          grp.add(lamp);
+          // A recessed downlight throws a warm cone onto the benches below it,
+          // plus a little fill so the ceiling around it is not black.
+          const spot = new THREE.SpotLight(0xffc488, 14, 4.5, 0.8, 0.85, 1.6);
+          spot.position.copy(pos).add(new THREE.Vector3(0, -0.03, 0));
+          spot.target.position.set(pos.x, 0, pos.z);
+          grp.add(spot, spot.target);
+          const fill = new THREE.PointLight(0xffc98f, 0.9, 3, 1.5);
+          fill.position.copy(pos).add(new THREE.Vector3(0, -0.25, 0));
+          grp.add(fill);
         }
         if (lights.length) add(this.instances('downlight', lights, own));
         const strips: Instance[] = [];

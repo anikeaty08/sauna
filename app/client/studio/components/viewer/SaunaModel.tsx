@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useStudio, SECTION_TAB } from '../../store/configurationStore.ts';
+import { useStudio } from '../../store/configurationStore.ts';
 import { ModuleAssembler } from '../../features/sauna/assembly/ModuleAssembler.ts';
 
 /**
@@ -15,7 +15,7 @@ export function SaunaModel({ onStatus }: { onStatus: (s: { loading: boolean; err
   useEffect(() => { assembler.materials.onChange = () => invalidate(); }, [assembler, invalidate]);
   const queue = useRef<Promise<void>>(Promise.resolve());
   const layout = useStudio(s => s.layout);
-  const section = useStudio(s => s.section);
+  const doorOpen = useStudio(s => s.doorOpen);
   const doorAngle = useRef(0);
 
   useEffect(() => () => assembler.dispose(), [assembler]);
@@ -29,14 +29,14 @@ export function SaunaModel({ onStatus }: { onStatus: (s: { loading: boolean; err
       .catch((e: Error) => onStatus({ loading: false, error: e.message || 'The 3D modules could not be loaded.' }));
   }, [assembler, layout, onStatus, invalidate]);
 
-  useEffect(() => { invalidate(); }, [section, invalidate]);
+  useEffect(() => { invalidate(); }, [doorOpen, invalidate]);
 
-  // Door opens outward when the camera goes inside.
+  // The glass door swings outward when the customer opens it.
   useFrame((_, dt) => {
     const pivot = assembler.doorPivot;
     if (!pivot) return;
     if (!pivot.userData.base) pivot.userData.base = pivot.quaternion.clone();
-    const target = SECTION_TAB[section] === 'interior' ? THREE.MathUtils.degToRad(80) : 0;
+    const target = doorOpen ? THREE.MathUtils.degToRad(80) : 0;
     if (Math.abs(doorAngle.current - target) < 1e-4) return;
     doorAngle.current = Math.abs(doorAngle.current - target) < 0.002 ? target : THREE.MathUtils.damp(doorAngle.current, target, 6, Math.min(dt, 0.05));
     invalidate();

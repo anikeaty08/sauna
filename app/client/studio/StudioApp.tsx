@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react';
 import {
   ChevronLeft, ChevronRight, Ruler, DoorOpen, Trees, Flame, LayoutGrid, PackagePlus,
-  Send, FileText, RotateCcw, Maximize2, ExternalLink, Undo2,
+  Send, Download, RotateCcw, Maximize2, ExternalLink, Undo2, DoorClosed, Smartphone, Share2, Move3d, ChevronDown,
 } from 'lucide-react';
 import { useStudio, type Section, type Tab } from './store/configurationStore.ts';
 import { SaunaViewer } from './components/viewer/SaunaViewer.tsx';
@@ -34,7 +34,7 @@ const BODY: Record<Section, ComponentType> = {
 };
 
 export default function StudioApp() {
-  const { model, config, price, issues, layout, tab, section, setSection, setTab, reset, resetView, load } = useStudio();
+  const { model, config, price, issues, layout, tab, section, setSection, setTab, reset, resetView, load, doorOpen, toggleDoor } = useStudio();
   const [open, setOpen] = useState<Set<Section>>(() => new Set(ALL.map(s => s.id)));
   const [showDims, setShowDims] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
@@ -123,6 +123,9 @@ export default function StudioApp() {
         <div className="st-canvas"><SaunaViewer onCanvas={c => { canvasRef.current = c; }} /></div>
 
         <div className="st-stage-tools">
+          <button type="button" onClick={toggleDoor} aria-pressed={doorOpen} aria-label={doorOpen ? 'Close the door' : 'Open the door'} title={doorOpen ? 'Close the door' : 'Open the door'} className="st-door-toggle">
+            {doorOpen ? <DoorOpen size={15} /> : <DoorClosed size={15} />}<span>{doorOpen ? 'Close door' : 'Open door'}</span>
+          </button>
           <button type="button" onClick={resetView} aria-label="Reset view" title="Reset view"><RotateCcw size={15} /></button>
           <button type="button" onClick={fullscreen} aria-label="Full screen" title="Full screen"><Maximize2 size={15} /></button>
         </div>
@@ -135,10 +138,17 @@ export default function StudioApp() {
           </div>
         )}
 
+        <p className="st-hint" aria-hidden="true">
+          <Move3d size={13} />
+          {tab === 'interior'
+            ? `You are inside the sauna${doorOpen ? '' : ', door closed'} · drag to look around · scroll to zoom`
+            : 'Drag to rotate · scroll to zoom · right-drag to move'}
+        </p>
+
         <div className="st-stage-actions">
-          <button type="button" onClick={viewInRoom}>View in your room</button>
-          <button type="button" onClick={() => setModal('share')}>Share</button>
-          <button type="button" className={showDims ? 'is-on' : ''} aria-pressed={showDims} onClick={() => setShowDims(v => !v)}>Measurements</button>
+          <button type="button" onClick={viewInRoom}><Smartphone size={14} /> View in your room</button>
+          <button type="button" onClick={() => setModal('share')}><Share2 size={14} /> Share</button>
+          <button type="button" className={showDims ? 'is-on' : ''} aria-pressed={showDims} onClick={() => setShowDims(v => !v)}><Ruler size={14} /> Measurements</button>
         </div>
         {loadError && <div className="st-viewer-msg" role="alert">{loadError} <button type="button" onClick={() => setLoadError(null)}>Dismiss</button></div>}
       </main>
@@ -148,7 +158,8 @@ export default function StudioApp() {
           {sharedNote && <p className="st-shared">Shared design</p>}
           <h1>{model.name}</h1>
           <button type="button" className="st-price" onClick={() => setShowSummary(v => !v)} aria-expanded={showSummary}>
-            {chf(price.total)} <small>incl. {model.vatRate * 100}% VAT{price.onRequest ? ' · + on request' : ''}</small>
+            {chf(price.total)} <small>incl. {model.vatRate * 100}% VAT{price.onRequest ? ' · some items priced on request' : ''}</small>
+            <span className="st-price-toggle">{showSummary ? 'Hide' : 'Price details'} <ChevronDown size={12} className={showSummary ? 'is-up' : ''} /></span>
           </button>
           {showSummary && (
             <table className="st-summary">
@@ -166,7 +177,7 @@ export default function StudioApp() {
 
         <div className="st-card st-stepper">
           <button type="button" onClick={() => step(-1)} aria-label="Previous section"><ChevronLeft size={16} /></button>
-          <span>{ALL[idx]?.label}</span>
+          <span>{ALL[idx]?.label} <small>{idx + 1} / {ALL.length}</small></span>
           <button type="button" onClick={() => step(1)} aria-label="Next section"><ChevronRight size={16} /></button>
         </div>
 
@@ -195,7 +206,7 @@ export default function StudioApp() {
         </div>
 
         <div className="st-card st-actions">
-          <button type="button" onClick={pdf} disabled={pdfBusy} aria-busy={pdfBusy}><FileText size={14} /> {pdfBusy ? 'Preparing…' : 'PDF quote'}</button>
+          <button type="button" onClick={pdf} disabled={pdfBusy} aria-busy={pdfBusy}><Download size={14} /> {pdfBusy ? 'Preparing PDF…' : 'Download PDF quote'}</button>
           <button type="button" className="is-primary" onClick={() => setModal('quote')}><Send size={14} /> Request a quote</button>
         </div>
       </aside>

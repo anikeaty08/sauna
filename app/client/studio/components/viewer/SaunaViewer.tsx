@@ -19,7 +19,7 @@ function Lighting() {
   const interior = useStudio(s => SECTION_TAB[s.section] === 'interior');
   const { gl, invalidate } = useThree();
   // Interiors are lit by the cabin's own warm lights, so they get more exposure.
-  useEffect(() => { gl.toneMappingExposure = interior ? 1.3 : 1.05; invalidate(); }, [gl, interior, invalidate]);
+  useEffect(() => { gl.toneMappingExposure = interior ? 1.4 : 1.05; invalidate(); }, [gl, interior, invalidate]);
   return (
     <>
       <hemisphereLight args={[interior ? 0xffe4c4 : 0xfff8ef, interior ? 0x8a6a4a : 0xb9b2a6, interior ? 0.55 : 0.9]} />

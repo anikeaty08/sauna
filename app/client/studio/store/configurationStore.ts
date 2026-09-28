@@ -10,6 +10,9 @@ interface StudioState extends EngineResult {
   section: Section;
   /** Bumped by "Reset view" so the camera rig re-frames. */
   viewNonce: number;
+  /** The glass door is closed unless the customer opens it. */
+  doorOpen: boolean;
+  toggleDoor: () => void;
   update: (patch: Partial<SaunaConfiguration>) => void;
   reset: () => void;
   load: (config: Partial<SaunaConfiguration>) => void;
@@ -29,6 +32,8 @@ export const useStudio = create<StudioState>((set, get) => ({
   tab: 'exterior',
   section: 'size',
   viewNonce: 0,
+  doorOpen: false,
+  toggleDoor: () => set(s => ({ doorOpen: !s.doorOpen })),
   update: patch => {
     const prev = get().config;
     const merged = {
