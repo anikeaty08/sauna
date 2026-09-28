@@ -140,8 +140,11 @@ export function computeLayout(model: ModelDefinition, config: SaunaConfiguration
 
   // ── door on the diagonal, hinged at its upper end (P3) ─────────────────────
   const diag = segById.diagonal;
-  const hingeU = diag.length - profile;
-  const fixedPane: [number, number] = [profile, hingeU - doorW - 0.008];
+  // Frameless glass meets glass: the hinge axis sits just off the corner (the
+  // leaf itself starts 4 mm from it) and the fixed pane runs from the other
+  // corner up to a 4 mm seal gap at the handle edge - no open slots.
+  const hingeU = diag.length - 0.004;
+  const fixedPane: [number, number] = [0.004, hingeU - doorW];
   if (fixedPane[1] - fixedPane[0] < 0.15) {
     issues.push({ level: 'error', path: 'dimensions', message: `The ${Math.round(doorW * 1000)} mm glass door does not fit the diagonal front at this size (needs a longer diagonal).` });
   }
