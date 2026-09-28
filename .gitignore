@@ -32,3 +32,6 @@ blender/__pycache__/
 # Ad-hoc debug screenshots written to the repo root when a script's OUT var
 # isn't set - these belong in the scratchpad, never in the repo.
 /*.png
+
+# Blender auto-backups
+*.blend1

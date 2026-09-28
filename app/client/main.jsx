@@ -3,14 +3,17 @@ import { createRoot } from 'react-dom/client';
 import Customizer from './sauna/Customizer';
 import './style.css';
 
-// Two independent UIs over the same data and 3D engine: the classic
-// configurator at / and the Studio design at /studio. The Studio is its own
-// chunk, so the classic page never downloads it.
-const Studio = lazy(() => import('./sauna/studio/Studio'));
-const isStudio = location.pathname.replace(/\/+$/, '') === '/studio';
+// Legacy demo configurator at /; the production configurator (modular engine,
+// app/client/studio) at /studio. The studio is its own chunk, so the demo page
+// never downloads it.
+const Studio = lazy(() => import('./studio/StudioApp.tsx'));
+const ArPage = lazy(() => import('./studio/ArPage.tsx'));
+const route = location.pathname.replace(/\/+$/, '');
+const isStudio = route === '/studio';
+const isAr = route === '/studio/ar';
 
 createRoot(document.getElementById('root')).render(
-  isStudio
-    ? <Suspense fallback={<div style={{ minHeight: '100svh', background: '#f6f5f1' }} />}><Studio /></Suspense>
+  isStudio || isAr
+    ? <Suspense fallback={<div style={{ minHeight: '100svh', background: '#f6f5f1' }} />}>{isAr ? <ArPage /> : <Studio />}</Suspense>
     : <Customizer />
 );

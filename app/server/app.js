@@ -1,9 +1,13 @@
 import express from 'express';
+import compression from 'compression';
+import { constants as zlibConstants } from 'node:zlib';
 import { DatabaseSync } from 'node:sqlite';
 import { randomBytes } from 'node:crypto';
 import { mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createStudioRouter, studioPageHtml } from './studio-api/index.ts';
+import { readFileSync } from 'node:fs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
@@ -45,6 +49,10 @@ export function createApp({ databasePath = path.join(root, 'data', 'sauna.sqlite
     if (req.path.startsWith('/api/')) res.setHeader('Cache-Control', 'no-store');
     next();
   });
+  // gzip / brotli for pages, API responses, scripts and the AR models (the USDZ is
+  // mostly geometry text and shrinks a lot; the phone viewers accept both).
+  const compressible = /^(model\/gltf-binary|model\/vnd\.usdz\+zip)/;
+  app.use(compression({ brotli: { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5 } }, filter: (req, res) => compressible.test(String(res.getHeader('Content-Type') || '')) || compression.filter(req, res) }));
   app.use(express.json({ limit: '8kb' }));
   // Bound write frequency and memory; the app does not trust forwarded IP headers.
   const writes = new Map();
@@ -94,13 +102,17 @@ export function createApp({ databasePath = path.join(root, 'data', 'sauna.sqlite
     res.json({ id: row.id, name: row.name, email: row.email, phone: row.phone, message: row.message, configuration: JSON.parse(row.configuration), totalChf: row.total_chf, status: row.status, createdAt: row.created_at });
   });
 
+  // Production configurator API (isolated from the legacy demo endpoints above).
+  app.use('/api/studio', createStudioRouter(database, { dataDir: databasePath === ':memory:' ? undefined : path.dirname(databasePath) }));
+
   app.use('/api', (req, res) => res.status(404).json({ error: 'Endpoint not found.' }));
 
   if (serveFrontend && existsSync(path.join(root, 'dist/index.html'))) {
     app.use(express.static(path.join(root, 'dist'), { maxAge: '1h', setHeaders: (res, file) => { if (file.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); } }));
     app.get('/', (req, res) => res.sendFile(path.join(root, 'dist/index.html')));
-    // The Studio design is client-routed; serve the same shell for it.
-    app.get(['/studio', '/studio/'], (req, res) => res.sendFile(path.join(root, 'dist/index.html')));
+    // Production studio; shared links (/studio?c=<id>) get link-preview tags for that design.
+    const shell = readFileSync(path.join(root, 'dist/index.html'), 'utf8');
+    app.get(['/studio', '/studio/', '/studio/ar', '/studio/ar/'], (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(studioPageHtml(database, shell, req.query.c)); });
   }
   app.use((error, req, res, next) => {
     if (error.type === 'entity.too.large') return res.status(413).json({ error: 'Request is too large.' });

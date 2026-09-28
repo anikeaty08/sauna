@@ -18,6 +18,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY index.html vite.config.js tailwind.config.js postcss.config.js ./
 COPY app/client ./app/client
+COPY packages ./packages
 COPY public ./public
 RUN npx vite build
 
@@ -28,6 +29,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
 COPY app/server ./app/server
+COPY packages ./packages
 RUN mkdir -p /app/data && chown -R node:node /app/data
 USER node
 EXPOSE 3001

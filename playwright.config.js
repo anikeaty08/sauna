@@ -2,6 +2,8 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
+  // Browser specs only; tests/unit/*.test.ts and tests/*.test.mjs run under `node --test`.
+  testMatch: '**/*.spec.js',
   timeout: 180000,
   workers: 1,
   use: {

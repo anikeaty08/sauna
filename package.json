@@ -11,21 +11,32 @@
     "start": "node app/server/index.js"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.1",
+    "compression": "^1.8.2",
     "express": "^5.2.1",
     "lucide": "^0.577.0",
     "lucide-react": "^1.43.0",
+    "pdfkit": "^0.17.2",
     "qrcode": "^1.5.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "three": "0.186.0"
+    "svg-to-pdfkit": "^0.1.8",
+    "three": "0.186.0",
+    "zod": "^4.6.5",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
     "@vitejs/plugin-react": "^5.2.0",
     "autoprefixer": "^10.6.1",
     "pngjs": "^7.0.0",
     "postcss": "^8.5.28",
     "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3",
     "vite": "^7.3.1"
   },
   "engines": {
