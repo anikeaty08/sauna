@@ -99,6 +99,8 @@ export function createApp({ databasePath = path.join(root, 'data', 'sauna.sqlite
   if (serveFrontend && existsSync(path.join(root, 'dist/index.html'))) {
     app.use(express.static(path.join(root, 'dist'), { maxAge: '1h', setHeaders: (res, file) => { if (file.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); } }));
     app.get('/', (req, res) => res.sendFile(path.join(root, 'dist/index.html')));
+    // The Studio design is client-routed; serve the same shell for it.
+    app.get(['/studio', '/studio/'], (req, res) => res.sendFile(path.join(root, 'dist/index.html')));
   }
   app.use((error, req, res, next) => {
     if (error.type === 'entity.too.large') return res.status(413).json({ error: 'Request is too large.' });
