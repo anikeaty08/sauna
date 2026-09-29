@@ -19,10 +19,11 @@
 import express, { Router, type Request, type Response } from 'express';
 import type { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { writeQuotePdf } from './quotePdf.ts';
+import { sceneViewerSafeGlb } from './sceneViewerGlb.ts';
 import {
   MODEL_REGISTRY, MODULES, modulesForModel, normalizeConfiguration, priceConfiguration, validateConfiguration,
   type SaunaConfiguration,
@@ -165,16 +166,20 @@ export function createStudioRouter(database: DatabaseSync, opts: { dataDir?: str
     if (!Buffer.isBuffer(body) || body.length < 16 || body.length > spec.maxBytes) return reject(res, 400, 'The file is empty or too large.');
     if (body.subarray(0, spec.magic.length).toString('latin1') !== spec.magic) return reject(res, 400, 'The file is not a valid model.');
     mkdirSync(path.dirname(target), { recursive: true });
-    writeFileSync(target, body, { flag: 'wx' });
+    writeFileSync(target, req.params.file === 'model.glb' ? sceneViewerSafeGlb(body) : body, { flag: 'wx' });
     res.status(201).json({ url: `/api/studio/configurations/${req.params.id}/ar/${req.params.file}` });
   });
   const serveAr = (req: Request, res: Response) => {
     const spec = AR_FILES[String(req.params.file)];
     const id = String(req.params.id);
     if (!spec || !ID.test(id) || !existsSync(arPath(id, String(req.params.file)))) return reject(res, 404, 'No AR model for this link yet.');
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    // A day, not immutable: a model stored by an older export is cleaned on the way out.
+    res.setHeader('Cache-Control', 'public, max-age=86400');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.type(spec.type).sendFile(arPath(id, String(req.params.file)));
+    const file = arPath(id, String(req.params.file));
+    // Scene Viewer rejects unsupported glTF extensions; older uploads may carry one.
+    if (req.params.file === 'model.glb') return res.type(spec.type).send(sceneViewerSafeGlb(readFileSync(file)));
+    res.type(spec.type).sendFile(file);
   };
   router.get('/configurations/:id/ar/:file', serveAr);
   router.head('/configurations/:id/ar/:file', serveAr);

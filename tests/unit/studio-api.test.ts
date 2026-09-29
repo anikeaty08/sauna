@@ -82,7 +82,7 @@ test('AR files: write-once, checked, served with the right type', async () => {
   const got = await fetch(url);
   assert.equal(got.status, 200);
   assert.match(got.headers.get('content-type') ?? '', /model\/gltf-binary/);
-  assert.match(got.headers.get('cache-control') ?? '', /immutable/);
+  assert.match(got.headers.get('cache-control') ?? '', /public, max-age=86400/);
   assert.equal((await fetch(`${base}/configurations/${saved.id}/ar/evil.sh`, { method: 'PUT', body: glb })).status, 404);
 });
 
