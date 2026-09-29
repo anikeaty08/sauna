@@ -72,12 +72,13 @@ export default function ArPage() {
         try {
           await ensureArModel(id, useStudio.getState().config, doorOpen);
         } catch {
-          // An older link whose upload window has closed: make a fresh snapshot of
-          // the same design and use that one (identical content, new files).
-          const fresh = await shareConfiguration(useStudio.getState().config);
+          // Last resort (e.g. the link's files are broken): a fresh snapshot of
+          // the same design. Always switch to it - even if the customer changed
+          // the door meanwhile - so the page never retries the old link.
+          const fresh = await shareConfiguration(useStudio.getState().config, { fresh: true });
           await ensureArModel(fresh.id, useStudio.getState().config, doorOpen);
           history.replaceState(null, '', `/studio/ar?c=${fresh.id}`);
-          if (!cancelled) setId(fresh.id);
+          setId(fresh.id);
         }
         if (!cancelled) setState({ status: 'ready', message: '' });
       } catch (e) {

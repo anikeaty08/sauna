@@ -20,10 +20,11 @@ const readLinks = (): Record<string, { id: string; url: string }> => { try { ret
  * Shareable link for the current design. Links are snapshots: once a link is
  * shared it never changes, so the person who receives it sees exactly what was
  * sent. Sharing the same design again reuses its link; any edit gets a new one.
+ * `fresh` always makes a new link (and remembers it for this design).
  */
-export async function shareConfiguration(configuration: SaunaConfiguration): Promise<SavedLink> {
+export async function shareConfiguration(configuration: SaunaConfiguration, opts: { fresh?: boolean } = {}): Promise<SavedLink> {
   const key = fingerprint(configuration);
-  const known = readLinks()[key];
+  const known = opts.fresh ? undefined : readLinks()[key];
   if (known) {
     const r = await getConfiguration(known.id).catch(() => null);
     if (r) return { id: known.id, url: known.url, price: r.price };

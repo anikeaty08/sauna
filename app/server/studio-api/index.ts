@@ -13,8 +13,8 @@
  *   PUT  /configurations/:id           update; header X-Edit-Token
  *   POST /quote-requests               { configurationId, name, email, phone?, message? }
  *   GET  /configurations/:id/quote.pdf printable quote with the dimensioned floor plan
- *   PUT  /configurations/:id/ar/:file  model.glb | model.usdz, write-once within 30 min of creation
- *   GET  /configurations/:id/ar/:file  the phone's AR viewers download these (public, immutable)
+ *   PUT  /configurations/:id/ar/:file  AR model (sauna-v4[-open].glb|.usdz), write-once per file
+ *   GET  /configurations/:id/ar/:file  the phone's AR viewers download these (public)
  */
 import express, { Router, type Request, type Response } from 'express';
 import type { DatabaseSync } from 'node:sqlite';
@@ -54,7 +54,6 @@ const AR_FILES: Record<string, { type: string; maxBytes: number; magic: string }
   'model.glb': { type: 'model/gltf-binary', maxBytes: 30 * 1024 * 1024, magic: 'glTF' },
   'model.usdz': { type: 'model/vnd.usdz+zip', maxBytes: 40 * 1024 * 1024, magic: 'PK' },
 };
-const UPLOAD_WINDOW_MS = 30 * 60 * 1000;
 
 export function createStudioRouter(database: DatabaseSync, opts: { dataDir?: string } = {}): Router {
   const arDir = path.join(opts.dataDir ?? path.join(tmpdir(), 'sauna-studio'), 'studio-ar');
@@ -157,9 +156,10 @@ export function createStudioRouter(database: DatabaseSync, opts: { dataDir?: str
   });
 
   // ── AR files (View in your room) ─────────────────────────────────────────
-  // Links never change, so each link's model is uploaded once, right after the
-  // link is made, and then served as an immutable public file: Scene Viewer
-  // downloads it itself from a public HTTPS URL.
+  // Links never change, so each AR file of a link is uploaded once and then
+  // served as a public file (Scene Viewer downloads it itself from a public HTTPS
+  // URL). No time limit: when the AR format version changes, older links get
+  // their new-format files on first use.
   const arPath = (id: string, file: string) => path.join(arDir, id, file);
   router.put('/configurations/:id/ar/:file', express.raw({ type: () => true, limit: '40mb' }), (req, res) => {
     const spec = AR_FILES[req.params.file];
@@ -168,7 +168,6 @@ export function createStudioRouter(database: DatabaseSync, opts: { dataDir?: str
     if (!row) return reject(res, 404, 'This configuration could not be found.');
     const target = arPath(req.params.id, req.params.file);
     if (existsSync(target)) return reject(res, 409, 'This AR file already exists.');
-    if (Date.now() - Date.parse(row.created_at) > UPLOAD_WINDOW_MS) return reject(res, 403, 'The upload window for this link has closed.');
     const body = req.body as Buffer;
     if (!Buffer.isBuffer(body) || body.length < 16 || body.length > spec.maxBytes) return reject(res, 400, 'The file is empty or too large.');
     if (body.subarray(0, spec.magic.length).toString('latin1') !== spec.magic) return reject(res, 400, 'The file is not a valid model.');

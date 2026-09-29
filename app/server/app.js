@@ -121,5 +121,5 @@ export function createApp({ databasePath = path.join(root, 'data', 'sauna.sqlite
     console.error('Request failed:', error.message);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });
   });
-  return { app, close: () => database.close() };
+  return { app, database, close: () => database.close() };
 }

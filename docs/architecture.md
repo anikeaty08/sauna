@@ -137,10 +137,9 @@ studio "View in your room"
   per material, textures capped at 1024 px. GLB via `GLTFExporter`, USDZ via
   `USDZExporter`.
 - Upload: `PUT /api/studio/configurations/:id/ar/{model.glb|model.usdz}` -
-  write-once, only within 30 min of the link's creation, size caps, magic bytes.
-  Served public + immutable (links never change); Scene Viewer downloads the GLB
-  itself, so it must be a public HTTPS URL.
-- An older link past its upload window gets a fresh snapshot of the same design.
+  write-once per file, size caps, magic bytes; no time limit, so older links get
+  their files in a new AR format on first use. Served public (links never change);
+  Scene Viewer downloads the GLB itself, so it must be a public HTTPS URL.
 
 ## 6. Transfer and compression
 

@@ -6,10 +6,11 @@ import type { Server } from 'node:http';
 import { createApp } from '../../app/server/app.js';
 import { defaultConfiguration, zirbe6eck } from '../../packages/configuration-core/index.ts';
 
-let server: Server, base = '', close: () => void;
+let server: Server, base = '', close: () => void, db: { prepare(sql: string): { run(...a: unknown[]): unknown } };
 before(async () => {
   const made = createApp({ databasePath: ':memory:' });
   close = made.close;
+  db = made.database;
   server = made.app.listen(0);
   await new Promise(r => server.once('listening', r));
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api/studio`;
@@ -84,6 +85,16 @@ test('AR files: write-once, checked, served with the right type', async () => {
   assert.match(got.headers.get('content-type') ?? '', /model\/gltf-binary/);
   assert.match(got.headers.get('cache-control') ?? '', /public, max-age=86400/);
   assert.equal((await fetch(`${base}/configurations/${saved.id}/ar/evil.sh`, { method: 'PUT', body: glb })).status, 404);
+});
+
+test('AR files: an older link still accepts files in a newer AR format', async () => {
+  const saved = await (await fetch(`${base}/configurations`, json('POST', { configuration: defaultConfiguration(zirbe6eck) }))).json();
+  db.prepare("UPDATE studio_configurations SET created_at = '2020-01-01T00:00:00.000Z' WHERE id = ?").run(saved.id);
+  const glb = Buffer.concat([Buffer.from('glTF'), Buffer.alloc(60)]);
+  const put = (file: string) => fetch(`${base}/configurations/${saved.id}/ar/${file}`, { method: 'PUT', body: glb, headers: { 'Content-Type': 'model/gltf-binary' } });
+  assert.equal((await put('sauna-v4.glb')).status, 201);
+  assert.equal((await put('sauna-v4-open.glb')).status, 201);
+  assert.equal((await put('sauna-v4.glb')).status, 409, 'still write-once');
 });
 
 test('quotation PDF is generated from the saved design and downloaded', async () => {
