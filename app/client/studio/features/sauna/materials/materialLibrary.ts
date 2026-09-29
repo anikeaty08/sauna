@@ -56,6 +56,8 @@ export const BENCH_WOOD_TEXTURES: Record<string, string> = {
   espe: `${TEX}/wood/espe.jpg`,
   erle: `${TEX}/wood/erle.jpg`,
 };
+/** Relief maps made from the same photo textures (make_textures.py): grain, grooves, riven slate. */
+const normalOf = (url: string) => url.replace(/\.jpg$/, '_normal.jpg');
 
 export class MaterialLibrary {
   private loader = new THREE.TextureLoader();
@@ -66,9 +68,9 @@ export class MaterialLibrary {
 
   constructor(private anisotropy = 8) {
     this.slots = {
-      slate: new THREE.MeshStandardMaterial({ map: this.texture(`${TEX}/slate/slate_tiles.jpg`), roughness: 0.78, metalness: 0 }),
-      zirbe: new THREE.MeshStandardMaterial({ map: this.texture(`${TEX}/wood/zirbe_boards.jpg`), roughness: 0.62, metalness: 0 }),
-      bench_wood: new THREE.MeshStandardMaterial({ map: this.texture(BENCH_WOOD_TEXTURES.espe), roughness: 0.6, metalness: 0 }),
+      slate: new THREE.MeshStandardMaterial({ map: this.texture(`${TEX}/slate/slate_tiles.jpg`), normalMap: this.texture(normalOf(`${TEX}/slate/slate_tiles.jpg`), false), normalScale: new THREE.Vector2(0.9, 0.9), roughness: 0.78, metalness: 0 }),
+      zirbe: new THREE.MeshStandardMaterial({ map: this.texture(`${TEX}/wood/zirbe_boards.jpg`), normalMap: this.texture(normalOf(`${TEX}/wood/zirbe_boards.jpg`), false), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 0.62, metalness: 0 }),
+      bench_wood: new THREE.MeshStandardMaterial({ map: this.texture(BENCH_WOOD_TEXTURES.espe), normalMap: this.texture(normalOf(BENCH_WOOD_TEXTURES.espe), false), normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.6, metalness: 0 }),
       // Low-iron clear glass: almost fully see-through with soft environment
       // reflections. Plain transparency instead of a transmission pass keeps
       // it cheap to render and avoids an over-shiny look.
@@ -87,12 +89,12 @@ export class MaterialLibrary {
     for (const [slot, mat] of Object.entries(this.slots)) mat.name = slot; // readable names in exported AR models
   }
 
-  private texture(url: string): THREE.Texture {
+  private texture(url: string, color = true): THREE.Texture {
     let t = this.textures.get(url);
     if (!t) {
       t = this.loader.load(url, () => this.onChange?.());
       t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      t.colorSpace = THREE.SRGBColorSpace;
+      t.colorSpace = color ? THREE.SRGBColorSpace : THREE.NoColorSpace; // normal maps hold vectors, not colours
       t.anisotropy = this.anisotropy;
       this.textures.set(url, t);
     }
@@ -109,7 +111,7 @@ export class MaterialLibrary {
     const url = BENCH_WOOD_TEXTURES[id] ?? BENCH_WOOD_TEXTURES.espe;
     const mat = this.slots.bench_wood as THREE.MeshStandardMaterial;
     const next = this.texture(url);
-    if (mat.map !== next) { mat.map = next; mat.needsUpdate = true; this.onChange?.(); }
+    if (mat.map !== next) { mat.map = next; mat.normalMap = this.texture(normalOf(url), false); mat.needsUpdate = true; this.onChange?.(); }
   }
 
   dispose() {

@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useStudio } from '../../store/configurationStore.ts';
 import { ModuleAssembler } from '../../features/sauna/assembly/ModuleAssembler.ts';
+import { dirtyGroups } from '../../../../../packages/configuration-core/index.ts';
 
 /**
  * Renders the assembled sauna. The assembler owns the scene graph; this
@@ -20,8 +21,14 @@ export function SaunaModel({ onStatus }: { onStatus: (s: { loading: boolean; err
 
   useEffect(() => () => assembler.dispose(), [assembler]);
 
+  // The first build is always complete: the store's `dirty` only lists what the
+  // last change touched, and a design loaded before this view mounted (AR page,
+  // shared links) would otherwise build just those groups - no walls or glass.
+  const built = useRef(false);
   useEffect(() => {
-    const { config, dirty } = useStudio.getState();
+    const { config } = useStudio.getState();
+    const dirty = built.current ? useStudio.getState().dirty : dirtyGroups(null, config);
+    built.current = true;
     onStatus({ loading: true, error: null });
     queue.current = queue.current
       .then(() => assembler.update(config, layout, dirty))

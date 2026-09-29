@@ -13,6 +13,9 @@ interface StudioState extends EngineResult {
   /** The glass door is closed unless the customer opens it. */
   doorOpen: boolean;
   toggleDoor: () => void;
+  /** Slow automatic turn of the exterior view (AR page preview). */
+  turntable: boolean;
+  setTurntable: (on: boolean) => void;
   update: (patch: Partial<SaunaConfiguration>) => void;
   reset: () => void;
   load: (config: Partial<SaunaConfiguration>) => void;
@@ -34,6 +37,8 @@ export const useStudio = create<StudioState>((set, get) => ({
   viewNonce: 0,
   doorOpen: false,
   toggleDoor: () => set(s => ({ doorOpen: !s.doorOpen })),
+  turntable: false,
+  setTurntable: on => set({ turntable: on }),
   update: patch => {
     const prev = get().config;
     const merged = {

@@ -155,16 +155,37 @@ def erle_slat(photo):
     return tinted.resize((tinted.width * UP, tinted.height * UP), Image.LANCZOS)
 
 
+def normal_map(img, strength, blur=1.2):
+    """Tangent-space normal map (OpenGL convention, +Y up) from the texture's
+    own detail: darker = deeper, so board grooves, slate joints and riven
+    stone read as relief. Low-frequency tone is removed first so only the
+    surface detail becomes height; wraps at the edges so it tiles like the
+    colour texture."""
+    lum = np.asarray(img.convert('L').filter(ImageFilter.GaussianBlur(blur))).astype(np.float64) / 255
+    base = np.asarray(img.convert('L').filter(ImageFilter.GaussianBlur(24))).astype(np.float64) / 255
+    h = lum - base
+    dx = (np.roll(h, -1, axis=1) - np.roll(h, 1, axis=1)) * strength
+    dy = (np.roll(h, -1, axis=0) - np.roll(h, 1, axis=0)) * strength
+    n = np.dstack([-dx, dy, np.ones_like(h)])                    # image rows run down, texture v runs up
+    n /= np.linalg.norm(n, axis=2, keepdims=True)
+    return Image.fromarray(((n * 0.5 + 0.5) * 255).astype(np.uint8))
+
+
+NORMAL_STRENGTH = {'zirbe_boards': 5.0, 'slate_tiles': 9.0, 'espe': 3.0, 'erle': 3.0}
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     photo = Image.open(SRC).convert('RGB')
     for name, fn in [('zirbe_boards', zirbe_boards), ('slate_tiles', slate_tiles), ('espe', espe_slat), ('erle', erle_slat)]:
         img = fn(photo)
-        img.save(OUT / f'{name}.jpg', quality=90, optimize=True)
+        nrm = normal_map(img, NORMAL_STRENGTH[name])
         web = WEB / ('slate' if name.startswith('slate') else 'wood')
         web.mkdir(parents=True, exist_ok=True)
-        img.save(web / f'{name}.jpg', quality=90, optimize=True)
-        print(f'{name}.jpg  {img.size[0]}x{img.size[1]}  mean RGB {tuple(round(v) for v in mean_rgb(img))}')
+        for folder in (OUT, web):
+            img.save(folder / f'{name}.jpg', quality=90, optimize=True)
+            nrm.save(folder / f'{name}_normal.jpg', quality=92, optimize=True)
+        print(f'{name}.jpg + _normal.jpg  {img.size[0]}x{img.size[1]}  mean RGB {tuple(round(v) for v in mean_rgb(img))}')
 
 
 if __name__ == '__main__':

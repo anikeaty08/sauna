@@ -4,12 +4,15 @@
  *   iPhone / iPad  -> Quick Look with our USDZ (scaling locked)
  *   Android        -> Scene Viewer with our GLB (resizing off)
  *   desktop        -> a QR code that opens this page on the phone
+ * Before opening AR, the page shows a turning 3D preview (outside / inside), the
+ * chosen options and a door open / closed choice (each door state is its own
+ * AR model, exported on first use).
  */
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Box, Smartphone } from 'lucide-react';
+import { ArrowLeft, Box, DoorClosed, DoorOpen, Footprints, Smartphone } from 'lucide-react';
 import { useStudio } from './store/configurationStore.ts';
 import { SaunaViewer } from './components/viewer/SaunaViewer.tsx';
-import { AR_GLB, AR_USDZ, arViewUrl, ensureArModel, getConfiguration, shareConfiguration } from './services/saunaApi.ts';
+import { arFiles, arViewUrl, ensureArModel, getConfiguration, shareConfiguration } from './services/saunaApi.ts';
 import { chf } from './utils/format.ts';
 import './styles/configurator.css';
 
@@ -28,14 +31,21 @@ export function sceneViewerIntent(glbUrl: string, title: string, backUrl: string
   return `intent://arvr.google.com/scene-viewer/1.2?${params.toString()}#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(backUrl)};end;`;
 }
 
+type Status = { status: 'loading' | 'preparing' | 'ready' | 'error'; message: string };
+
 export default function ArPage() {
-  const { model, config, price, load } = useStudio();
+  const { model, config, price, load, tab, setTab, doorOpen, toggleDoor, setTurntable } = useStudio();
   const [platform] = useState<Platform>(detectPlatform);
   const [id, setId] = useState<string | null>(() => new URLSearchParams(location.search).get('c'));
-  const [state, setState] = useState<{ status: 'loading' | 'preparing' | 'ready' | 'error'; message: string }>({ status: 'loading', message: 'Loading your design…' });
+  const [loaded, setLoaded] = useState(false);
+  const [state, setState] = useState<Status>({ status: 'loading', message: 'Loading your design…' });
   const [qr, setQr] = useState('');
   const quickLook = useRef<HTMLAnchorElement>(null);
 
+  // The preview turns slowly on its own while showing the outside.
+  useEffect(() => { setTurntable(true); return () => setTurntable(false); }, [setTurntable]);
+
+  // 1. load the saved design
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -44,14 +54,28 @@ export default function ArPage() {
         const r = await getConfiguration(id);
         if (cancelled) return;
         load(r.configuration);
-        setState({ status: 'preparing', message: 'Preparing the 3D model for your room…' });
+        setLoaded(true);
+      } catch (e) {
+        if (!cancelled) setState({ status: 'error', message: (e as Error).message || 'This design could not be loaded.' });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id, load]);
+
+  // 2. make sure the AR model for the chosen door state exists
+  useEffect(() => {
+    if (!loaded || !id) return;
+    let cancelled = false;
+    setState({ status: 'preparing', message: doorOpen ? 'Preparing the model with the door open…' : 'Preparing the 3D model for your room…' });
+    (async () => {
+      try {
         try {
-          await ensureArModel(id, useStudio.getState().config);
+          await ensureArModel(id, useStudio.getState().config, doorOpen);
         } catch {
           // An older link whose upload window has closed: make a fresh snapshot of
           // the same design and use that one (identical content, new files).
           const fresh = await shareConfiguration(useStudio.getState().config);
-          await ensureArModel(fresh.id, useStudio.getState().config);
+          await ensureArModel(fresh.id, useStudio.getState().config, doorOpen);
           history.replaceState(null, '', `/studio/ar?c=${fresh.id}`);
           if (!cancelled) setId(fresh.id);
         }
@@ -61,7 +85,7 @@ export default function ArPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [id, load]);
+  }, [loaded, id, doorOpen]);
 
   useEffect(() => {
     if (platform !== 'desktop') return;
@@ -69,14 +93,17 @@ export default function ArPage() {
   }, [platform, id]);
 
   const heater = model.options.heaterSet.find(h => h.id === config.heaterSet);
+  const wood = model.options.benchWood.find(w => w.id === config.materials.benchWood);
+  const extras = config.accessories.map(a => model.options.accessories.find(o => o.id === a)?.name.split(' (')[0]).filter(Boolean);
   const title = `${model.name} ${config.dimensions.widthCm} × ${config.dimensions.depthCm} cm`;
   const studioUrl = id ? `${location.origin}/studio?c=${id}` : `${location.origin}/studio`;
   const ready = state.status === 'ready' && id;
+  const files = arFiles(doorOpen);
 
   const open = () => {
     if (!ready) return;
     if (platform === 'ios') quickLook.current?.click();
-    else location.href = sceneViewerIntent(arViewUrl(id!, AR_GLB), title, studioUrl);
+    else location.href = sceneViewerIntent(arViewUrl(id!, files.glb), title, studioUrl);
   };
 
   return (
@@ -90,8 +117,19 @@ export default function ArPage() {
         <section className="ar-card">
           <p className="ar-kicker">View in your room</p>
           <h1>{title}</h1>
-          <p className="ar-meta">{heater?.id === 'none' ? 'Without heater' : heater?.name.replace(/^Set: /, '').split(',')[0]} · {model.options.benchWood.find(w => w.id === config.materials.benchWood)?.name.split(',')[0]} benches</p>
-          <p className="ar-price">{chf(price.total)} <small>incl. {model.vatRate * 100}% VAT{price.onRequest ? ' · + on request' : ''}</small></p>
+          <ul className="ar-specs">
+            <li><span>Size</span>{config.dimensions.widthCm} × {config.dimensions.depthCm} × {model.dimensions.heightMm / 10} cm</li>
+            <li><span>Benches</span>{wood?.name.split(',')[0]}</li>
+            <li><span>Heater</span>{heater?.id === 'none' ? 'Without heater' : heater?.name.replace(/^Set: /, '').split(',')[0]}</li>
+            {extras.length > 0 && <li><span>Extras</span>{extras.join(', ')}</li>}
+          </ul>
+          <p className="ar-price">{chf(price.total)} <small>incl. {model.vatRate * 100}% VAT{price.onRequest ? ' · some items priced on request' : ''}</small></p>
+
+          <div className="ar-door" role="radiogroup" aria-label="Door in AR">
+            <span>Door</span>
+            <button type="button" role="radio" aria-checked={!doorOpen} className={!doorOpen ? 'is-on' : ''} onClick={() => doorOpen && toggleDoor()}><DoorClosed size={15} /> Closed</button>
+            <button type="button" role="radio" aria-checked={doorOpen} className={doorOpen ? 'is-on' : ''} onClick={() => !doorOpen && toggleDoor()}><DoorOpen size={15} /> Open</button>
+          </div>
 
           {platform === 'desktop' ? (
             <div className="ar-qr-block">
@@ -105,7 +143,7 @@ export default function ArPage() {
               </button>
               {/* Quick Look needs a real <a rel="ar"> with an <img> child. */}
               {platform === 'ios' && ready && (
-                <a ref={quickLook} rel="ar" href={`${arViewUrl(id!, AR_USDZ)}#allowsContentScaling=0`} className="ar-hidden" aria-hidden="true" tabIndex={-1}>
+                <a ref={quickLook} rel="ar" href={`${arViewUrl(id!, files.usdz)}#allowsContentScaling=0`} className="ar-hidden" aria-hidden="true" tabIndex={-1}>
                   <img alt="" src="/assets/images/logo.gif" />
                 </a>
               )}
@@ -118,10 +156,15 @@ export default function ArPage() {
             <li>The sauna appears at its real size ({config.dimensions.widthCm} × {config.dimensions.depthCm} × {model.dimensions.heightMm / 10} cm) - it cannot be scaled.</li>
             <li>Drag to move it, twist with two fingers to turn it, and walk around it.</li>
           </ol>
+          <p className="ar-walkin"><Footprints size={15} /> Have the space? Walk into the sauna with your phone to look around inside - benches, heater and lights are all there.</p>
         </section>
 
         <section className="ar-preview" aria-label="3D preview">
           <SaunaViewer />
+          <div className="ar-view-toggle" role="tablist" aria-label="Preview">
+            <button type="button" role="tab" aria-selected={tab === 'exterior'} className={tab === 'exterior' ? 'is-on' : ''} onClick={() => setTab('exterior')}>Outside</button>
+            <button type="button" role="tab" aria-selected={tab === 'interior'} className={tab === 'interior' ? 'is-on' : ''} onClick={() => setTab('interior')}>Inside</button>
+          </div>
         </section>
       </main>
     </div>

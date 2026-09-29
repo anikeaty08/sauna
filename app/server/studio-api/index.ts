@@ -42,12 +42,15 @@ function checkConfiguration(raw: unknown) {
   return { model, configuration: cfg as SaunaConfiguration, valid, issues, price: valid ? priceConfiguration(model, cfg as SaunaConfiguration) : null };
 }
 
-/** The two files the phone's own AR viewers need, per snapshot link. */
+/** The files the phone's own AR viewers need, per snapshot link (door closed / open). */
+const GLB = { type: 'model/gltf-binary', maxBytes: 30 * 1024 * 1024, magic: 'glTF' };
+const USDZ = { type: 'model/vnd.usdz+zip', maxBytes: 40 * 1024 * 1024, magic: 'PK' };
 const AR_FILES: Record<string, { type: string; maxBytes: number; magic: string }> = {
-  // current export format (indexed geometry, power-of-two JPEG textures)
-  'sauna-v3.glb': { type: 'model/gltf-binary', maxBytes: 30 * 1024 * 1024, magic: 'glTF' },
-  'sauna-v3.usdz': { type: 'model/vnd.usdz+zip', maxBytes: 40 * 1024 * 1024, magic: 'PK' },
+  // current export format: baked light layers, relief maps, door closed or open
+  'sauna-v4.glb': GLB, 'sauna-v4.usdz': USDZ,
+  'sauna-v4-open.glb': GLB, 'sauna-v4-open.usdz': USDZ,
   // earlier exports, still served for old links
+  'sauna-v3.glb': GLB, 'sauna-v3.usdz': USDZ,
   'model.glb': { type: 'model/gltf-binary', maxBytes: 30 * 1024 * 1024, magic: 'glTF' },
   'model.usdz': { type: 'model/vnd.usdz+zip', maxBytes: 40 * 1024 * 1024, magic: 'PK' },
 };

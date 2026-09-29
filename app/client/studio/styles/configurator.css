@@ -267,6 +267,20 @@
 .ar-steps { margin: 20px 0 0; padding-left: 18px; display: grid; gap: 8px; font-size: 13px; line-height: 1.45; color: #4a4945; }
 .ar-preview { position: relative; min-height: 520px; border-radius: 16px; overflow: hidden; background: #f6f5f1; border: 1px solid #e5e3de; }
 .ar-preview > * { position: absolute; inset: 0; }
+.ar-preview > .ar-view-toggle {
+  inset: auto; top: 12px; left: 50%; transform: translateX(-50%); z-index: 2;
+  display: inline-flex; padding: 3px; gap: 2px; background: #fff; border: 1px solid #e5e3de; border-radius: 8px;
+}
+.ar-view-toggle button { padding: 7px 16px; border-radius: 6px; font-size: 13px; color: #1c1c1c; }
+.ar-view-toggle button.is-on { background: #1c1c1c; color: #fff; }
+.ar-specs { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; font-size: 13px; color: #1c1c1c; }
+.ar-specs span { display: inline-block; min-width: 72px; color: #6f6d68; }
+.ar-door { display: flex; align-items: center; gap: 6px; margin: 0 0 14px; }
+.ar-door > span { font-size: 12px; color: #6f6d68; margin-right: 4px; min-width: 66px; }
+.ar-door button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 10px; border: 1px solid #e5e3de; border-radius: 10px; font-size: 13px; color: #1c1c1c; background: #fff; }
+.ar-door button.is-on { border-color: #1c1c1c; box-shadow: inset 0 0 0 1px #1c1c1c; font-weight: 600; }
+.ar-walkin { display: flex; gap: 8px; align-items: flex-start; margin: 16px 0 0; padding: 10px 12px; border-radius: 10px; background: #f6f1e8; font-size: 12.5px; line-height: 1.45; color: #4a4945; }
+.ar-walkin svg { flex: none; margin-top: 1px; color: #662d11; }
 @media (max-width: 860px) {
   .ar-main { grid-template-columns: 1fr; }
   .ar-preview { min-height: 340px; order: -1; }

@@ -92,6 +92,7 @@ export function CameraRig() {
   const { camera, invalidate } = useThree() as unknown as { camera: THREE.PerspectiveCamera; invalidate: () => void };
   const section = useStudio(s => s.section);
   const nonce = useStudio(s => s.viewNonce);
+  const turntable = useStudio(s => s.turntable);
   const aspect = useThree(s => s.size.width / Math.max(1, s.size.height));
   const width = useStudio(s => s.layout.width), depth = useStudio(s => s.layout.depth);
   const anim = useRef<{ from: View; to: View; t: number } | null>(null);
@@ -208,6 +209,7 @@ export function CameraRig() {
       }
       invalidate(); // keep frames coming while a key is held (frameloop="demand")
     }
+    if (ctl && turntable && !interior && !anim.current) { ctl.update(); invalidate(); } // keep autoRotate going (frameloop="demand")
     const a = anim.current;
     if (!a || !ctl) return;
     a.t = Math.min(1, a.t + dt / 0.9);
@@ -226,6 +228,7 @@ export function CameraRig() {
       minDistance={interior ? 0.15 : 0.4} maxDistance={interior ? 1.6 : 14}
       minPolarAngle={interior ? Math.PI * 0.2 : 0} maxPolarAngle={interior ? Math.PI * 0.8 : Math.PI * 0.495}
       // inside, panning walks along the floor (kept within the walls)
-      enablePan screenSpacePanning={!interior} />
+      enablePan screenSpacePanning={!interior}
+      autoRotate={turntable && !interior} autoRotateSpeed={0.9} />
   );
 }
