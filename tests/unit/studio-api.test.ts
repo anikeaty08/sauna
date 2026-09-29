@@ -38,6 +38,21 @@ test('save re-prices on the server and ignores any client total', async () => {
   assert.equal(read.configuration.heaterSet, 'harvia-virta-9');
 });
 
+test('an identical design is stored once and gets the same link', async () => {
+  const a = { ...defaultConfiguration(zirbe6eck), dimensions: { widthCm: 190, depthCm: 190 }, accessories: ['led-5m', 'nova-set-4'] };
+  const b = { ...a, accessories: ['nova-set-4', 'led-5m'] }; // same design, other order
+  const first = await fetch(`${base}/configurations`, json('POST', { configuration: a }));
+  const second = await fetch(`${base}/configurations`, json('POST', { configuration: b }));
+  assert.equal(first.status, 201);
+  assert.equal(second.status, 200);
+  const [x, y] = [await first.json(), await second.json()];
+  assert.equal(y.id, x.id);
+  assert.equal(y.reused, true);
+  assert.equal(y.editToken, undefined, 'a reused link cannot be edited by someone else');
+  const other = await (await fetch(`${base}/configurations`, json('POST', { configuration: { ...a, heaterSet: 'none' } }))).json();
+  assert.notEqual(other.id, x.id);
+});
+
 test('invalid configurations are rejected with issues', async () => {
   const res = await fetch(`${base}/configurations`, json('POST', { configuration: { ...defaultConfiguration(zirbe6eck), dimensions: { widthCm: 999, depthCm: 200 } } }));
   assert.equal(res.status, 400);
@@ -63,7 +78,7 @@ test('shared links get link-preview tags for that design', async () => {
   const { DatabaseSync } = await import('node:sqlite');
   const db = new DatabaseSync(':memory:');
   createStudioRouter(db);
-  db.prepare('INSERT INTO studio_configurations VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run('abcdefghijkl', 'zirbe-6eck', '1.0.0',
+  db.prepare('INSERT INTO studio_configurations (id, model_id, model_version, configuration, price_chf, price_on_request, edit_token_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run('abcdefghijkl', 'zirbe-6eck', '1.0.0',
     JSON.stringify({ ...defaultConfiguration(zirbe6eck), dimensions: { widthCm: 200, depthCm: 220 }, heaterSet: 'harvia-virta-9' }), 0, 0, 'x', 'now', 'now');
   const shell = '<title>Old</title><meta name="description" content="x" /><meta property="og:title" content="x" /><meta property="og:description" content="x" />';
   const html = studioPageHtml(db, shell, 'abcdefghijkl');
@@ -73,8 +88,8 @@ test('shared links get link-preview tags for that design', async () => {
 });
 
 test('AR files: write-once, checked, served with the right type', async () => {
-  const saved = await (await fetch(`${base}/configurations`, json('POST', { configuration: defaultConfiguration(zirbe6eck) }))).json();
-  const url = `${base}/configurations/${saved.id}/ar/model.glb`;
+  const saved = await (await fetch(`${base}/configurations`, json('POST', { configuration: { ...defaultConfiguration(zirbe6eck), dimensions: { widthCm: 200, depthCm: 200 } } }))).json();
+  const url = `${base}/configurations/${saved.id}/ar/sauna-v5.glb`;
   assert.equal((await fetch(url)).status, 404);
   const glb = Buffer.concat([Buffer.from('glTF'), Buffer.alloc(60)]);
   assert.equal((await fetch(url, { method: 'PUT', body: Buffer.from('nope-not-a-model-at-all'), headers: { 'Content-Type': 'model/gltf-binary' } })).status, 400);
@@ -88,13 +103,13 @@ test('AR files: write-once, checked, served with the right type', async () => {
 });
 
 test('AR files: an older link still accepts files in a newer AR format', async () => {
-  const saved = await (await fetch(`${base}/configurations`, json('POST', { configuration: defaultConfiguration(zirbe6eck) }))).json();
+  const saved = await (await fetch(`${base}/configurations`, json('POST', { configuration: { ...defaultConfiguration(zirbe6eck), dimensions: { widthCm: 210, depthCm: 210 } } }))).json();
   db.prepare("UPDATE studio_configurations SET created_at = '2020-01-01T00:00:00.000Z' WHERE id = ?").run(saved.id);
   const glb = Buffer.concat([Buffer.from('glTF'), Buffer.alloc(60)]);
   const put = (file: string) => fetch(`${base}/configurations/${saved.id}/ar/${file}`, { method: 'PUT', body: glb, headers: { 'Content-Type': 'model/gltf-binary' } });
-  assert.equal((await put('sauna-v4.glb')).status, 201);
-  assert.equal((await put('sauna-v4-open.glb')).status, 201);
-  assert.equal((await put('sauna-v4.glb')).status, 409, 'still write-once');
+  assert.equal((await put('sauna-v5.glb')).status, 201);
+  assert.equal((await put('sauna-v5-open.glb')).status, 201);
+  assert.equal((await put('sauna-v5.glb')).status, 409, 'still write-once');
 });
 
 test('quotation PDF is generated from the saved design and downloaded', async () => {

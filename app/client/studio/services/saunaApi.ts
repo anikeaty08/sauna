@@ -53,7 +53,7 @@ export const requestQuote = (payload: { configurationId: string; name: string; e
  * format changes, so a link never reuses an old-format model.
  */
 export const arFiles = (doorOpen = false) => {
-  const base = doorOpen ? 'sauna-v4-open' : 'sauna-v4';
+  const base = doorOpen ? 'sauna-v5-open' : 'sauna-v5';
   return { glb: `${base}.glb`, usdz: `${base}.usdz` } as const;
 };
 export const arFileUrl = (id: string, file: string) => `${location.origin}/api/studio/configurations/${encodeURIComponent(id)}/ar/${file}`;

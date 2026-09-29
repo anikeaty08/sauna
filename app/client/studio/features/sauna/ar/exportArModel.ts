@@ -30,6 +30,7 @@ export async function exportArModel(config: SaunaConfiguration, layout: Layout, 
     }
     assembler.root.add(lightLayers(layout));
     const scene = bake(assembler.root);
+    faceTheViewer(scene, layout);
     const [{ GLTFExporter }, { USDZExporter }] = await Promise.all([
       import('three/addons/exporters/GLTFExporter.js'),
       import('three/addons/exporters/USDZExporter.js'),
@@ -41,6 +42,25 @@ export async function exportArModel(config: SaunaConfiguration, layout: Layout, 
   } finally {
     assembler.dispose();
   }
+}
+
+/**
+ * Android's Scene Viewer puts the model's origin where the phone points, about
+ * a metre ahead - a 2.5 m sauna centred there surrounds the viewer, who then
+ * only sees the inside. So: turn the glass door towards the viewer (+Z, the
+ * viewers' "front") and move the whole footprint behind the origin with a
+ * little space, so both viewers start outside, looking at the front.
+ */
+const FRONT_CLEARANCE = 0.5; // metres between the placement point and the front of the sauna
+function faceTheViewer(scene: THREE.Group, layout: Layout) {
+  const f = new PlanFrame(layout.width, layout.depth);
+  const door = f.dir(layout.door.outward).setY(0).normalize();
+  const turn = new THREE.Quaternion().setFromUnitVectors(door, new THREE.Vector3(0, 0, 1));
+  const meshes = scene.children as THREE.Mesh[];
+  for (const m of meshes) m.geometry.applyQuaternion(turn);
+  const box = new THREE.Box3().setFromObject(scene);
+  const cx = (box.min.x + box.max.x) / 2;
+  for (const m of meshes) m.geometry.translate(-cx, 0, -box.max.z - FRONT_CLEARANCE);
 }
 
 /**

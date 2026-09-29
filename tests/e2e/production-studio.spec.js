@@ -46,7 +46,7 @@ test('production studio: one configurable sauna, real prices, QR share and PDF q
   expect(href).toMatch(/\/studio\/ar\?c=[A-Za-z0-9_-]{12}$/);
   await expect(page.locator('.st-modal-note')).toContainText('Ready', { timeout: 120000 });
   const id = href.split('c=')[1];
-  for (const [file, type] of [['sauna-v4.glb', 'model/gltf-binary'], ['sauna-v4.usdz', 'model/vnd.usdz+zip']]) {
+  for (const [file, type] of [['sauna-v5.glb', 'model/gltf-binary'], ['sauna-v5.usdz', 'model/vnd.usdz+zip']]) {
     const r = await page.request.get(`/api/studio/configurations/${id}/ar/${file}`);
     expect(r.status()).toBe(200);
     expect(r.headers()['content-type']).toContain(type);

@@ -8,12 +8,12 @@
  *   GET  /saunas/:modelId              full product definition + compatible modules
  *   GET  /modules?model=               module registry
  *   POST /configurations/validate      { configuration } -> { valid, issues, configuration, price }
- *   POST /configurations               save -> 201 { id, editToken, path }
+ *   POST /configurations               save -> 201 { id, editToken, path }; identical design -> 200 { id, path, reused }
  *   GET  /configurations/:id           read by unguessable id
  *   PUT  /configurations/:id           update; header X-Edit-Token
  *   POST /quote-requests               { configurationId, name, email, phone?, message? }
  *   GET  /configurations/:id/quote.pdf printable quote with the dimensioned floor plan
- *   PUT  /configurations/:id/ar/:file  AR model (sauna-v4[-open].glb|.usdz), write-once per file
+ *   PUT  /configurations/:id/ar/:file  AR model (sauna-v5[-open].glb|.usdz), write-once per file
  *   GET  /configurations/:id/ar/:file  the phone's AR viewers download these (public)
  */
 import express, { Router, type Request, type Response } from 'express';
@@ -45,15 +45,22 @@ function checkConfiguration(raw: unknown) {
 /** The files the phone's own AR viewers need, per snapshot link (door closed / open). */
 const GLB = { type: 'model/gltf-binary', maxBytes: 30 * 1024 * 1024, magic: 'glTF' };
 const USDZ = { type: 'model/vnd.usdz+zip', maxBytes: 40 * 1024 * 1024, magic: 'PK' };
+// Export format v5: baked light layers, relief maps, door closed or open, front
+// towards the viewer. The version is in the file name, so a format change never
+// serves an old-format file.
 const AR_FILES: Record<string, { type: string; maxBytes: number; magic: string }> = {
-  // current export format: baked light layers, relief maps, door closed or open
-  'sauna-v4.glb': GLB, 'sauna-v4.usdz': USDZ,
-  'sauna-v4-open.glb': GLB, 'sauna-v4-open.usdz': USDZ,
-  // earlier exports, still served for old links
-  'sauna-v3.glb': GLB, 'sauna-v3.usdz': USDZ,
-  'model.glb': { type: 'model/gltf-binary', maxBytes: 30 * 1024 * 1024, magic: 'glTF' },
-  'model.usdz': { type: 'model/vnd.usdz+zip', maxBytes: 40 * 1024 * 1024, magic: 'PK' },
+  'sauna-v5.glb': GLB, 'sauna-v5.usdz': USDZ,
+  'sauna-v5-open.glb': GLB, 'sauna-v5-open.usdz': USDZ,
 };
+
+/** Same design -> same hash: key order and accessory order do not matter. */
+function designFingerprint(modelId: string, configuration: unknown): string {
+  const canon = (v: unknown): unknown => Array.isArray(v) ? v.map(canon)
+    : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v as object).sort().map(k => [k, canon((v as Record<string, unknown>)[k])])) : v;
+  const c = canon(configuration) as Record<string, unknown>;
+  if (Array.isArray(c.accessories)) c.accessories = [...(c.accessories as string[])].sort();
+  return createHash('sha256').update(`${modelId}|${JSON.stringify(c)}`).digest('hex');
+}
 
 export function createStudioRouter(database: DatabaseSync, opts: { dataDir?: string } = {}): Router {
   const arDir = path.join(opts.dataDir ?? path.join(tmpdir(), 'sauna-studio'), 'studio-ar');
@@ -67,9 +74,15 @@ export function createStudioRouter(database: DatabaseSync, opts: { dataDir?: str
     name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT, message TEXT,
     price_chf REAL NOT NULL, status TEXT NOT NULL DEFAULT 'new', created_at TEXT NOT NULL
   ) STRICT;`);
-  const insert = database.prepare('INSERT INTO studio_configurations VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  // One row per distinct design: design_hash identifies identical designs, so
+  // sharing the same sauna twice (or from several devices) reuses its link.
+  const cols = database.prepare('PRAGMA table_info(studio_configurations)').all() as { name: string }[];
+  if (!cols.some(c => c.name === 'design_hash')) database.exec('ALTER TABLE studio_configurations ADD COLUMN design_hash TEXT');
+  database.exec('CREATE INDEX IF NOT EXISTS studio_configurations_design ON studio_configurations(design_hash)');
+  const insert = database.prepare('INSERT INTO studio_configurations (id, model_id, model_version, configuration, price_chf, price_on_request, edit_token_hash, created_at, updated_at, design_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
   const select = database.prepare('SELECT * FROM studio_configurations WHERE id = ?');
-  const update = database.prepare('UPDATE studio_configurations SET model_version = ?, configuration = ?, price_chf = ?, price_on_request = ?, updated_at = ? WHERE id = ?');
+  const selectByDesign = database.prepare('SELECT id FROM studio_configurations WHERE design_hash = ? ORDER BY created_at LIMIT 1');
+  const update = database.prepare('UPDATE studio_configurations SET model_version = ?, configuration = ?, price_chf = ?, price_on_request = ?, updated_at = ?, design_hash = ? WHERE id = ?');
   const insertQuote = database.prepare('INSERT INTO studio_quote_requests (id, configuration_id, name, email, phone, message, price_chf, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
 
   const router = Router();
@@ -98,10 +111,13 @@ export function createStudioRouter(database: DatabaseSync, opts: { dataDir?: str
     const r = checkConfiguration(req.body?.configuration);
     if ('error' in r) return reject(res, 400, r.error);
     if (!r.valid || !r.price) return reject(res, 400, 'The configuration is not valid.', r.issues);
+    const designHash = designFingerprint(r.model.id, r.configuration);
+    const existing = selectByDesign.get(designHash) as { id: string } | undefined;
+    if (existing) return res.status(200).json({ id: existing.id, path: `/studio?c=${existing.id}`, price: r.price, reused: true });
     const id = randomBytes(9).toString('base64url');
     const editToken = randomBytes(24).toString('base64url');
     const t = now();
-    insert.run(id, r.model.id, r.model.version, JSON.stringify(r.configuration), r.price.total, r.price.onRequest ? 1 : 0, hash(editToken), t, t);
+    insert.run(id, r.model.id, r.model.version, JSON.stringify(r.configuration), r.price.total, r.price.onRequest ? 1 : 0, hash(editToken), t, t, designHash);
     res.status(201).json({ id, editToken, path: `/studio?c=${id}`, price: r.price });
   });
 
@@ -123,7 +139,7 @@ export function createStudioRouter(database: DatabaseSync, opts: { dataDir?: str
     const r = checkConfiguration(req.body?.configuration);
     if ('error' in r) return reject(res, 400, r.error);
     if (!r.valid || !r.price) return reject(res, 400, 'The configuration is not valid.', r.issues);
-    update.run(r.model.version, JSON.stringify(r.configuration), r.price.total, r.price.onRequest ? 1 : 0, now(), req.params.id);
+    update.run(r.model.version, JSON.stringify(r.configuration), r.price.total, r.price.onRequest ? 1 : 0, now(), designFingerprint(r.model.id, r.configuration), req.params.id);
     res.json({ id: req.params.id, price: r.price });
   });
 
