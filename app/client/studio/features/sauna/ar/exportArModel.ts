@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Layout, SaunaConfiguration } from '../../../../../../packages/configuration-core/index.ts';
 import { dirtyGroups } from '../../../../../../packages/configuration-core/index.ts';
 import { ModuleAssembler } from '../assembly/ModuleAssembler.ts';
@@ -32,6 +32,36 @@ export async function exportArModel(config: SaunaConfiguration, layout: Layout):
   } finally {
     assembler.dispose();
   }
+}
+
+/**
+ * Scene Viewer is stricter than the glTF spec: textures are redrawn at
+ * power-of-two sizes (max 1024) and stored as JPEG when the material is opaque.
+ */
+const safeMaps = new WeakMap<THREE.Texture, THREE.Texture>();
+function viewerSafeMaterial(material: THREE.Material): THREE.Material {
+  const std = material as THREE.MeshStandardMaterial;
+  const src = std.map;
+  const img = src?.image as (CanvasImageSource & { width: number; height: number }) | undefined;
+  if (!src || !img || !img.width || !img.height) return material;
+  let map = safeMaps.get(src);
+  if (!map) {
+    const pot = (n: number) => Math.min(1024, Math.max(64, 2 ** Math.round(Math.log2(n))));
+    const canvas = document.createElement('canvas');
+    canvas.width = pot(img.width); canvas.height = pot(img.height);
+    canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const t = new THREE.CanvasTexture(canvas);
+    t.wrapS = src.wrapS; t.wrapT = src.wrapT; t.colorSpace = src.colorSpace;
+    t.repeat.copy(src.repeat); t.offset.copy(src.offset); t.rotation = src.rotation; t.center.copy(src.center);
+    t.flipY = src.flipY;
+    if (!std.transparent) t.userData.mimeType = 'image/jpeg';
+    safeMaps.set(src, t);
+    map = t;
+  }
+  const out = std.clone();
+  out.map = map;
+  out.name = material.name;
+  return out;
 }
 
 /** Wait until every texture used in the model has its image. */
@@ -82,15 +112,19 @@ function bake(root: THREE.Object3D): THREE.Group {
   const out = new THREE.Group();
   out.name = 'zirbe_6eck';
   for (const [material, geos] of byMaterial) {
-    const merged = mergeGeometries(geos, false);
+    const flat = mergeGeometries(geos, false);
     geos.forEach(g => g.dispose());
-    if (!merged) continue;
+    if (!flat) continue;
+    // Indexed triangles: ARCore's loader rejects some un-indexed GLBs from
+    // three.js ("Invalid index range"); indexing also shrinks the file.
+    const merged = mergeVertices(flat, 1e-5);
+    flat.dispose();
     // Scene Viewer supports only a few glTF extensions: keep emissive at the
     // core range (an intensity > 1 would export KHR_materials_emissive_strength).
-    let mat = material;
-    const std = material as THREE.MeshStandardMaterial;
+    let mat = viewerSafeMaterial(material);
+    const std = mat as THREE.MeshStandardMaterial;
     if (std.isMeshStandardMaterial && std.emissiveIntensity > 1) {
-      const c = std.clone();
+      const c = std === material ? std.clone() : std;
       c.emissive.multiplyScalar(std.emissiveIntensity);
       c.emissive.r = Math.min(1, c.emissive.r); c.emissive.g = Math.min(1, c.emissive.g); c.emissive.b = Math.min(1, c.emissive.b);
       c.emissiveIntensity = 1;

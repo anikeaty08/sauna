@@ -44,6 +44,10 @@ function checkConfiguration(raw: unknown) {
 
 /** The two files the phone's own AR viewers need, per snapshot link. */
 const AR_FILES: Record<string, { type: string; maxBytes: number; magic: string }> = {
+  // current export format (indexed geometry, power-of-two JPEG textures)
+  'sauna-v3.glb': { type: 'model/gltf-binary', maxBytes: 30 * 1024 * 1024, magic: 'glTF' },
+  'sauna-v3.usdz': { type: 'model/vnd.usdz+zip', maxBytes: 40 * 1024 * 1024, magic: 'PK' },
+  // earlier exports, still served for old links
   'model.glb': { type: 'model/gltf-binary', maxBytes: 30 * 1024 * 1024, magic: 'glTF' },
   'model.usdz': { type: 'model/vnd.usdz+zip', maxBytes: 40 * 1024 * 1024, magic: 'PK' },
 };
@@ -166,7 +170,7 @@ export function createStudioRouter(database: DatabaseSync, opts: { dataDir?: str
     if (!Buffer.isBuffer(body) || body.length < 16 || body.length > spec.maxBytes) return reject(res, 400, 'The file is empty or too large.');
     if (body.subarray(0, spec.magic.length).toString('latin1') !== spec.magic) return reject(res, 400, 'The file is not a valid model.');
     mkdirSync(path.dirname(target), { recursive: true });
-    writeFileSync(target, req.params.file === 'model.glb' ? sceneViewerSafeGlb(body) : body, { flag: 'wx' });
+    writeFileSync(target, spec.magic === 'glTF' ? sceneViewerSafeGlb(body) : body, { flag: 'wx' });
     res.status(201).json({ url: `/api/studio/configurations/${req.params.id}/ar/${req.params.file}` });
   });
   const serveAr = (req: Request, res: Response) => {
@@ -178,7 +182,7 @@ export function createStudioRouter(database: DatabaseSync, opts: { dataDir?: str
     res.setHeader('Access-Control-Allow-Origin', '*');
     const file = arPath(id, String(req.params.file));
     // Scene Viewer rejects unsupported glTF extensions; older uploads may carry one.
-    if (req.params.file === 'model.glb') return res.type(spec.type).send(sceneViewerSafeGlb(readFileSync(file)));
+    if (spec.magic === 'glTF') return res.type(spec.type).send(sceneViewerSafeGlb(readFileSync(file)));
     res.type(spec.type).sendFile(file);
   };
   router.get('/configurations/:id/ar/:file', serveAr);

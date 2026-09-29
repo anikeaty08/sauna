@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Box, Smartphone } from 'lucide-react';
 import { useStudio } from './store/configurationStore.ts';
 import { SaunaViewer } from './components/viewer/SaunaViewer.tsx';
-import { arViewUrl, ensureArModel, getConfiguration, shareConfiguration } from './services/saunaApi.ts';
+import { AR_GLB, AR_USDZ, arViewUrl, ensureArModel, getConfiguration, shareConfiguration } from './services/saunaApi.ts';
 import { chf } from './utils/format.ts';
 import './styles/configurator.css';
 
@@ -76,7 +76,7 @@ export default function ArPage() {
   const open = () => {
     if (!ready) return;
     if (platform === 'ios') quickLook.current?.click();
-    else location.href = sceneViewerIntent(arViewUrl(id!, 'model.glb'), title, studioUrl);
+    else location.href = sceneViewerIntent(arViewUrl(id!, AR_GLB), title, studioUrl);
   };
 
   return (
@@ -105,7 +105,7 @@ export default function ArPage() {
               </button>
               {/* Quick Look needs a real <a rel="ar"> with an <img> child. */}
               {platform === 'ios' && ready && (
-                <a ref={quickLook} rel="ar" href={`${arViewUrl(id!, 'model.usdz')}#allowsContentScaling=0`} className="ar-hidden" aria-hidden="true" tabIndex={-1}>
+                <a ref={quickLook} rel="ar" href={`${arViewUrl(id!, AR_USDZ)}#allowsContentScaling=0`} className="ar-hidden" aria-hidden="true" tabIndex={-1}>
                   <img alt="" src="/assets/images/logo.gif" />
                 </a>
               )}

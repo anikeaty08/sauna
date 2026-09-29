@@ -47,7 +47,10 @@ export const getConfiguration = (id: string) =>
 export const requestQuote = (payload: { configurationId: string; name: string; email: string; phone?: string; message?: string }) =>
   request<{ id: string }>('/api/studio/quote-requests', { method: 'POST', body: JSON.stringify(payload) });
 
-export const arFileUrl = (id: string, file: 'model.glb' | 'model.usdz') => `${location.origin}/api/studio/configurations/${encodeURIComponent(id)}/ar/${file}`;
+/** AR file names; the version changes whenever the export format changes, so links never reuse an old-format model. */
+export const AR_GLB = 'sauna-v3.glb', AR_USDZ = 'sauna-v3.usdz';
+type ArFile = typeof AR_GLB | typeof AR_USDZ;
+export const arFileUrl = (id: string, file: ArFile) => `${location.origin}/api/studio/configurations/${encodeURIComponent(id)}/ar/${file}`;
 
 /**
  * The address the phone's AR viewer opens. The viewers cache models by URL, so
@@ -55,11 +58,11 @@ export const arFileUrl = (id: string, file: 'model.glb' | 'model.usdz') => `${lo
  * otherwise a phone keeps showing its old (possibly broken) download.
  */
 const AR_MODEL_REV = 2;
-export const arViewUrl = (id: string, file: 'model.glb' | 'model.usdz') => `${arFileUrl(id, file)}?rev=${AR_MODEL_REV}`;
+export const arViewUrl = (id: string, file: ArFile) => `${arFileUrl(id, file)}?rev=${AR_MODEL_REV}`;
 
 /** True when both AR files exist for this link. */
 export async function hasArModel(id: string): Promise<boolean> {
-  const heads = await Promise.all((['model.glb', 'model.usdz'] as const).map(f => fetch(arFileUrl(id, f), { method: 'HEAD' }).then(r => r.ok).catch(() => false)));
+  const heads = await Promise.all(([AR_GLB, AR_USDZ] as const).map(f => fetch(arFileUrl(id, f), { method: 'HEAD' }).then(r => r.ok).catch(() => false)));
   return heads.every(Boolean);
 }
 
@@ -76,7 +79,7 @@ export async function ensureArModel(id: string, configuration: SaunaConfiguratio
   ]);
   const layout = computeLayout(MODEL_REGISTRY[configuration.modelId], configuration);
   const { glb, usdz } = await exportArModel(configuration, layout);
-  for (const [file, data, type] of [['model.glb', glb, 'model/gltf-binary'], ['model.usdz', usdz, 'model/vnd.usdz+zip']] as const) {
+  for (const [file, data, type] of [[AR_GLB, glb, 'model/gltf-binary'], [AR_USDZ, usdz, 'model/vnd.usdz+zip']] as const) {
     const res = await fetch(arFileUrl(id, file), { method: 'PUT', body: new Blob([data as BlobPart], { type }), headers: { 'Content-Type': type } });
     if (!res.ok && res.status !== 409) throw new Error((await res.json().catch(() => ({}))).error || 'The AR model could not be uploaded.');
   }
