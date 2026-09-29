@@ -85,7 +85,18 @@ function bake(root: THREE.Object3D): THREE.Group {
     const merged = mergeGeometries(geos, false);
     geos.forEach(g => g.dispose());
     if (!merged) continue;
-    const mesh = new THREE.Mesh(merged, material);
+    // Scene Viewer supports only a few glTF extensions: keep emissive at the
+    // core range (an intensity > 1 would export KHR_materials_emissive_strength).
+    let mat = material;
+    const std = material as THREE.MeshStandardMaterial;
+    if (std.isMeshStandardMaterial && std.emissiveIntensity > 1) {
+      const c = std.clone();
+      c.emissive.multiplyScalar(std.emissiveIntensity);
+      c.emissive.r = Math.min(1, c.emissive.r); c.emissive.g = Math.min(1, c.emissive.g); c.emissive.b = Math.min(1, c.emissive.b);
+      c.emissiveIntensity = 1;
+      mat = c;
+    }
+    const mesh = new THREE.Mesh(merged, mat);
     mesh.name = material.name || 'part';
     out.add(mesh);
   }

@@ -99,6 +99,11 @@ export default function StudioApp() {
     finally { setPdfBusy(false); }
   };
   const warnings = issues.filter(i => i.level !== 'info');
+  // How-to hint: touch wording on phones; fades after a few seconds and comes
+  // back when switching between exterior and interior.
+  const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+  const [hintOn, setHintOn] = useState(true);
+  useEffect(() => { setHintOn(true); const t = setTimeout(() => setHintOn(false), 7000); return () => clearTimeout(t); }, [tab]);
   // Phones go straight to their own AR; desktops get the QR code.
   const viewInRoom = async () => {
     if (!isPhone()) { setModal('room'); return; }
@@ -138,15 +143,15 @@ export default function StudioApp() {
           </div>
         )}
 
-        <p className="st-hint" aria-hidden="true">
+        <p className={`st-hint${hintOn ? '' : ' is-hidden'}`} aria-hidden="true">
           <Move3d size={13} />
           {tab === 'interior'
-            ? `You are inside the sauna${doorOpen ? '' : ', door closed'} · drag to look around · scroll to zoom`
-            : 'Drag to rotate · scroll to zoom · right-drag to move'}
+            ? (touch ? 'Drag to look around · pinch to walk · two fingers to move' : 'Walk with W A S D or the arrow keys · drag to look around · scroll to walk forward')
+            : (touch ? 'Drag to rotate · pinch to zoom' : 'Drag to rotate · scroll to zoom · right-drag to move')}
         </p>
 
         <div className="st-stage-actions">
-          <button type="button" onClick={viewInRoom}><Smartphone size={14} /> View in your room</button>
+          <button type="button" onClick={viewInRoom}><Smartphone size={14} /> <span className="st-lbl-long">View in your room</span><span className="st-lbl-short">In your room</span></button>
           <button type="button" onClick={() => setModal('share')}><Share2 size={14} /> Share</button>
           <button type="button" className={showDims ? 'is-on' : ''} aria-pressed={showDims} onClick={() => setShowDims(v => !v)}><Ruler size={14} /> Measurements</button>
         </div>
@@ -206,8 +211,8 @@ export default function StudioApp() {
         </div>
 
         <div className="st-card st-actions">
-          <button type="button" onClick={pdf} disabled={pdfBusy} aria-busy={pdfBusy}><Download size={14} /> {pdfBusy ? 'Preparing PDF…' : 'Download PDF quote'}</button>
-          <button type="button" className="is-primary" onClick={() => setModal('quote')}><Send size={14} /> Request a quote</button>
+          <button type="button" onClick={pdf} disabled={pdfBusy} aria-busy={pdfBusy}><Download size={14} /> {pdfBusy ? 'Preparing…' : <><span className="st-lbl-long">Download PDF quote</span><span className="st-lbl-short">PDF quote</span></>}</button>
+          <button type="button" className="is-primary" onClick={() => setModal('quote')}><Send size={14} /> <span className="st-lbl-long">Request a quote</span><span className="st-lbl-short">Request quote</span></button>
         </div>
       </aside>
 

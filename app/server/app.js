@@ -49,10 +49,11 @@ export function createApp({ databasePath = path.join(root, 'data', 'sauna.sqlite
     if (req.path.startsWith('/api/')) res.setHeader('Cache-Control', 'no-store');
     next();
   });
-  // gzip / brotli for pages, API responses, scripts and the AR models (the USDZ is
-  // mostly geometry text and shrinks a lot; the phone viewers accept both).
-  const compressible = /^(model\/gltf-binary|model\/vnd\.usdz\+zip)/;
-  app.use(compression({ brotli: { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5 } }, filter: (req, res) => compressible.test(String(res.getHeader('Content-Type') || '')) || compression.filter(req, res) }));
+  // gzip / brotli for pages, API responses and scripts. The AR models are sent
+  // as-is: Android's Scene Viewer downloads them itself and fails ("something
+  // wrong with this object") when it receives an encoded body.
+  const arModel = /^model\/(gltf-binary|vnd\.usdz\+zip)/;
+  app.use(compression({ brotli: { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5 } }, filter: (req, res) => !arModel.test(String(res.getHeader('Content-Type') || '')) && compression.filter(req, res) }));
   app.use(express.json({ limit: '8kb' }));
   // Bound write frequency and memory; the app does not trust forwarded IP headers.
   const writes = new Map();

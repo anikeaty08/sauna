@@ -119,7 +119,7 @@ export function ShareModal({ onClose }: { onClose: () => void }) {
   useEffect(() => { link.share(); /* once, for the design as it is now */ // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const heater = model.options.heaterSet.find(h => h.id === config.heaterSet);
-  const summary = `${model.name}, ${config.dimensions.widthCm} × ${config.dimensions.depthCm} cm, ${heater?.id === 'none' ? 'without heater' : heater?.name.replace(/^Set: /, '').split(',')[0]} - ${chf(price.total)}${price.onRequest ? ' + on request' : ''}`;
+  const summary = `${model.name}, ${config.dimensions.widthCm} × ${config.dimensions.depthCm} cm, ${heater?.id === 'none' ? 'without heater' : heater?.name.replace(/^Set: /, '').split(',')[0]} - ${chf(price.total)}${price.onRequest ? ' (some items priced on request)' : ''}`;
   const url = link.link?.url ?? '';
   const copy = async () => {
     try { await navigator.clipboard.writeText(url); }
