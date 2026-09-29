@@ -36,8 +36,11 @@ export function viewFor(section: Section, layout: Layout, aspect = 1.1): View {
   const heater = layout.placements.find(p => p.key === 'heater');
   const exterior = (dir: Vec2, dist: number, height: number, look = 0.85): View => {
     const n = Math.hypot(dir[0], dir[1]);
-    const k = Math.pow(narrow, 0.9);
-    return { pos: f.point([centre[0] + (dir[0] / n) * dist * k, centre[1] + (dir[1] / n) * dist * k], height * (1 + (k - 1) * 0.5)), target: f.point(centre, look), fov: 36 };
+    // Narrow screens: back off just enough to fit the width, and aim at the
+    // model's true middle so it is centred instead of riding high.
+    const k = Math.pow(narrow, 0.75);
+    const aim = narrow > 1 ? look + Math.min(0.3, (narrow - 1) * 0.6) : look;
+    return { pos: f.point([centre[0] + (dir[0] / n) * dist * k, centre[1] + (dir[1] / n) * dist * k], height * (1 + (k - 1) * 0.4)), target: f.point(centre, aim), fov: 36 };
   };
   switch (section) {
     case 'size': return exterior([1, 0.62], size * 2.15, 2.3);

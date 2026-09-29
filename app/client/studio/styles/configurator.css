@@ -292,7 +292,7 @@
 .st-lbl-short { display: none; }
 @media (max-width: 860px) {
   .st-stage { height: auto; min-height: 0; overflow: visible; display: flex; flex-direction: column; align-items: center; gap: 10px; border-radius: 0; }
-  .st-canvas { position: relative; inset: auto; order: 0; width: 100%; height: min(58svh, 560px); min-height: 300px; border-radius: 16px; overflow: hidden; background: var(--st-bg); }
+  .st-canvas { position: relative; inset: auto; order: 0; width: 100%; height: clamp(300px, 92vw, min(58svh, 560px)); border-radius: 16px; overflow: hidden; background: var(--st-bg); }
   .st-tabs, .st-hint, .st-stage-actions { position: static; transform: none; }
   .st-tabs { order: 1; }
   .st-hint { order: 2; white-space: normal; text-align: center; background: none; backdrop-filter: none; padding: 0 8px; }
