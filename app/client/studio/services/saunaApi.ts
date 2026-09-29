@@ -49,6 +49,14 @@ export const requestQuote = (payload: { configurationId: string; name: string; e
 
 export const arFileUrl = (id: string, file: 'model.glb' | 'model.usdz') => `${location.origin}/api/studio/configurations/${encodeURIComponent(id)}/ar/${file}`;
 
+/**
+ * The address the phone's AR viewer opens. The viewers cache models by URL, so
+ * bump AR_MODEL_REV whenever the server changes what it sends for a model -
+ * otherwise a phone keeps showing its old (possibly broken) download.
+ */
+const AR_MODEL_REV = 2;
+export const arViewUrl = (id: string, file: 'model.glb' | 'model.usdz') => `${arFileUrl(id, file)}?rev=${AR_MODEL_REV}`;
+
 /** True when both AR files exist for this link. */
 export async function hasArModel(id: string): Promise<boolean> {
   const heads = await Promise.all((['model.glb', 'model.usdz'] as const).map(f => fetch(arFileUrl(id, f), { method: 'HEAD' }).then(r => r.ok).catch(() => false)));
